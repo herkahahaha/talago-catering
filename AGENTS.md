@@ -5,9 +5,9 @@ Ringkasan lengkap sesi terakhir ada di [`docs/session-summary.md`](docs/session-
 ## Status
 - Development dijeda; stack Docker (`docker compose -f deploy/compose.dev.yml`) dimatikan.
 - Seluruh aplikasi dapat berjalan di Docker dengan compose terpisah dev/staging/prod; lihat
-  [`doc/docker.md`](doc/docker.md).
+  [`doc-docker/docker.md`](doc-docker/docker.md).
 - Dashboard memakai design system shadcn/ui light mode (Tailwind v4 + Kobalte); lihat
-  [`doc/dashboard-ui.md`](doc/dashboard-ui.md).
+  [`doc-dashboard/dashboard-ui.md`](doc-dashboard/dashboard-ui.md).
 - PostgreSQL 16 native tetap berjalan di `127.0.0.1:5432` (db `catering_dev` / `catering_test`,
   user `catering`, password `catering_dev_pw`). Container dev memakai port host `5433`.
 - Semua tes/build/lint terakhir hijau: 18 unit + 26 integrasi.

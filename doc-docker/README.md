@@ -10,7 +10,7 @@ Dokumentasi teknis untuk dua perubahan besar terakhir:
 
 | Dokumen | Isi |
 | :-- | :-- |
-| [dashboard-ui.md](dashboard-ui.md) | Design system, token, inventaris komponen, pola pemakaian, screenshot, dan batasan |
+| [dashboard-ui.md](../doc-dashboard/dashboard-ui.md) | Design system, token, inventaris komponen, pola pemakaian, screenshot, dan batasan |
 | [docker.md](docker.md) | Arsitektur container, cara menjalankan tiap environment, deploy production, operasional, troubleshooting |
 
 ## Ringkasan cepat
