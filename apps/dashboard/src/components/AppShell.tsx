@@ -3,6 +3,7 @@ import { For, Show, createEffect, createMemo, createSignal } from 'solid-js';
 import { Link, useLocation, useNavigate } from '@tanstack/solid-router';
 import { useQuery, useQueryClient } from '@tanstack/solid-query';
 import type { StaffDto } from '@catering/contracts';
+import { todayWib } from '~/lib/format';
 import {
   CalendarDays,
   ChefHat,
@@ -16,7 +17,6 @@ import {
   UtensilsCrossed,
 } from 'lucide-solid';
 import { api, ApiError } from '~/lib/api';
-import { todayWib, formatDate } from '~/lib/format';
 import { cn } from '~/lib/cn';
 import { Button } from '~/components/ui/button';
 import { Separator } from '~/components/ui/separator';
@@ -94,7 +94,6 @@ export function AppShell(props: {
   );
   const path = createMemo(() => location().pathname);
   const current = createMemo(() => links.find((link) => link.match(path())));
-  const today = createMemo(() => formatDate(todayWib()));
 
   async function logout() {
     await api.post('/admin/auth/logout').catch(() => undefined);
@@ -153,7 +152,12 @@ export function AppShell(props: {
       </div>
 
       <div class="mt-auto border-t p-3">
-        <Show when={user()} keyed>
+        <Show when={user()} keyed fallback={<div class="flex items-center gap-2.5 rounded-md p-2 text-sm text-muted-foreground">
+          <span class="bg-secondary text-secondary-foreground grid size-8 shrink-0 place-items-center rounded-full text-xs font-semibold">
+            ?
+          </span>
+          <span class="min-w-0 flex-1">Memuat sesi...</span>
+        </div>}>
           {(currentUser) => (
             <DropdownMenu>
               <DropdownMenuTrigger
@@ -215,7 +219,7 @@ export function AppShell(props: {
         <div data-slot="app-wrapper" class="flex min-h-svh flex-col md:pl-64">
           <header
             data-slot="header"
-            class="bg-background/95 supports-[backdrop-filter]:bg-background/80 sticky top-0 z-20 flex h-14 shrink-0 items-center gap-3 border-b px-4 backdrop-blur md:px-6"
+            class="bg-background/95 supports-backdrop-filter:bg-background/80 sticky top-0 z-20 flex h-14 shrink-0 items-center gap-3 border-b px-4 backdrop-blur md:px-6"
           >
             <Button
               variant="ghost"
@@ -232,38 +236,32 @@ export function AppShell(props: {
               <span class="text-muted-foreground hidden sm:inline">/</span>
               <span class="truncate font-medium">{current()?.label ?? props.title}</span>
             </nav>
-            <div class="ml-auto flex items-center gap-2">
-              <span class="text-muted-foreground border-border hidden items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs lg:flex">
-                <CalendarDays class="size-3.5" />
-                {today()}
-              </span>
-              <Show when={user()} keyed>
-                {(currentUser) => (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger
-                      class="border-border hover:bg-accent grid size-8 place-items-center rounded-full border text-xs font-semibold md:hidden"
-                      aria-label="Menu pengguna"
-                    >
-                      {initials()}
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent class="w-56">
-                      <DropdownMenuLabel class="flex flex-col gap-0.5">
-                        <span class="text-foreground text-sm font-medium">{currentUser.name}</span>
-                        <span class="text-muted-foreground text-xs">{currentUser.email}</span>
-                      </DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onSelect={() => void logout()} class="text-destructive">
-                        <LogOut class="size-4" />
-                        Keluar
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                )}
-              </Show>
-            </div>
+            <Show when={user()} keyed>
+              {(currentUser) => (
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                    class="border-border hover:bg-accent grid size-8 place-items-center rounded-full border text-xs font-semibold md:hidden"
+                    aria-label="Menu pengguna"
+                  >
+                    {initials()}
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent class="w-56">
+                    <DropdownMenuLabel class="flex flex-col gap-0.5">
+                      <span class="text-foreground text-sm font-medium">{currentUser.name}</span>
+                      <span class="text-muted-foreground text-xs">{currentUser.email}</span>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onSelect={() => void logout()} class="text-destructive">
+                      <LogOut class="size-4" />
+                      Keluar
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </Show>
           </header>
 
-          <main data-slot="app-main" class="mx-auto w-full max-w-[1440px] flex-1 px-4 py-6 md:px-6 lg:px-8">
+          <main data-slot="app-main" class="mx-auto w-full max-w-360 flex-1 px-4 py-6 md:px-6 lg:px-8">
             <div class="no-print mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
               <div class="min-w-0">
                 <h1 class="text-2xl font-semibold tracking-tight">{props.title}</h1>

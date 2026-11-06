@@ -275,7 +275,7 @@ function MenuPage() {
           <Badge variant="secondary">{catalog.data?.length ?? 0} hidangan</Badge>
         </div>
 
-        <Table class="min-w-[860px] md:min-w-0">
+        <Table class="min-w-215 md:min-w-0">
           <TableHeader>
             <TableRow class="hover:bg-transparent">
               <TableHead>Hidangan</TableHead>

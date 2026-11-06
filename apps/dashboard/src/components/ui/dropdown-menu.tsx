@@ -39,10 +39,10 @@ function DropdownMenuItem(props: ComponentProps<typeof KDropdownMenu.Item>) {
   );
 }
 
-function DropdownMenuLabel(props: ComponentProps<typeof KDropdownMenu.GroupLabel>) {
+function DropdownMenuLabel(props: ComponentProps<'div'>) {
   const [local, rest] = splitProps(props, ['class']);
   return (
-    <KDropdownMenu.GroupLabel
+    <div
       data-slot="dropdown-menu-label"
       class={cn('px-2 py-1.5 text-xs font-medium text-muted-foreground', local.class)}
       {...rest}

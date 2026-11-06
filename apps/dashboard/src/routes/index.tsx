@@ -217,7 +217,7 @@ function OrdersPage() {
           </div>
         </Show>
 
-        <Table class="min-w-[1080px] md:min-w-0">
+        <Table class="min-w-270 md:min-w-0">
           <TableHeader>
             <TableRow class="hover:bg-transparent">
               <TableHead>Dibuat</TableHead>
