@@ -1,0 +1,115 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Production — image immutable (tag = versi rilis), database terkelola.
+#
+#   cp deploy/env/.env.production.example deploy/env/.env.production
+#   docker compose --env-file deploy/env/.env.production -f deploy/compose.prod.yml up -d
+#
+# Build + push di CI:
+#   docker build -f deploy/Dockerfile.api -t registry/api:$TAG .
+#   ... web (--build-arg PUBLIC_API_URL), dashboard (--build-arg VITE_API_URL), migrate
+#
+# Untuk Postgres self-hosted tambahkan overlay:
+#   docker compose --env-file deploy/env/.env.production \
+#     -f deploy/compose.prod.yml -f deploy/compose.prod.db.yml up -d
+#
+# Semua port hanya 127.0.0.1; reverse proxy (TLS) wajib di depan.
+# ─────────────────────────────────────────────────────────────────────────────
+name: catering-prod
+
+x-logging: &logging
+  logging:
+    driver: json-file
+    options:
+      max-size: '10m'
+      max-file: '3'
+
+x-app: &app
+  restart: unless-stopped
+  init: true
+  logging:
+    driver: json-file
+    options:
+      max-size: '10m'
+      max-file: '3'
+
+services:
+  # One-shot: migrasi harus sukses sebelum API/worker versi baru dibuat.
+  migrate:
+    image: ${IMAGE_PREFIX:-catering}/migrate:${IMAGE_TAG:-latest}
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.migrate
+    env_file:
+      - env/.env.production
+    restart: 'no'
+    <<: *logging
+
+  api:
+    <<: *app
+    image: ${IMAGE_PREFIX:-catering}/api:${IMAGE_TAG:-latest}
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.api
+    env_file:
+      - env/.env.production
+    environment:
+      ROLE: web
+    ports:
+      - '127.0.0.1:${API_PORT:-3000}:3000'
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    stop_grace_period: 30s
+
+  worker:
+    <<: *app
+    image: ${IMAGE_PREFIX:-catering}/api:${IMAGE_TAG:-latest}
+    env_file:
+      - env/.env.production
+    environment:
+      ROLE: worker
+    # Image API punya healthcheck HTTP untuk peran web; worker tidak membuka port.
+    healthcheck:
+      disable: true
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    stop_grace_period: 30s
+
+  web:
+    <<: *app
+    image: ${IMAGE_PREFIX:-catering}/web:${IMAGE_TAG:-latest}
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.web
+      args:
+        PUBLIC_API_URL: ${PUBLIC_API_URL:?PUBLIC_API_URL wajib diisi di env production}
+    env_file:
+      - env/.env.production
+    environment:
+      PORT: '4321'
+      HOST: 0.0.0.0
+    ports:
+      - '127.0.0.1:${WEB_PORT:-4321}:4321'
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  dashboard:
+    <<: *app
+    image: ${IMAGE_PREFIX:-catering}/dashboard:${IMAGE_TAG:-latest}
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.dashboard
+      args:
+        VITE_API_URL: ${PUBLIC_API_URL:?PUBLIC_API_URL wajib diisi di env production}
+    env_file:
+      - env/.env.production
+    environment:
+      PORT: '3001'
+      HOST: 0.0.0.0
+    ports:
+      - '127.0.0.1:${DASHBOARD_PORT:-3001}:3001'
+    depends_on:
+      migrate:
+        condition: service_completed_successfully

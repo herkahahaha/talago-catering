@@ -1,0 +1,39 @@
+---
+import Layout from '../layouts/Layout.astro';
+import QuoteForm from '../islands/QuoteForm';
+import { serverApi } from '../lib/api';
+
+const availability = await serverApi.availability(1).catch(() => null);
+const maxPortions = availability?.maxPortionsPerOrder ?? 200;
+---
+
+<Layout
+  title="Minta penawaran · Sajian Kita"
+  description="Pesanan di atas kapasitas order reguler: minta penawaran katering untuk acara kantor, syukuran, dan pernikahan."
+>
+  <div class="container page-head">
+    <span class="eyebrow">Pesanan besar</span>
+    <h1 style="max-width: 20ch">Acara besar, penawaran khusus.</h1>
+    <p class="muted" style="max-width: 58ch">
+      Untuk pesanan di atas {maxPortions} porsi, kami susun menu dan harga bersama Anda. Tim akan menghubungi
+      untuk konfirmasi ketersediaan dapur dan jadwal produksi.
+    </p>
+  </div>
+
+  <div class="container split" style="padding-bottom: 3rem; align-items: start">
+    <QuoteForm client:load maxPortions={maxPortions} />
+
+    <aside class="panel" style="background: var(--cream-deep)">
+      <h3 style="font-size: 1.1rem">Yang perlu Anda tahu</h3>
+      <ul class="checklist">
+        <li>Harga menyesuaikan volume, jenis menu, dan tanggal acara.</li>
+        <li>PO korporat dibayar penuh di muka — tidak ada termin.</li>
+        <li>Kapasitas dapur terbatas; tanggal besar sebaiknya dikunci lebih awal.</li>
+        <li>Perubahan menu setelah cut-off hanya lewat persetujuan admin.</li>
+      </ul>
+      <p class="tiny" style="margin-top: 1rem">
+        Butuh jawaban cepat? Hubungi WhatsApp dapur di 0812-3456-7890.
+      </p>
+    </aside>
+  </div>
+</Layout>

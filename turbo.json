@@ -1,0 +1,43 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "ui": "stream",
+  "globalEnv": [
+    "NODE_ENV",
+    "DATABASE_URL",
+    "DATABASE_URL_TEST",
+    "APP_URL",
+    "DASHBOARD_URL",
+    "API_BASE_URL",
+    "ROLE",
+    "SESSION_SECRET",
+    "CAPTCHA_SECRET",
+    "PAYMENT_GATEWAY",
+    "PAYMENT_WEBHOOK_SECRET",
+    "PAYMENT_MOCK_BASE_URL",
+    "ADMIN_EMAIL",
+    "ADMIN_PASSWORD",
+    "TZ"
+  ],
+  "globalPassThroughEnv": ["PNPM_HOME", "PATH", "HOME"],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", ".astro/**", ".output/**", ".tanstack/**", ".vinxi/**"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "typecheck": {
+      "dependsOn": ["^typecheck"],
+      "outputs": []
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "outputs": []
+    },
+    "lint": {
+      "outputs": []
+    }
+  }
+}

@@ -1,0 +1,68 @@
+---
+import Layout from '../layouts/Layout.astro';
+import MenuBrowser from '../islands/MenuBrowser';
+import { serverApi } from '../lib/api';
+
+const availability = await serverApi.availability(30).catch(() => null);
+const minPortions = availability?.minPortions ?? 50;
+const openDays =
+  availability?.days.filter(
+    (day) => day.isOpen && !day.cutoffPassed && day.remainingRegular >= minPortions,
+  ) ?? [];
+const requested = Astro.url.searchParams.get('date');
+const selected = openDays.find((day) => day.date === requested)?.date ?? openDays[0]?.date ?? null;
+const menu = selected ? await serverApi.menu(selected).catch(() => null) : null;
+
+const dayProps = openDays.map((day) => ({
+  date: day.date,
+  remainingRegular: day.remainingRegular,
+  isOpen: day.isOpen,
+  cutoffPassed: day.cutoffPassed,
+}));
+---
+
+<Layout
+  title="Menu & tanggal · Sajian Kita"
+  description="Pilih tanggal layanan dan hidangan katering. Minimal 50 porsi, cut-off H-1 pukul 18.00 WIB."
+>
+  <div class="container page-head">
+    <span class="eyebrow">Menu &amp; tanggal</span>
+    <h1 style="max-width: 18ch">Pilih tanggal, lalu pilih porsi.</h1>
+    <p class="muted" style="max-width: 56ch">
+      Setiap tanggal punya sisa porsi sendiri. Keranjang terikat satu tanggal; mengganti tanggal akan
+      mengosongkan keranjang.
+    </p>
+  </div>
+
+  <div class="container" style="padding-bottom: 3rem">
+    {!availability || openDays.length === 0 || !selected || !menu ? (
+      <div class="panel empty">
+        <h3>Menu belum tersedia</h3>
+        <p class="muted">
+          Semua tanggal pada dua minggu ke depan sedang penuh atau ditutup. Hubungi dapur untuk menanyakan
+          jadwal khusus.
+        </p>
+        <a class="btn btn-primary" href="https://wa.me/6281234567890" target="_blank" rel="noopener">
+          Hubungi dapur
+        </a>
+      </div>
+    ) : (
+      <MenuBrowser
+        client:only="solid-js"
+        initialDate={selected}
+        initialItems={menu.items}
+        days={dayProps}
+        minPortions={availability.minPortions}
+        maxPortions={availability.maxPortionsPerOrder}
+      />
+    )}
+
+    <div class="alert alert-info" style="margin-top: 2rem">
+      Butuh lebih dari {availability?.maxPortionsPerOrder ?? 50} porsi?{' '}
+      <a href="/quote" style="font-weight: 700">
+        Minta penawaran
+      </a>{' '}
+      agar harga dan jadwal produksi disepakati lebih dulu.
+    </div>
+  </div>
+</Layout>

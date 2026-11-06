@@ -1,0 +1,21 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import OrderLookup from '../../islands/OrderLookup';
+---
+
+<Layout
+  title="Pesanan saya · Sajian Kita"
+  description="Lacak status pesanan katering Anda dengan nomor pesanan dan nomor HP."
+>
+  <div class="container page-head">
+    <span class="eyebrow">Pesanan</span>
+    <h1 style="max-width: 20ch">Cek pesanan tanpa perlu akun.</h1>
+    <p class="muted" style="max-width: 58ch">
+      Lacak status produksi dan pengantaran, atau buka kembali pesanan yang dibuat dari perangkat ini.
+    </p>
+  </div>
+
+  <div class="container" style="padding-bottom: 3rem">
+    <OrderLookup client:load />
+  </div>
+</Layout>

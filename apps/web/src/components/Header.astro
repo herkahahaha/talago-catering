@@ -1,0 +1,31 @@
+---
+interface Props {
+  current: string;
+}
+const { current } = Astro.props;
+---
+
+<header class="site-header">
+  <div class="container inner">
+    <a class="brand" href="/">
+      <span class="brand-mark">
+        <span>SK</span>
+      </span>
+      Sajian Kita
+    </a>
+    <nav class="nav" aria-label="Navigasi utama">
+      <a href="/menu" aria-current={current === '/menu' ? 'page' : undefined}>
+        Menu
+      </a>
+      <a href="/pesanan" aria-current={current === '/pesanan' ? 'page' : undefined}>
+        Pesanan
+      </a>
+      <a href="/#cara-pesan">Cara pesan</a>
+      <a href="/quote">Pesanan besar</a>
+      <a href="/#area">Area antar</a>
+    </nav>
+    <a class="btn btn-primary btn-sm" href="/menu">
+      Pesan sekarang
+    </a>
+  </div>
+</header>

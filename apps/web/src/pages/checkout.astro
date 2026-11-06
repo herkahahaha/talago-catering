@@ -1,0 +1,56 @@
+---
+import Layout from '../layouts/Layout.astro';
+import CheckoutFlow from '../islands/CheckoutFlow';
+import { serverApi } from '../lib/api';
+
+const availability = await serverApi.availability(14).catch(() => null);
+
+const days =
+  availability?.days.map((day) => ({
+    date: day.date,
+    isOpen: day.isOpen,
+    cutoffPassed: day.cutoffPassed,
+    remainingRegular: day.remainingRegular,
+    windows: day.windows.map((window) => ({
+      id: window.id ?? '',
+      label: window.label,
+      startTime: window.startTime,
+      endTime: window.endTime,
+      remainingStops: window.remainingStops,
+    })),
+  })) ?? [];
+---
+
+<Layout
+  title="Checkout · Sajian Kita"
+  description="Konfirmasi pesanan katering: isi data, pilih jendela antar, dan bayar via QRIS atau VA."
+>
+  <div class="container page-head">
+    <span class="eyebrow">Konfirmasi pesanan</span>
+    <h1 style="max-width: 20ch">Satu halaman lagi sebelum dapur mulai.</h1>
+    <p class="muted" style="max-width: 58ch">
+      Slot ditahan 10 menit setelah pesanan dibuat. Jika pembayaran tidak masuk sampai hold habis, porsi
+      otomatis dilepas kembali ke kapasitas.
+    </p>
+  </div>
+
+  <div class="container" style="padding-bottom: 3rem">
+    {availability ? (
+      <CheckoutFlow
+        client:only="solid-js"
+        days={days}
+        minPortions={availability.minPortions}
+        maxPortions={availability.maxPortionsPerOrder}
+        deliveryFee={availability.deliveryFee}
+      />
+    ) : (
+      <div class="panel empty">
+        <h3>Server sedang sibuk</h3>
+        <p class="muted">Kapasitas belum bisa dimuat. Coba muat ulang halaman sebentar lagi.</p>
+        <a class="btn btn-primary" href="/menu">
+          Kembali ke menu
+        </a>
+      </div>
+    )}
+  </div>
+</Layout>

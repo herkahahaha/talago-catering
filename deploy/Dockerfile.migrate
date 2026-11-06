@@ -1,0 +1,21 @@
+# syntax=docker/dockerfile:1.7
+# Image one-shot untuk migrasi (dan seed di non-production).
+# Build: docker build -f deploy/Dockerfile.migrate -t catering/migrate:latest .
+# Pakai: docker run --rm --env-file deploy/env/.env.staging catering/migrate:latest
+
+FROM node:24-alpine AS base
+RUN npm install -g pnpm@10.34.9 --no-fund --no-audit
+WORKDIR /repo
+ENV CI=1
+
+COPY pnpm-workspace.yaml pnpm-lock.yaml package.json tsconfig.base.json ./
+COPY packages/core/package.json packages/core/
+COPY packages/contracts/package.json packages/contracts/
+RUN pnpm install --frozen-lockfile
+
+COPY packages/core packages/core
+COPY packages/contracts packages/contracts
+
+ENV NODE_ENV=production
+
+CMD ["pnpm", "--filter", "@catering/core", "db:migrate"]

@@ -1,0 +1,23 @@
+# syntax=docker/dockerfile:1.7
+# Image pengembangan — semua dependency + source, dipakai bersama oleh service compose dev.
+# Source di-bind-mount di compose.dev.yml, node_modules tetap dari image.
+FROM node:24-alpine
+
+RUN npm install -g pnpm@10.34.9 --no-fund --no-audit
+WORKDIR /repo
+ENV NODE_ENV=development \
+    CI=1
+
+COPY pnpm-workspace.yaml pnpm-lock.yaml package.json tsconfig.base.json ./
+COPY apps/api/package.json apps/api/
+COPY apps/web/package.json apps/web/
+COPY apps/dashboard/package.json apps/dashboard/
+COPY packages/core/package.json packages/core/
+COPY packages/contracts/package.json packages/contracts/
+RUN pnpm install --frozen-lockfile
+
+COPY . .
+
+EXPOSE 3000 3001 4321
+
+CMD ["pnpm", "--filter", "@catering/api", "dev"]

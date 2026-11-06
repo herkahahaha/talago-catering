@@ -1,0 +1,11 @@
+node_modules
+dist
+.output
+.astro
+.tanstack
+.turbo
+pnpm-lock.yaml
+drizzle
+*.md
+apps/dashboard/src/routeTree.gen.ts
+apps/web/.astro

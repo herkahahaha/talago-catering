@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: catering
+          POSTGRES_PASSWORD: catering_dev_pw
+          POSTGRES_DB: catering_dev
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U catering -d catering_dev"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgres://catering:catering_dev_pw@127.0.0.1:5432/catering_dev
+      DATABASE_URL_TEST: postgres://catering:catering_dev_pw@127.0.0.1:5432/catering_test
+      SESSION_SECRET: ci-session-secret-0123456789abcdef
+      CAPTCHA_SECRET: ci-captcha-secret-0123456789abcdef
+      PAYMENT_WEBHOOK_SECRET: ci-webhook-secret
+      TZ: Asia/Jakarta
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.34.9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Buat database tes
+        run: PGPASSWORD=catering_dev_pw createdb -h 127.0.0.1 -U catering catering_test
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint (termasuk batas modul)
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Tes unit
+        run: pnpm --filter @catering/core test
+
+      - name: Tes integrasi (kapasitas konkuren, webhook, refund)
+        run: pnpm --filter @catering/core test:integration
+
+      - name: Build
+        run: pnpm build

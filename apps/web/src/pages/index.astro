@@ -1,0 +1,203 @@
+---
+import Layout from '../layouts/Layout.astro';
+import ZoneChecker from '../islands/ZoneChecker';
+import { serverApi } from '../lib/api';
+import { formatShortDate, rp } from '../lib/format';
+
+const availability = await serverApi.availability(14).catch(() => null);
+const minPortions = availability?.minPortions ?? 50;
+const maxPortions = availability?.maxPortionsPerOrder ?? 200;
+const openDays =
+  availability?.days.filter(
+    (day) => day.isOpen && !day.cutoffPassed && day.remainingRegular >= minPortions,
+  ) ?? [];
+const firstDate = openDays[0]?.date;
+const menu = firstDate ? await serverApi.menu(firstDate).catch(() => null) : null;
+const preview = menu?.items.slice(0, 3) ?? [];
+---
+
+<Layout>
+  <section class="hero">
+    <div class="container hero-grid">
+      <div>
+        <span class="eyebrow">Katering Pontianak · pesan H-1</span>
+        <h1>
+          Masak untuk <em>acara Anda</em>, bukan sekadar pesan antar.
+        </h1>
+        <p class="hero-lede">
+          Menu rumahan dimasak segar untuk syukuran, rapat kantor, dan makan siang bersama. Pesan per porsi,
+          minimal {minPortions} porsi, gratis ongkir di area Pontianak.
+        </p>
+        <div class="hero-cta">
+          <a class="btn btn-primary" href={firstDate ? `/menu?date=${firstDate}` : '/menu'}>
+            Pesan untuk {firstDate ? formatShortDate(firstDate) : 'tanggal terdekat'}
+          </a>
+          <a class="btn btn-ghost" href="/quote">
+            Butuh &gt;{maxPortions} porsi?
+          </a>
+        </div>
+        <div class="hero-facts">
+          <div class="fact">
+            <strong>{minPortions} porsi</strong>
+            <span>minimum per pesanan</span>
+          </div>
+          <div class="fact">
+            <strong>18.00 WIB</strong>
+            <span>cut-off H-1</span>
+          </div>
+          <div class="fact">
+            <strong>Gratis</strong>
+            <span>ongkir area kota</span>
+          </div>
+          <div class="fact">
+            <strong>10 menit</strong>
+            <span>slot ditahan saat checkout</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="menu-ticket" aria-label="Contoh paket pesanan">
+        <div class="ticket-head">
+          <strong style="font-family: var(--font-display); font-size: 1.2rem">Contoh pesanan</strong>
+          <span class="badge badge-amber">{firstDate ? formatShortDate(firstDate) : 'H-1'}</span>
+        </div>
+        {preview.length > 0 ? (
+          preview.map((item) => (
+            <div class="ticket-row">
+              <span>{item.name}</span>
+              <span>{rp(item.price)} / porsi</span>
+            </div>
+          ))
+        ) : (
+          <p class="muted" style="margin: 0">
+            Menu sedang disiapkan. Hubungi dapur untuk ketersediaan hari ini.
+          </p>
+        )}
+        <div class="ticket-total">
+          <span>{preview.length > 0 ? 'Mulai dari' : 'Informasi'}</span>
+          <span>
+            {preview.length > 0 ? rp(Math.min(...preview.map((item) => item.price)) * minPortions) : '—'}
+          </span>
+        </div>
+        <p class="tiny" style="margin: 1rem 0 0">
+          Setiap pesanan dihitung dalam <strong>porsi hidangan</strong>, bukan pax. Total porsi dari beberapa
+          hidangan dijumlahkan.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="menu-pilihan">
+    <div class="container">
+      <div class="section-head">
+        <div>
+          <span class="eyebrow">Menu pilihan</span>
+          <h2>Dimasak hari itu, untuk hari itu.</h2>
+        </div>
+        <p>Menu bisa berubah per tanggal. Sisa porsi selalu ditampilkan sebelum Anda memesan.</p>
+      </div>
+      <div class="menu-grid">
+        {preview.map((item) => (
+          <article class="dish">
+            <div class="dish-media" data-category={item.category} aria-hidden="true">
+              <span class="dish-glyph">
+                {item.name
+                  .split(' ')
+                  .slice(0, 2)
+                  .map((word) => word[0])
+                  .join('')}
+              </span>
+            </div>
+            <div class="dish-body">
+              <div class="dish-title">
+                <h3>{item.name}</h3>
+                <span class="dish-price">{rp(item.price)}</span>
+              </div>
+              <p class="dish-desc">{item.description}</p>
+              <span class="badge">per porsi</span>
+            </div>
+          </article>
+        ))}
+      </div>
+      <div style="margin-top: 1.4rem">
+        <a class="btn btn-primary" href="/menu">
+          Lihat semua menu &amp; tanggal
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section
+    class="section"
+    id="cara-pesan"
+    style="background: color-mix(in srgb, var(--cream-deep) 55%, transparent)"
+  >
+    <div class="container">
+      <div class="section-head">
+        <div>
+          <span class="eyebrow">Cara pesan</span>
+          <h2>Tiga langkah, lalu dapur memasak.</h2>
+        </div>
+      </div>
+      <div class="steps">
+        <div class="step">
+          <span class="step-num">01</span>
+          <h3>Pilih tanggal &amp; menu</h3>
+          <p>
+            Kalender menampilkan sisa porsi per tanggal. Keranjang terikat satu tanggal dan minimal{' '}
+            {minPortions} porsi.
+          </p>
+        </div>
+        <div class="step">
+          <span class="step-num">02</span>
+          <h3>Isi data &amp; bayar</h3>
+          <p>
+            Isi nama, nomor HP, dan alamat. Pilih QRIS atau VA. Slot ditahan 10 menit selama Anda membayar.
+          </p>
+        </div>
+        <div class="step">
+          <span class="step-num">03</span>
+          <h3>Pantau status</h3>
+          <p>
+            Simpan tautan status. Anda bisa melihat status masak, pengantaran, dan menyelesaikan pembayaran
+            dari sana.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="area">
+    <div class="container split">
+      <div>
+        <span class="eyebrow">Area pengantaran</span>
+        <h2>Kami antar di Pontianak, gratis.</h2>
+        <p class="muted">
+          Zona layanan kami satu kota. Ketik kecamatan Anda untuk memastikan alamat terjangkau. Titik peta
+          bersifat opsional.
+        </p>
+        <div class="panel" style="margin-top: 1rem">
+          <ZoneChecker client:load />
+        </div>
+      </div>
+      <div class="panel" style="background: var(--ink); color: #f4efe2; border: 0">
+        <span class="eyebrow" style="color: var(--amber-bright)">
+          Pesanan besar
+        </span>
+        <h2 style="color: #fdf8ec; font-size: clamp(1.6rem, 2.6vw, 2.1rem)">
+          Lebih dari {maxPortions} porsi?
+        </h2>
+        <p style="color: #d7d0bf; font-size: 0.94rem">
+          Kami kerjakan lewat jalur penawaran: menu disepakati, harga menyesuaikan volume, dan jadwal produksi
+          dikunci khusus untuk acara Anda.
+        </p>
+        <a class="btn btn-amber" href="/quote">
+          Minta penawaran
+        </a>
+        <p class="tiny" style="color: #b8b09d; margin-top: 1rem">
+          PO korporat dibayar di muka; tidak ada termin.
+        </p>
+      </div>
+    </div>
+  </section>
+</Layout>

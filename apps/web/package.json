@@ -1,0 +1,26 @@
+{
+  "name": "@catering/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "start": "node ./dist/server/entry.mjs",
+    "typecheck": "astro check",
+    "lint": "eslint src --max-warnings=0"
+  },
+  "dependencies": {
+    "@astrojs/node": "^11.1.9",
+    "@astrojs/solid-js": "^7.1.2",
+    "@catering/contracts": "workspace:*",
+    "astro": "^7.4.5",
+    "solid-js": "^1.9.18"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.4",
+    "@types/node": "^24.10.0",
+    "typescript": "catalog:",
+    "vitest": "^5.1.0"
+  }
+}

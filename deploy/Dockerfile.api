@@ -1,0 +1,48 @@
+# syntax=docker/dockerfile:1.7
+# Image API produksi. Satu image, dua peran: ROLE=web (HTTP) atau ROLE=worker (pg-boss).
+# Build: docker build -f deploy/Dockerfile.api -t catering/api:latest .
+
+FROM node:24-alpine AS base
+RUN npm install -g pnpm@10.34.9 --no-fund --no-audit
+WORKDIR /repo
+ENV CI=1
+
+# ── Dependensi build (devDeps dibutuhkan tsup) ────────────────────────────────
+FROM base AS deps
+COPY pnpm-workspace.yaml pnpm-lock.yaml package.json tsconfig.base.json ./
+COPY apps/api/package.json apps/api/
+COPY packages/core/package.json packages/core/
+COPY packages/contracts/package.json packages/contracts/
+RUN pnpm install --frozen-lockfile
+
+FROM deps AS build
+COPY apps/api apps/api
+COPY packages/core packages/core
+COPY packages/contracts packages/contracts
+RUN pnpm --filter @catering/api build
+
+# ── Dependensi runtime (tanpa devDeps) ────────────────────────────────────────
+FROM base AS prod-deps
+COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
+COPY apps/api/package.json apps/api/
+COPY packages/core/package.json packages/core/
+COPY packages/contracts/package.json packages/contracts/
+RUN pnpm install --frozen-lockfile --prod
+
+# ── Runtime ───────────────────────────────────────────────────────────────────
+FROM base AS runtime
+ENV NODE_ENV=production \
+    ROLE=web \
+    PORT=3000
+
+COPY --from=prod-deps --chown=node:node /repo /app
+COPY --from=build --chown=node:node /repo/apps/api/dist /app/apps/api/dist
+
+WORKDIR /app
+USER node
+EXPOSE 3000
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+  CMD wget -qO- "http://127.0.0.1:${PORT}/health" >/dev/null || exit 1
+
+CMD ["node", "apps/api/dist/index.js"]

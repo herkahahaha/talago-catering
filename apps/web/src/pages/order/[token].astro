@@ -1,0 +1,242 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import OrderStatusActions from '../../islands/OrderStatusActions';
+import { serverApi } from '../../lib/api';
+import { formatDate, formatTime, rp } from '../../lib/format';
+import type { OrderDto } from '@catering/contracts';
+
+const { token } = Astro.params;
+let data: { order: OrderDto; statusUrl: string | null } | null = null;
+let failed = false;
+
+if (token) {
+  try {
+    data = await serverApi.order(token);
+  } catch {
+    failed = true;
+  }
+}
+
+const order = data?.order ?? null;
+
+const timelineSteps = [
+  { key: 'pending_payment', title: 'Pesanan dibuat', desc: 'Slot ditahan 10 menit untuk pembayaran.' },
+  { key: 'paid', title: 'Pembayaran diterima', desc: 'Dapur menerima pesanan Anda.' },
+  { key: 'in_production', title: 'Sedang dimasak', desc: 'Menu disiapkan pada hari layanan.' },
+  { key: 'out_for_delivery', title: 'Dalam pengantaran', desc: 'Kurir menuju alamat Anda.' },
+  { key: 'delivered', title: 'Selesai', desc: 'Pesanan sudah diterima.' },
+];
+
+const statusRank: Record<string, number> = {
+  pending_payment: 0,
+  paid: 1,
+  paid_after_expiry: 1,
+  in_production: 2,
+  out_for_delivery: 3,
+  delivered: 4,
+  expired: -1,
+  cancelled_refunded: -1,
+};
+
+const statusLabels: Record<string, string> = {
+  pending_payment: 'Menunggu pembayaran',
+  paid: 'Dibayar',
+  paid_after_expiry: 'Dibayar setelah kedaluwarsa',
+  in_production: 'Diproduksi',
+  out_for_delivery: 'Diantar',
+  delivered: 'Selesai',
+  expired: 'Kedaluwarsa',
+  cancelled_refunded: 'Dibatalkan & refund',
+};
+
+const rank = order ? (statusRank[order.status] ?? 0) : -1;
+const isClosed = order?.status === 'expired' || order?.status === 'cancelled_refunded';
+const payment = order?.payment ?? null;
+const pendingPayment = order?.status === 'pending_payment';
+const badgeClass = !order
+  ? 'badge'
+  : order.status === 'delivered'
+    ? 'badge badge-ok'
+    : order.status === 'cancelled_refunded'
+      ? 'badge badge-danger'
+      : order.status === 'paid_after_expiry' || pendingPayment
+        ? 'badge badge-amber'
+        : 'badge';
+---
+
+<Layout title={order ? `Pesanan ${order.orderNo} · Sajian Kita` : 'Status pesanan · Sajian Kita'}>
+  <div class="container page-head">
+    <span class="eyebrow">Status pesanan</span>
+    {order ? (
+      <>
+        <h1 style="max-width: 22ch">{order.orderNo}</h1>
+        <div style="display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap">
+          <span class={badgeClass}>{statusLabels[order.status]}</span>
+          <span class="tiny">Dipesan {formatTime(order.createdAt)}</span>
+          <span class="tiny">· Layanan {formatDate(order.serviceDate)}</span>
+        </div>
+      </>
+    ) : (
+      <h1>Tautan tidak ditemukan</h1>
+    )}
+  </div>
+
+  <div class="container" style="padding-bottom: 3rem">
+    {!order ? (
+      <div class="panel empty">
+        <h3>{failed ? 'Tautan status tidak valid' : 'Pesanan tidak tersedia'}</h3>
+        <p class="muted">
+          Tautan status bersifat unik dan tidak bisa ditebak. Periksa kembali tautan dari pesan konfirmasi
+          Anda, atau hubungi dapur lewat WhatsApp.
+        </p>
+        <div style="display: flex; gap: 0.6rem; justify-content: center; flex-wrap: wrap">
+          <a class="btn btn-primary" href="/menu">
+            Kembali ke menu
+          </a>
+          <a class="btn btn-ghost" href="https://wa.me/6281234567890" target="_blank" rel="noopener">
+            Hubungi dapur
+          </a>
+        </div>
+      </div>
+    ) : (
+      <div class="status-grid">
+        <div style="display: grid; gap: 1.2rem">
+          {isClosed && (
+            <div class={`alert ${order.status === 'expired' ? 'alert-warn' : 'alert-error'}`}>
+              {order.status === 'expired'
+                ? 'Hold sudah habis dan pesanan kedaluwarsa. Porsi sudah dilepas kembali. Silakan buat pesanan baru.'
+                : 'Pesanan dibatalkan. Jika pembayaran sudah masuk, refund akan diproses sesuai kebijakan.'}
+            </div>
+          )}
+
+          <div class="card panel">
+            <h3 style="font-size: 1.05rem">Perjalanan pesanan</h3>
+            <ul class="timeline" style="margin-top: 1rem">
+              {timelineSteps.map((step, index) => {
+                const reached =
+                  order.status === 'paid_after_expiry' && step.key === 'paid'
+                    ? true
+                    : index <= rank && rank >= 0;
+                return (
+                  <li data-done={reached ? 'true' : 'false'}>
+                    <span class="dot">{reached ? '✓' : index + 1}</span>
+                    <div>
+                      <h4>{step.title}</h4>
+                      <small>{step.desc}</small>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+
+          <div class="card panel">
+            <h3 style="font-size: 1.05rem">Rincian hidangan</h3>
+            <div style="margin-top: 0.6rem">
+              {order.items.map((item) => (
+                <div class="cart-item">
+                  <span>
+                    {item.name}{' '}
+                    <span class="tiny">
+                      · {item.portions} porsi × {rp(item.unitPrice)}
+                    </span>
+                  </span>
+                  <strong>{rp(item.lineTotal)}</strong>
+                </div>
+              ))}
+              <div class="summary-line" style="margin-top: 0.7rem">
+                <span>Subtotal</span>
+                <span>{rp(order.subtotal)}</span>
+              </div>
+              <div class="summary-line">
+                <span>Ongkir</span>
+                <span>{order.deliveryFee === 0 ? 'Gratis' : rp(order.deliveryFee)}</span>
+              </div>
+              <div class="summary-line summary-total">
+                <span>Total</span>
+                <span>{rp(order.total)}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card panel">
+            <h3 style="font-size: 1.05rem">Pengantaran</h3>
+            <dl class="summary-list" style="margin: 0.7rem 0 0">
+              <dt>Penerima</dt>
+              <dd>
+                {order.customer.name} · {order.customer.phone}
+              </dd>
+              <dt>Alamat</dt>
+              <dd>
+                {order.delivery.addressLine}
+                {order.delivery.district ? `, ${order.delivery.district}` : ''}
+              </dd>
+              <dt>Jendela antar</dt>
+              <dd>{order.delivery.windowLabel ?? 'Diatur admin'}</dd>
+              {order.notes && (
+                <>
+                  <dt>Catatan</dt>
+                  <dd>{order.notes}</dd>
+                </>
+              )}
+            </dl>
+          </div>
+        </div>
+
+        <aside style="display: grid; gap: 1.2rem">
+          <div class={pendingPayment ? 'pay-box' : 'card panel'}>
+            {pendingPayment ? (
+              <>
+                <span class="eyebrow" style="color: var(--amber-bright)">
+                  Selesaikan pembayaran
+                </span>
+                <p style="color: #d8d1c0; margin: 0.5rem 0 0; font-size: 0.9rem">
+                  {payment
+                    ? `Tagihan ${payment.method === 'qris' ? 'QRIS' : 'Virtual Account'}`
+                    : 'Tagihan belum dibuat'}
+                </p>
+                <span class="reference">{payment?.reference ?? '—'}</span>
+                <p style="font-weight: 700; font-size: 1.5rem; margin: 0 0 0.6rem">{rp(order.total)}</p>
+                <p style="color: #cfc8b6; font-size: 0.84rem">
+                  {payment?.expiresAt ? `Tagihan berlaku sampai ${formatTime(payment.expiresAt)}` : ''}
+                </p>
+                <p style="color: #b9b2a0; font-size: 0.8rem">
+                  {payment
+                    ? 'Mode simulasi aktif: gunakan tombol simulasi di bawah untuk melunasi, atau bayar lewat aplikasi bank sungguhan bila gateway asli sudah dipasang.'
+                    : 'Muat ulang halaman beberapa saat lagi atau buat tagihan ulang.'}
+                </p>
+              </>
+            ) : (
+              <>
+                <span class="eyebrow">Pembayaran</span>
+                <h3 style="margin: 0.4rem 0 0.3rem">
+                  {order.status === 'paid'
+                    ? 'Lunas'
+                    : order.status === 'paid_after_expiry'
+                      ? 'Dibayar setelah kedaluwarsa'
+                      : statusLabels[order.status]}
+                </h3>
+                <p class="muted tiny" style="margin: 0">
+                  {order.paidAt ? `Diterima ${formatTime(order.paidAt)}` : 'Tidak ada pembayaran aktif.'}
+                </p>
+              </>
+            )}
+          </div>
+
+          <div class="card panel">
+            <h3 style="font-size: 1.02rem">Butuh bantuan?</h3>
+            <OrderStatusActions
+              client:only="solid-js"
+              orderId={order.id}
+              token={token ?? ''}
+              status={order.status}
+              gatewayRef={payment?.gatewayRef ?? null}
+              holdExpiresAt={order.holdExpiresAt}
+              orderNo={order.orderNo}
+            />
+          </div>
+        </aside>
+      </div>
+    )}
+  </div>
+</Layout>

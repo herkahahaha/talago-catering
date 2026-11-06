@@ -1,0 +1,31 @@
+{
+  "name": "@catering/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch --clear-screen=false src/index.ts",
+    "dev:worker": "tsx watch --clear-screen=false src/worker-entry.ts",
+    "build": "tsup",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src --max-warnings=0",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@catering/contracts": "workspace:*",
+    "@catering/core": "workspace:*",
+    "@hono/node-server": "^2.1.6",
+    "hono": "^4.13.16",
+    "pg": "^8.23.1",
+    "pg-boss": "^12.38.0",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.0",
+    "tsup": "^9.0.0",
+    "tsx": "^4.23.15",
+    "typescript": "catalog:",
+    "vitest": "^5.1.0"
+  }
+}

@@ -1,0 +1,145 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Staging — mirror production, database ikut di compose, data boleh di-seed.
+#
+#   cp deploy/env/.env.staging.example deploy/env/.env.staging
+#   docker compose --env-file deploy/env/.env.staging -f deploy/compose.staging.yml up -d --build
+#
+# Semua port hanya di-bind ke 127.0.0.1; taruh reverse proxy (Caddy/Nginx) di depan.
+# ─────────────────────────────────────────────────────────────────────────────
+name: catering-staging
+
+x-logging: &logging
+  logging:
+    driver: json-file
+    options:
+      max-size: '10m'
+      max-file: '3'
+
+x-db-healthcheck: &db-healthcheck
+  test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-catering} -d ${POSTGRES_DB:-catering_staging}']
+  interval: 5s
+  timeout: 3s
+  retries: 20
+
+services:
+  db:
+    image: postgres:16-alpine
+    env_file:
+      - env/.env.staging
+    ports:
+      - '127.0.0.1:${DB_PORT:-5434}:5432'
+    volumes:
+      - catering_staging_pgdata:/var/lib/postgresql/data
+    healthcheck: *db-healthcheck
+    restart: unless-stopped
+    <<: *logging
+
+  migrate:
+    image: ${IMAGE_PREFIX:-catering}/migrate:staging
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.migrate
+    env_file:
+      - env/.env.staging
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: 'no'
+    <<: *logging
+
+  seed:
+    image: ${IMAGE_PREFIX:-catering}/migrate:staging
+    command: pnpm --filter @catering/core db:seed
+    env_file:
+      - env/.env.staging
+    environment:
+      # Seed membuat order demo + simulasi pembayaran mock (diblokir di production).
+      NODE_ENV: development
+    profiles: ['seed']
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: 'no'
+    <<: *logging
+
+  api:
+    image: ${IMAGE_PREFIX:-catering}/api:staging
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.api
+    env_file:
+      - env/.env.staging
+    environment:
+      ROLE: web
+    ports:
+      - '127.0.0.1:${API_PORT:-3000}:3000'
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 30s
+    <<: *logging
+
+  worker:
+    image: ${IMAGE_PREFIX:-catering}/api:staging
+    env_file:
+      - env/.env.staging
+    environment:
+      ROLE: worker
+    # Image API punya healthcheck HTTP untuk peran web; worker tidak membuka port.
+    healthcheck:
+      disable: true
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 30s
+    <<: *logging
+
+  web:
+    image: ${IMAGE_PREFIX:-catering}/web:staging
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.web
+      args:
+        PUBLIC_API_URL: ${PUBLIC_API_URL:?PUBLIC_API_URL wajib diisi di env staging}
+    env_file:
+      - env/.env.staging
+    environment:
+      PORT: '4321'
+      HOST: 0.0.0.0
+    ports:
+      - '127.0.0.1:${WEB_PORT:-4321}:4321'
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    init: true
+    <<: *logging
+
+  dashboard:
+    image: ${IMAGE_PREFIX:-catering}/dashboard:staging
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.dashboard
+      args:
+        VITE_API_URL: ${PUBLIC_API_URL:?PUBLIC_API_URL wajib diisi di env staging}
+    env_file:
+      - env/.env.staging
+    environment:
+      PORT: '3001'
+      HOST: 0.0.0.0
+    ports:
+      - '127.0.0.1:${DASHBOARD_PORT:-3001}:3001'
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    init: true
+    <<: *logging
+
+volumes:
+  catering_staging_pgdata:
+    name: catering_staging_pgdata

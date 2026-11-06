@@ -1,0 +1,36 @@
+# Overlay opsional: Postgres self-hosted untuk production.
+# Jalankan bersama compose.prod.yml:
+#   docker compose --env-file deploy/env/.env.production \
+#     -f deploy/compose.prod.yml -f deploy/compose.prod.db.yml up -d
+#
+# Pastikan DATABASE_URL di .env.production memakai host `db`.
+name: catering-prod
+
+services:
+  db:
+    image: postgres:16-alpine
+    env_file:
+      - env/.env.production
+    volumes:
+      - catering_prod_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-catering} -d ${POSTGRES_DB:-catering}']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '3'
+
+  # Migrasi menunggu database siap.
+  migrate:
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  catering_prod_pgdata:
+    name: catering_prod_pgdata

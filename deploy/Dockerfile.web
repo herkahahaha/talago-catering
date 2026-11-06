@@ -1,0 +1,45 @@
+# syntax=docker/dockerfile:1.7
+# Image storefront Astro (adapter node standalone).
+# Build: docker build -f deploy/Dockerfile.web --build-arg PUBLIC_API_URL=https://api.example.id -t catering/web:latest .
+
+FROM node:24-alpine AS base
+RUN npm install -g pnpm@10.34.9 --no-fund --no-audit
+WORKDIR /repo
+ENV CI=1
+
+FROM base AS deps
+COPY pnpm-workspace.yaml pnpm-lock.yaml package.json tsconfig.base.json ./
+COPY apps/web/package.json apps/web/
+COPY packages/contracts/package.json packages/contracts/
+RUN pnpm install --frozen-lockfile
+
+FROM deps AS build
+COPY apps/web apps/web
+COPY packages/contracts packages/contracts
+# Nilai PUBLIC_* di-inline Astro saat build (dipakai browser + CSP).
+ARG PUBLIC_API_URL=http://127.0.0.1:3000
+ENV PUBLIC_API_URL=$PUBLIC_API_URL
+RUN pnpm --filter @catering/web build
+
+FROM base AS prod-deps
+COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
+COPY apps/web/package.json apps/web/
+COPY packages/contracts/package.json packages/contracts/
+RUN pnpm install --frozen-lockfile --prod
+
+FROM base AS runtime
+ENV NODE_ENV=production \
+    HOST=0.0.0.0 \
+    PORT=4321
+
+COPY --from=prod-deps --chown=node:node /repo /app
+COPY --from=build --chown=node:node /repo/apps/web/dist /app/apps/web/dist
+
+WORKDIR /app
+USER node
+EXPOSE 4321
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+  CMD wget -qO- "http://127.0.0.1:${PORT}/" >/dev/null || exit 1
+
+CMD ["node", "apps/web/dist/server/entry.mjs"]
