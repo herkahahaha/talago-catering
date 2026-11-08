@@ -69,7 +69,7 @@ email/WhatsApp, CAPTCHA Turnstile, upload bukti serah terima kurir, PWA kurir, a
 ```bash
 cp deploy/env/.env.development.example deploy/env/.env.development
 docker compose -f deploy/compose.dev.yml up --build
-docker compose -f deploy/compose.dev.yml run --rm seed   # sekali, data contoh
+docker compose --profile seed -f deploy/compose.dev.yml run --rm seed   # sekali, data contoh
 ```
 
 Dashboard <http://127.0.0.1:3001>, storefront <http://127.0.0.1:4321>, API

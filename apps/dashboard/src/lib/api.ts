@@ -1,4 +1,13 @@
-const API_ROOT = import.meta.env.VITE_API_URL ?? 'http://127.0.0.1:3000';
+// Browser memakai proxy /api se-origin bila VITE_API_URL kosong (default di development),
+// sehingga cookie staf selalu first-party untuk localhost maupun 127.0.0.1.
+// Saat SSR (tidak ada window), pakai alamat API absolut langsung.
+const BROWSER_ROOT = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+const SERVER_ROOT = (
+  (typeof process !== 'undefined' && process.env.API_BASE_URL) ||
+  'http://127.0.0.1:3000'
+).replace(/\/$/, '');
+const API_ROOT = typeof window === 'undefined' ? SERVER_ROOT : BROWSER_ROOT;
+const API_PREFIX = API_ROOT ? `${API_ROOT}/api/v1` : '/api/v1';
 
 export class ApiError extends Error {
   code: string;
@@ -26,7 +35,7 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
 
   let response: Response;
   try {
-    response = await fetch(`${API_ROOT}/api/v1${path}`, {
+    response = await fetch(`${API_PREFIX}${path}`, {
       ...init,
       headers,
       credentials: 'include',

@@ -26,11 +26,15 @@
     "docker:dev:up": "docker compose -f deploy/compose.dev.yml up -d --build",
     "docker:dev:logs": "docker compose -f deploy/compose.dev.yml logs -f",
     "docker:dev:down": "docker compose -f deploy/compose.dev.yml down",
-    "docker:dev:seed": "docker compose -f deploy/compose.dev.yml run --rm seed",
+    "docker:dev:seed": "docker compose --profile seed -f deploy/compose.dev.yml run --rm seed",
     "docker:staging:up": "docker compose --env-file deploy/env/.env.staging -f deploy/compose.staging.yml up -d --build",
     "docker:staging:down": "docker compose --env-file deploy/env/.env.staging -f deploy/compose.staging.yml down",
+    "docker:staging:seed": "docker compose --env-file deploy/env/.env.staging --profile seed -f deploy/compose.staging.yml run --rm seed",
+    "docker:staging:logs": "docker compose --env-file deploy/env/.env.staging -f deploy/compose.staging.yml logs -f api worker dashboard",
     "docker:prod:up": "docker compose --env-file deploy/env/.env.production -f deploy/compose.prod.yml up -d",
-    "docker:prod:down": "docker compose --env-file deploy/env/.env.production -f deploy/compose.prod.yml down"
+    "docker:prod:down": "docker compose --env-file deploy/env/.env.production -f deploy/compose.prod.yml down",
+    "docker:prod:pull": "docker compose --env-file deploy/env/.env.production -f deploy/compose.prod.yml pull",
+    "docker:prod:logs": "docker compose --env-file deploy/env/.env.production -f deploy/compose.prod.yml logs -f api worker"
   },
   "devDependencies": {
     "eslint": "^10.14.0",
