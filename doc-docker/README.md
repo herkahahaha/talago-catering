@@ -19,7 +19,7 @@ Dokumentasi teknis untuk dua perubahan besar terakhir:
 # Development (hot reload, semua service di Docker)
 cp deploy/env/.env.development.example deploy/env/.env.development
 docker compose -f deploy/compose.dev.yml up --build
-docker compose -f deploy/compose.dev.yml run --rm seed
+docker compose --profile seed -f deploy/compose.dev.yml run --rm seed
 
 # Dashboard  http://127.0.0.1:3001  (admin@catering.local / admin12345)
 # Storefront http://127.0.0.1:4321

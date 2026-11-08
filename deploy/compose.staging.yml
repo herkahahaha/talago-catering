@@ -83,6 +83,9 @@ services:
 
   worker:
     image: ${IMAGE_PREFIX:-catering}/api:staging
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.api
     env_file:
       - env/.env.staging
     environment:

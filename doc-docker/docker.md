@@ -89,7 +89,10 @@ Perbedaan penting:
 - **Staging/production** memakai `Dockerfile.api`, `Dockerfile.web`, `Dockerfile.dashboard`,
   `Dockerfile.migrate` (multi-stage, non-root, hanya dependency produksi).
 - `PUBLIC_API_URL` (web) dan `VITE_API_URL` (dashboard) **di-inline saat build**, jadi staging dan
-  production wajib di-build dengan URL environment masing-masing.
+  production wajib di-build dengan URL environment masing-masing. **Development sebaliknya
+  mengosongkan keduanya**: browser memakai proxy `/api` se-origin (`astro.config.mjs` /
+  `vite.config.ts` → `API_BASE_URL`), sehingga cookie sesi/staf (httpOnly, `SameSite=Lax`) selalu
+  first-party baik dibuka via `localhost` maupun `127.0.0.1`.
 
 ---
 
@@ -159,11 +162,12 @@ Akun demo: `admin@catering.local / admin12345`, `dapur@catering.local / dapur123
 ### 6.2 Seed data contoh
 
 ```bash
-docker compose -f deploy/compose.dev.yml run --rm seed
+docker compose --profile seed -f deploy/compose.dev.yml run --rm seed
 ```
 
-Perintah ini memakai profil `seed` dan hanya berjalan sekali (one-shot). Aman diulang: seed
-melewati pembuatan order bila sudah ada.
+Flag `--profile seed` wajib: service `seed` tidak terdaftar tanpa profil itu (`config --services`
+tidak menampilkannya), sehingga perintah tanpa flag gagal dengan "no such service".
+Aman diulang: seed melewati pembuatan order bila sudah ada.
 
 ### 6.3 Log, status, dan shell
 
@@ -200,7 +204,7 @@ docker compose -f deploy/compose.dev.yml up --build -d
 # Hentikan dan hapus volume database (data hilang)
 docker compose -f deploy/compose.dev.yml down -v
 docker compose -f deploy/compose.dev.yml up -d
-docker compose -f deploy/compose.dev.yml run --rm seed
+docker compose --profile seed -f deploy/compose.dev.yml run --rm seed
 ```
 
 ### 6.6 Menjalankan tes di container
@@ -242,9 +246,11 @@ docker compose --env-file deploy/env/.env.staging \
 # Status & kesehatan
 docker compose --env-file deploy/env/.env.staging -f deploy/compose.staging.yml ps
 
-# Seed (opsional, hanya staging)
+# Seed (opsional, hanya staging; tanpa `--profile seed` gagal `no such service`
+# karena service memakai `profiles: ['seed']`, pola yang sama seperti §6.2)
+# atau: pnpm docker:staging:seed
 docker compose --env-file deploy/env/.env.staging \
-  -f deploy/compose.staging.yml run --rm seed
+  --profile seed -f deploy/compose.staging.yml run --rm seed
 
 # Log
 docker compose --env-file deploy/env/.env.staging \
@@ -256,11 +262,24 @@ Ubah lewat `API_PORT`, `WEB_PORT`, `DASHBOARD_PORT`, `DB_PORT` di env staging.
 
 Catatan penting:
 
+- Buka dashboard, storefront, dan API lewat **hostname yang sama** dengan yang di-bake di
+  `PUBLIC_API_URL` (default semua `127.0.0.1` — jangan campur `localhost` dan `127.0.0.1`).
+  Host browser yang berbeda dari `PUBLIC_API_URL` dihitung lintas-site sehingga cookie
+  `SameSite=Lax` tidak dikirim kembali.
 - `PUBLIC_API_URL` dan `APP_URL`/`DASHBOARD_URL` harus sesuai URL yang dipakai browser.
+- Bila ingin hostname/domain lain, ubah `PUBLIC_API_URL`, `APP_URL`, `DASHBOARD_URL` di
+  `deploy/env/.env.staging` lalu **build ulang** `web` + `dashboard` (nilai di-inline saat
+  build; tanpa rebuild browser tetap menembak URL lama).
 - Seed staging otomatis memakai `NODE_ENV=development` **hanya untuk container seed**, karena
   simulasi pembayaran mock diblokir di `NODE_ENV=production`. Aplikasi tetap berjalan production.
 - Jika domain publik dipakai, ganti `PUBLIC_API_URL`, `APP_URL`, `DASHBOARD_URL` ke domain staging
   lalu **build ulang** `web` dan `dashboard` (nilainya di-inline saat build).
+- Hentikan stack dev dulu (`pnpm docker:dev:down`) atau override `API_PORT`/`WEB_PORT`/
+  `DASHBOARD_PORT` bila kedua stack jalan bersamaan — default port staging sengaja sama dengan
+  dev agar bookmark/skrip konsisten.
+- Akses staging polos-http hanya via loopback (`127.0.0.1`/`localhost`); akses via IP
+  LAN/hostname non-loopback membutuhkan reverse proxy TLS, kalau tidak cookie `Secure` tidak
+  terkirim dan login/checkout gagal.
 
 Hentikan:
 
@@ -314,8 +333,11 @@ Set `IMAGE_PREFIX=registry.example.id/catering` dan `IMAGE_TAG=$TAG` di env prod
 memakai image yang benar. Di server cukup `pull` (tanpa `--build`):
 
 ```bash
-docker compose --env-file deploy/env/.env.production -f deploy/compose.prod.yml pull
-docker compose --env-file deploy/env/.env.production -f deploy/compose.prod.yml up -d
+pnpm docker:prod:pull
+pnpm docker:prod:up
+# alternatif mentah:
+# docker compose --env-file deploy/env/.env.production -f deploy/compose.prod.yml pull
+# docker compose --env-file deploy/env/.env.production -f deploy/compose.prod.yml up -d
 ```
 
 ### 8.3 Urutan rilis
@@ -350,7 +372,8 @@ api.example.id {
 
 Sesuaikan `APP_URL`, `DASHBOARD_URL`, dan `PUBLIC_API_URL` dengan domain di atas. API hanya
 mengizinkan origin `APP_URL` dan `DASHBOARD_URL` (CORS), jadi ketiganya harus konsisten.
-Cookie sesi memakai `SameSite=Lax`; karena semua subdomain berada di site yang sama
+Buka ketiganya lewat domain tersebut di browser, bukan nilai contoh `example.id` yang belum
+diganti. Cookie sesi memakai `SameSite=Lax`; karena semua subdomain berada di site yang sama
 (`example.id`), cookie tetap terkirim. Wajib HTTPS di production.
 
 ### 8.5 Backup & restore
@@ -464,8 +487,12 @@ Health check yang tersedia:
 | Dashboard produksi tanpa CSS | `app.css?url` menghasilkan hash asset berbeda antara build SSR dan client | Gunakan side-effect import `import '~/styles/app.css'` di `__routes/__root.tsx` (sudah diterapkan) |
 | Worker `unhealthy` | Image API membawa healthcheck HTTP untuk peran web | Compose worker memakai `healthcheck.disable: true` |
 | HMR tidak bereaksi | File yang diubah tidak termasuk bind mount | Edit file di `src/` atau rebuild image dev |
+| `run --rm seed` gagal "no such service" | Service `seed` memakai `profiles: ['seed']`, tanpa flag profil ia tidak terdaftar | Jalankan dengan flag profil: `docker compose --profile seed -f deploy/compose.dev.yml run --rm seed` (atau `pnpm docker:dev:seed`) |
+| Checkout gagal "Sesi tamu tidak ditemukan" | Cookie `cg_session` (`SameSite=Lax`) diset lintas-site (`localhost` ↔ `127.0.0.1` dihitung beda site) lalu tidak dikirim kembali | Dev sudah memakai proxy `/api` se-origin — pastikan `PUBLIC_API_URL` kosong (default compose dev). Jangan menembak API absolut lintas-host dari browser |
+| Checkout staging/production "Sesi tamu tidak ditemukan" | Host browser ≠ host `PUBLIC_API_URL` (lintas-site, cookie Lax tidak dikirim; di production juga cek `APP_URL`/`DASHBOARD_URL` vs domain yang dibuka) | Samakan host, atau rebuild dengan URL baru |
+| Dashboard kosong setelah seed / login berputar ke `/login` | (a) seed belum pernah jalan; (b) cookie staf lintas-site seperti di atas; (c) tanggal demo (besok → +14 hari) jatuh di bulan berbeda dari filter | (a) jalankan seed profil; (b) `VITE_API_URL` kosongkan (default compose dev); (c) ganti filter bulan di halaman Pesanan |
+| Login dashboard staging/production berputar ke /login | Host browser ≠ host `PUBLIC_API_URL` (lintas-site, cookie Lax tidak dikirim; di production juga cek `APP_URL`/`DASHBOARD_URL` vs domain yang dibuka) | Samakan host, atau rebuild dengan URL baru |
 | `docker compose` error env file tidak ditemukan | Belum menyalin file example | `cp deploy/env/.env.<env>.example deploy/env/.env.<env>` |
-| Build lambat / disk penuh | Cache BuildKit menumpuk | `docker builder prune` dan `docker image prune` (hati-hati) |
 
 Validasi konfigurasi tanpa menyalakan service:
 

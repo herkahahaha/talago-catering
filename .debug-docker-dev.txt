@@ -1,0 +1,8 @@
+# Docker Development Debug Checklist
+# Run these commands to diagnose issues
+
+echo "=== Test 1: API Health ===" && curl -s http://127.0.0.1:3000/health
+echo -e "\n=== Test 2: Menu API ===" && curl -s 'http://127.0.0.1:3000/api/v1/menu?date=2026-11-08' | head -c 200
+echo -e "\n=== Test 3: Availability API ===" && curl -s 'http://127.0.0.1:3000/api/v1/availability?days=14' | head -c 200
+echo -e "\n=== Test 4: Check container logs (last 20 lines) ===" && docker compose -f deploy/compose.dev.yml logs web --tail=20
+echo -e "\n=== Test 5: Check API logs (last 20 lines) ===" && docker compose -f deploy/compose.dev.yml logs api --tail=20

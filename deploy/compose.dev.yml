@@ -3,7 +3,7 @@
 #
 #   cp deploy/env/.env.development.example deploy/env/.env.development
 #   docker compose -f deploy/compose.dev.yml up --build
-#   docker compose -f deploy/compose.dev.yml run --rm seed   # data contoh
+#   docker compose --profile seed -f deploy/compose.dev.yml run --rm seed   # data contoh
 #
 # Port host: API 3000 · dashboard 3001 · storefront 4321 · Postgres 5433
 # (5433 agar tidak bentrok dengan PostgreSQL native di 5432).
@@ -107,6 +107,9 @@ services:
     environment:
       PORT: '4321'
       HOST: 0.0.0.0
+      # Kosong = browser memakai proxy /api se-origin (astro.config.mjs), agar cookie
+      # sesi tidak hilang saat membuka via localhost maupun 127.0.0.1.
+      PUBLIC_API_URL: ''
     ports:
       - '127.0.0.1:${WEB_PORT:-4321}:4321'
     healthcheck:
@@ -125,6 +128,9 @@ services:
     environment:
       PORT: '3001'
       HOST: 0.0.0.0
+      # Kosong = browser memakai proxy /api se-origin (vite.config.ts), agar cookie
+      # staf tidak hilang saat membuka via localhost maupun 127.0.0.1.
+      VITE_API_URL: ''
     ports:
       - '127.0.0.1:${DASHBOARD_PORT:-3001}:3001'
     healthcheck:
@@ -137,8 +143,8 @@ services:
       migrate:
         condition: service_completed_successfully
 
-  # Data contoh hanya untuk development:
-  # docker compose -f deploy/compose.dev.yml run --rm seed
+  # Data contoh hanya untuk development (flag --profile wajib karena service ini memakai profiles):
+  # docker compose --profile seed -f deploy/compose.dev.yml run --rm seed
   seed:
     <<: *dev-image
     command: pnpm --filter @catering/core db:seed

@@ -64,6 +64,9 @@ services:
   worker:
     <<: *app
     image: ${IMAGE_PREFIX:-catering}/api:${IMAGE_TAG:-latest}
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.api
     env_file:
       - env/.env.production
     environment:

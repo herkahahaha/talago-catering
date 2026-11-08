@@ -65,3 +65,12 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+      - name: Validasi compose dev/staging/prod
+        run: |
+          docker compose -f deploy/compose.dev.yml config >/dev/null
+          cp deploy/env/.env.staging.example deploy/env/.env.staging
+          docker compose --env-file deploy/env/.env.staging -f deploy/compose.staging.yml config >/dev/null
+          cp deploy/env/.env.production.example deploy/env/.env.production
+          docker compose --env-file deploy/env/.env.production -f deploy/compose.prod.yml config >/dev/null
+          docker compose --env-file deploy/env/.env.production -f deploy/compose.prod.yml -f deploy/compose.prod.db.yml config >/dev/null
