@@ -6,8 +6,8 @@ import { defineMiddleware } from 'astro:middleware';
  * Catatan pelanggan dirender sebagai teks (di-escape framework), jadi
  * tidak ada HTML mentah yang dieksekusi.
  */
-const API_ORIGIN = process.env.API_BASE_URL ?? import.meta.env.API_BASE_URL ?? 'http://127.0.0.1:3000';
-const PUBLIC_API = import.meta.env.PUBLIC_API_URL ?? process.env.PUBLIC_API_URL ?? API_ORIGIN;
+const API_ORIGIN = process.env.API_BASE_URL || import.meta.env.API_BASE_URL || 'http://127.0.0.1:3000';
+const PUBLIC_API = import.meta.env.PUBLIC_API_URL || process.env.PUBLIC_API_URL || API_ORIGIN;
 
 const csp = [
   "default-src 'self'",

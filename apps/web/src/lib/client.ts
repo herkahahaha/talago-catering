@@ -1,4 +1,14 @@
-const API_ROOT = import.meta.env.PUBLIC_API_URL ?? 'http://127.0.0.1:3000';
+// Browser memakai proxy /api se-origin bila PUBLIC_API_URL kosong (default di development),
+// sehingga cookie sesi selalu first-party untuk localhost maupun 127.0.0.1.
+// Saat SSR (tidak ada window), pakai alamat API absolut langsung.
+const BROWSER_ROOT = (import.meta.env.PUBLIC_API_URL || '').replace(/\/$/, '');
+const SERVER_ROOT = (
+  (typeof process !== 'undefined' && process.env.API_BASE_URL) ||
+  import.meta.env.API_BASE_URL ||
+  'http://127.0.0.1:3000'
+).replace(/\/$/, '');
+const API_ROOT = typeof window === 'undefined' ? SERVER_ROOT : BROWSER_ROOT;
+const API_PREFIX = API_ROOT ? `${API_ROOT}/api/v1` : '/api/v1';
 
 export class ClientError extends Error {
   code: string;
@@ -27,7 +37,7 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
 
   let response: Response;
   try {
-    response = await fetch(`${API_ROOT}/api/v1${path}`, {
+    response = await fetch(`${API_PREFIX}${path}`, {
       ...init,
       headers,
       credentials: 'include',
