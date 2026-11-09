@@ -304,11 +304,11 @@ Checklist manual yang sudah dijalankan:
 | Halaman | Tangkapan |
 | :-- | :-- |
 | Login | ![Login](screenshots/login.png) |
-| Pesanan | ![Pesanan](screenshots/orders.png) |
-| Menu + dialog | ![Menu](screenshots/menu.png) ![Dialog menu](screenshots/menu-dialog.png) |
+| Pesanan | ![Pesanan](screenshots/dashboard-orders.png) |
+| Menu + dialog | ![Menu](screenshots/dashboard-menu.png) ![Dialog menu](screenshots/menu-dialog.png) |
 | Detail order & dialog batal | ![Detail order](screenshots/order-detail.png) ![Batal](screenshots/cancel-dialog.png) |
-| Pengaturan hari | ![Pengaturan hari](screenshots/day-settings.png) |
-| Rekap produksi | ![Rekap produksi](screenshots/production.png) |
+| Pengaturan hari | ![Pengaturan hari](screenshots/dashboard-day-settings.png) |
+| Rekap produksi | ![Rekap produksi](screenshots/dashboard-production.png) |
 | Order manual / PO | ![Order manual](screenshots/new-order.png) |
 | Refund | ![Refund](screenshots/refunds.png) |
 | Audit log | ![Audit](screenshots/audit.png) |

@@ -331,5 +331,5 @@ Defined in `:root` on `app.css`, mapped to Tailwind via `@theme inline`:
 - `docs/architecture.md` — System architecture & module map
 - `docs/prd-mapping.md` — PRD → implementation mapping table
 - `docs/runbook.md` — Operational runbook (deploy, check, refund, backup, incidents)
-- `doc-docker/docker.md` — Docker dev/staging/prod guides
-- `doc-dashboard/dashboard-ui.md` — shadcn/ui design system for dashboard
+- `docs/docker.md` — Docker dev/staging/prod guides
+- `docs/dashboard-ui.md` — shadcn/ui design system for dashboard

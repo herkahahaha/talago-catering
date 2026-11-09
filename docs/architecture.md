@@ -150,7 +150,7 @@ Hanya transisi maju satu arah yang diizinkan lewat API admin; koreksi lain dicat
 
 Seluruh aplikasi berjalan di Docker. Tiga compose terpisah: `deploy/compose.dev.yml`,
 `deploy/compose.staging.yml`, dan `deploy/compose.prod.yml` (opsional `compose.prod.db.yml` untuk
-Postgres self-hosted). Panduan lengkap: [`../doc/docker.md`](../doc/docker.md).
+Postgres self-hosted). Panduan lengkap: [`docker.md`](docker.md).
 
 - Satu image API (`deploy/Dockerfile.api`), dua peran: `ROLE=web` (`:3000`) dan
   `ROLE=worker` (tanpa port publik). Image non-root, multi-stage, hanya dependency produksi.

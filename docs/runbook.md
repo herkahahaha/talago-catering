@@ -16,7 +16,7 @@ curl -fsS http://127.0.0.1:3000/health
 ```
 
 Compose menjalankan `migrate` lebih dulu; API/worker/web/dashboard baru dibuat setelah migrasi
-sukses. Seed tidak tersedia di production. Detail lengkap: [`../doc/docker.md`](../doc/docker.md).
+sukses. Seed tidak tersedia di production. Detail lengkap: [`docker.md`](docker.md).
 
 ### 1.2 Native (tanpa Docker)
 

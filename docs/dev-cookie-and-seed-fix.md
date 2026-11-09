@@ -21,7 +21,7 @@ Staging/production untouched (they bake absolute API URLs at build time).
   and `pnpm docker:dev:seed` both failed with "no such service".
 
 Fix: `docker compose --profile seed -f deploy/compose.dev.yml run --rm seed`
-in `package.json`, `README.md`, `doc-docker/README.md`, `doc-docker/docker.md`
+in `package.json`, `README.md`, `docs/docker.md`
 (§6.2, §6.5), and the `compose.dev.yml` header/seed comments.
 
 ### B. Guest/staff cookies lost cross-site

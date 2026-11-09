@@ -75,7 +75,7 @@ docker compose --profile seed -f deploy/compose.dev.yml run --rm seed   # sekali
 Dashboard <http://127.0.0.1:3001>, storefront <http://127.0.0.1:4321>, API
 <http://127.0.0.1:3000/health>. Database dev dipetakan ke `127.0.0.1:5433` agar tidak bentrok
 dengan PostgreSQL native. Panduan lengkap (staging, production, migrasi, backup):
-[`doc/docker.md`](doc/docker.md).
+[`docs/docker.md`](docs/docker.md).
 
 ### 3.2 Native (tanpa Docker)
 
@@ -164,7 +164,6 @@ packages/
 deploy/         Dockerfile (api/web/dashboard/migrate/dev) + compose dev/staging/prod + env
 scripts/        check-boundaries.mjs (lint arsitektur)
 docs/           arsitektur, runbook, API, pemetaan PRD
-doc/            dokumentasi Docker & design system dashboard (shadcn/ui)
 ```
 
 ### Aturan modul
@@ -238,8 +237,8 @@ Rincian pemetaan per bagian PRD: [`docs/prd-mapping.md`](docs/prd-mapping.md).
 Arsitektur & alur: [`docs/architecture.md`](docs/architecture.md).
 Operasional: [`docs/runbook.md`](docs/runbook.md).
 Kontrak API: [`docs/api.md`](docs/api.md).
-Design system dashboard: [`doc/dashboard-ui.md`](doc/dashboard-ui.md).
-Docker (dev/staging/production): [`doc/docker.md`](doc/docker.md).
+Design system dashboard: [`docs/dashboard-ui.md`](docs/dashboard-ui.md).
+Docker (dev/staging/production): [`docs/docker.md`](docs/docker.md).
 
 ---
 
@@ -272,7 +271,7 @@ Lihat `.env.example`. Ringkasnya:
    catat RPO/RTO sebenarnya.
 6. **Image & deploy** — gunakan compose terpisah untuk staging dan production; build image dengan
    tag versi, jalankan migrasi sebagai service one-shot, lalu naikkan versi. Panduan lengkap:
-   [`doc/docker.md`](doc/docker.md).
+   [`docs/docker.md`](docs/docker.md).
 
 ---
 
