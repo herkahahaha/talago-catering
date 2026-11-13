@@ -1,4 +1,7 @@
-# Project Summary — Deepseek Harness
+---
+language: en-US
+---
+# Project Summary — Catering Talago
 
 ## Project Overview
 - **Type**: Monorepo Turborepo + pnpm

@@ -1,3 +1,7 @@
+---
+language: id-ID
+---
+
 # Pemetaan PRD → implementasi
 
 Status per bagian **System Design v2** (29 Okt 2026). Legenda: ✅ selesai · 🟡 sebagian /
@@ -10,7 +14,7 @@ mock · ⏳ fase berikutnya.
 | :-- | :-- | :-- | :-- |
 | 1 | Porsi, minimal order 20 qty dari setiap menu | `order.min_portions = 20`; validasi `MIN_ORDER_NOT_MET` | ✅ |
 | 2 | 200 porsi/hari | `capacity.max_regular = 200` | ✅ |
-| 3 | Minimal 50 untuk target produksi harian syarat keras | ditolak sebelum reservasi; produksi tetap berjalan walau target belum tercapai | ✅ |
+| 3 | Minimal 50 untuk target hanya indikator dapur | ditolak sebelum reservasi; produksi tetap berjalan walau target belum tercapai | ✅ |
 | 4 | PO 201–1000, kapasitas dapur bersama | `max_po` per tanggal + `kitchen_max_total` + CHECK constraint | ✅ |
 | 5 | Cut-off H-1 18.00 | `daily_capacity.cut_off_at`, default H-1 18:00 WIB | ✅ |
 | 6 | PO dibayar di muka | order PO `hold=true` sampai pembayaran; tunai langsung lunas | ✅ |
@@ -49,7 +53,6 @@ mock · ⏳ fase berikutnya.
 | Cap porsi per order 200 | `ORDER_TOO_LARGE` | ✅ |
 | Plafon hold per tanggal 50% | `hold_ceiling` | ✅ |
 | Idempotency-Key wajib | header + unique constraint + replay | ✅ |
-| Verifikasi signature webhook | HMAC-SHA256 + timestamp di payload | ✅ |
 | Admin 300/menit/user | middleware staf | ✅ |
 | OTP adaptif | OTP setelah 2 hold kedaluwarsa atau hold aktif melebihi batas; `OTP_REQUIRED` | ✅ |
 | Degradasi baca saat DB bermasalah | belum | ⏳ |
