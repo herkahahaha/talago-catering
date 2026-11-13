@@ -3,29 +3,15 @@
 Status per bagian **System Design v2** (29 Okt 2026). Legenda: ✅ selesai · 🟡 sebagian /
 mock · ⏳ fase berikutnya.
 
-## §1 Ringkasan & perubahan dari v1
 
-| Butir v2 | Implementasi | Status |
-| :-- | :-- | :-- |
-| Satuan porsi (bukan pax) | `orders.portions`, label UI “porsi”, total lintas hidangan dijumlahkan | ✅ |
-| Kapasitas dapur + partisi reguler/PO | `daily_capacity` (`max_regular`, `max_po`, `kitchen_max_total`, `reserved_*`, `held_*`) | ✅ |
-| Batas stop per jendela | `delivery_windows.max_stops`, `stops_used`, reservasi stop bersyarat | ✅ |
-| Hold 10 menit + CAPTCHA + plafon hold + cap porsi | `settings` (`order.hold_minutes`, `capacity.hold_ceiling_ratio`, `order.max_portions_per_order`), `security/captcha.ts` | ✅ |
-| Re-reserve atomik saat bayar telat | `checkout/service.ts` jalur `late_paid` / `late_unavailable` | ✅ |
-| Rate limit di database | `security/rate-limit.ts` + tabel `rate_limits` | ✅ |
-| Worker peran proses terpisah | `apps/api/src/worker.ts`, `ROLE=worker`, pg-boss | ✅ |
-| Monorepo Astro + dashboard + core + contracts | `apps/web`, `apps/dashboard`, `packages/core`, `packages/contracts` | ✅ |
-| Tamu dulu, akun opsional, OTP adaptif | sesi tamu; OTP endpoint + pemicu adaptif di checkout; `accounts` belum | 🟡 |
-| Refund: kebijakan, tabel, kanal | tabel `refunds`, kebijakan manual, dashboard refund | ✅ |
-
-## §2 Keputusan bisnis
+## Keputusan bisnis
 
 | # | Keputusan | Default di `settings` | Status |
 | :-- | :-- | :-- | :-- |
-| 1 | Porsi, minimal 50 | `order.min_portions = 50`; validasi `MIN_ORDER_NOT_MET` | ✅ |
+| 1 | Porsi, minimal order 50 qty dari setiap menu | `order.min_portions = 50`; validasi `MIN_ORDER_NOT_MET` | ✅ |
 | 2 | 200 porsi/hari | `capacity.max_regular = 200` | ✅ |
-| 3 | Minimal 50 syarat keras | ditolak sebelum reservasi; produksi tetap berjalan walau target belum tercapai | ✅ |
-| 4 | PO 500–1000, kapasitas dapur bersama | `max_po` per tanggal + `kitchen_max_total` + CHECK constraint | ✅ |
+| 3 | Minimal 50 untuk target produksi harian syarat keras | ditolak sebelum reservasi; produksi tetap berjalan walau target belum tercapai | ✅ |
+| 4 | PO 201–1000, kapasitas dapur bersama | `max_po` per tanggal + `kitchen_max_total` + CHECK constraint | ✅ |
 | 5 | Cut-off H-1 18.00 | `daily_capacity.cut_off_at`, default H-1 18:00 WIB | ✅ |
 | 6 | PO dibayar di muka | order PO `hold=true` sampai pembayaran; tunai langsung lunas | ✅ |
 | 7 | Refund manual soft launch | `refunds.status=queued` → admin menyelesaikan | ✅ |
