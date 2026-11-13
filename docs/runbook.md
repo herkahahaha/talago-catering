@@ -15,7 +15,7 @@ docker compose --env-file deploy/env/.env.production -f deploy/compose.prod.yml 
 curl -fsS http://127.0.0.1:3000/health
 
 # Optional
-docker compose deploy/compose.prod.yml run --rm migrate pnpm admin:create --email … --role admin
+docker compose -env-file deploy/env/.env.production -f deploy/compose.prod.yml run --rm migrate pnpm admin:create --email … --role admin
 ```
 
 Compose menjalankan `migrate` lebih dulu; API/worker/web/dashboard baru dibuat setelah migrasi
@@ -158,7 +158,7 @@ Skenario minimum:
 | `SESSION_SECRET` | semua tautan status lama & OTP batal; sesi tamu tetap valid (hash token disimpan) |
 | `CAPTCHA_SECRET` | tantangan CAPTCHA yang sedang berjalan batal |
 | `PAYMENT_WEBHOOK_SECRET` | webhook selama jendela rotasi ditolak; putar bersamaan dengan gateway |
-| Password staf | ubah lewat seed/admin; sesi aktif tidak otomatis batal (pertimbangkan hapus `staff_sessions`) |
+|`ADMIN_EMAIL`, `ADMIN_PASSWORD` | seed | Perintah CLI sekali jalan|
 
 ## 9. Hal yang belum ada di thin slice
 
