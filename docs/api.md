@@ -1,3 +1,7 @@
+---
+language: id-ID
+---
+
 # API v1
 
 Base URL: `{API_BASE_URL}/api/v1`. Semua respons sukses berbentuk `{ "data": ... }`; semua error
@@ -96,13 +100,12 @@ Respons `201`:
   }
 }
 ```
-Respons `200`:
 
 Catatan:
 
 - `Idempotency-Key` wajib (8–128 karakter). Permintaan dengan kunci sama dan payload sama
   mengembalikan order yang sama; payload berbeda → `IDEMPOTENCY_CONFLICT`.
-- Minimal 50 porsi; batas maksimum per order adalah konfigurasi global (default 200, dapat diubah admin lewat `PUT /admin/settings/order`).
+- Minimal order 50 porsi; batas maksimum per order adalah konfigurasi global (default 200, dapat diubah admin lewat `PUT /admin/settings/order`).
 - CAPTCHA diverifikasi sebelum reservasi; replay idempoten tidak memerlukan CAPTCHA baru.
 
 ### Webhook
@@ -216,7 +219,7 @@ storefront. Ketersediaan per tanggal tetap dapat diubah di `PUT /admin/days/{dat
 ```
 
 Validasi: `maxRegular + maxPo <= kitchenMaxTotal`; tidak boleh turun di bawah porsi terpesan;
-`holdCeiling <= maxRegular` dan `>= held` saat ini; `ceiling ≥ maxPo` Saat batas per order dinaikkan, `ensureMinimumHoldCeiling` menaikkan plafon hold hari-hari kedepan minimal sebesar batas tersebut (dibatasi `max_regular`).
+`holdCeiling <= maxRegular` dan `>= held` saat ini; `ceiling ≥ maxPo` Saat batas per order dinaikkan
 
 ## Kode error
 
