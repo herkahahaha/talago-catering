@@ -1,3 +1,7 @@
+---
+language: id-ID
+---
+
 # Runbook operasional
 
 Dokumen ini untuk on-call dan admin dapur. Semua waktu adalah **WIB (UTC+7)**.

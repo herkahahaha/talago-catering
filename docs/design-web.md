@@ -1,10 +1,10 @@
+---
+language: id-ID
+---
+
 # DESIGN.md — Storefront (`apps/web`), Fase 1: Fondasi Tailwind
 
 *Versi 1.1 • 2026-11-13 • Status: siap dikerjakan • Estimasi: ≤ 2 jam*
-
-> **Cakupan dokumen ini.** Menggantikan §1, §3–§4, Fase 1 di §8, dan gerbang Fase 1 di §10 dari
-> `design-web.md` v1.0. Bagian lain v1.0 (spesifikasi komponen §5, migrasi island §6, Fase 2–5)
-> berstatus **draft**: jangan dijadikan acuan implementasi sebelum ditulis ulang (lihat §6).
 
 ---
 
@@ -29,22 +29,7 @@ konstruksi itu benar.
 
 ---
 
-## 2. Keputusan (berubah dari v1.0)
-
-| Keputusan | Alasan |
-| :-- | :-- |
-| **Tanpa Preflight**: impor `theme.css` + `utilities.css`, bukan `tailwindcss` penuh | Preflight mereset heading, button, img, border. Itu mengubah 984 baris CSS legacy yang sudah punya reset sendiri. |
-| **Urutan layer ditetapkan sekali**: `theme, reset, base, components, utilities` | Utilitas menang atas kelas legacy tanpa `!important`; `global.css` tidak perlu diedit. |
-| **`global.css` tidak disentuh** | Token tetap punya satu sumber (`:root` legacy) sampai Fase 5. Tidak ada nilai ganda yang bisa berselisih. |
-| **Hanya warna**, dipetakan 1:1 ke variabel legacy | Alias semantik (`primary`, `surface`, …) berarti menebak. Ditunda sampai komponen pertama (Fase 3). |
-| **Palet bawaan Tailwind dikosongkan** | Mencegah warna di luar brand masuk lewat `bg-blue-500`. |
-| **Tanpa awalan `--md-sys-*` dan tanpa `tokens.css`** | Nilai v1.0 bukan nilai M3 asli (mis. radius `large` 28px; di M3 itu `extra-large`), jadi labelnya menyesatkan. File token baru juga menggandakan `:root` yang sudah ada. |
-| **Tidak memasang** `tw-animate-css`, `class-variance-authority`, `clsx`, `tailwind-merge` | Belum ada pemakai. Dipasang di Fase 3 bersama komponen pertama. |
-| **Tidak mengubah breakpoint** | Legacy memakai 900px/560px; default Tailwind 768px/640px. Ditentukan saat utilitas responsif pertama dibutuhkan. |
-
----
-
-## 3. Langkah
+## 2. Langkah
 
 ### Langkah 0 — Baseline (sebelum mengubah apa pun)
 
@@ -186,7 +171,7 @@ terimpor. Periksa ulang §3 Langkah 2–3 sebelum menyalahkan Tailwind.
 
 ---
 
-## 4. Gerbang Fase 1
+## 3. Gerbang Fase 1
 
 - [ ] Baseline stabil (`before` = `before2`) atau halaman tak stabil dicatat
 - [ ] `grep` layer order menemukan deklarasi urutan yang benar
@@ -199,7 +184,7 @@ terimpor. Periksa ulang §3 Langkah 2–3 sebelum menyalahkan Tailwind.
 
 ---
 
-## 5. Aturan selama koeksistensi
+## 4. Aturan selama koeksistensi
 
 1. Jangan edit `global.css`, kecuali menghapus kelas yang sudah terbukti tidak dipakai.
 2. Tidak ada kelas baru di `@layer components`.
@@ -210,7 +195,7 @@ terimpor. Periksa ulang §3 Langkah 2–3 sebelum menyalahkan Tailwind.
 
 ---
 
-## 6. Ditunda (dengan pemicu)
+## 5. Ditunda (dengan pemicu)
 
 | Item | Dipicu oleh | Catatan dari audit |
 | :-- | :-- | :-- |
@@ -225,7 +210,7 @@ terimpor. Periksa ulang §3 Langkah 2–3 sebelum menyalahkan Tailwind.
 
 ---
 
-## 7. Rollback dan risiko
+## 6. Rollback dan risiko
 
 **Rollback:** `git revert` commit Fase 1, atau hapus `tailwind.css` dan satu baris impor di `Layout.astro`.
 
