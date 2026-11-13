@@ -193,3 +193,4 @@ Only forward transitions allowed via API admin; corrections recorded in audit lo
 - `docs/runbook.md` — Operational runbook (deploy, check, refund, backup, incidents)
 - `docs/docker.md` — Docker dev/staging/prod guides
 - `docs/dashboard-ui.md` — shadcn/ui design system for dashboard
+- `docs/DESIGN.md` — material 3 design system for storefront

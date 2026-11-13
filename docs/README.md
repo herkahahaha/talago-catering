@@ -1,3 +1,7 @@
+---
+language: id-ID
+---
+
 # Dokumentasi — Platform Catering Online
 
 ## Referensi cepat
@@ -8,9 +12,9 @@
 | [api.md](api.md) | Semua endpoint API v1 publik dan admin, contoh request/response, kode error |
 | [docker.md](docker.md) | Arsitektur container, cara menjalankan dev/staging/production, troubleshooting |
 | [dashboard-ui.md](dashboard-ui.md) | Design system shadcn/ui, token, komponen, pola pemakaian, screenshot |
+| [DESIGN.md](DESIGN.md) | Design system material 3, komponen, pola pemakaian untuk storefront `apps/web`, screenshot |
 | [runbook.md](runbook.md) | Deploy pertama, pemeriksaan harian, refund, backup, insiden, go-live |
 | [prd-mapping.md](prd-mapping.md) | Pemetaan PRD §1–§13 ke implementasi, status per fitur |
-| [session-summary.md](session-summary.md) | Status sesi terakhir, data lokal, langkah berikutnya |
 | [quick-reference.md](quick-reference.md) | Ringkasan cepat mesin-baca: stack, aturan bisnis, API, arsitektur, design system |
 | [dev-cookie-and-seed-fix.md](dev-cookie-and-seed-fix.md) | Analisis bug cookie/seed dev-flow (2026-11-07) |
 
