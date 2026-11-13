@@ -13,6 +13,9 @@ cp deploy/env/.env.production.example deploy/env/.env.production
 docker compose --env-file deploy/env/.env.production -f deploy/compose.prod.yml up -d
 docker compose --env-file deploy/env/.env.production -f deploy/compose.prod.yml ps
 curl -fsS http://127.0.0.1:3000/health
+
+# Optional
+docker compose deploy/compose.prod.yml run --rm migrate pnpm admin:create --email … --role admin
 ```
 
 Compose menjalankan `migrate` lebih dulu; API/worker/web/dashboard baru dibuat setelah migrasi

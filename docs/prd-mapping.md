@@ -44,7 +44,7 @@ mock · ⏳ fase berikutnya.
 
 | Butir | Implementasi | Status |
 | :-- | :-- | :-- |
-| 5 status + 2 jalur keluar | `ORDER_STATUSES` di contracts; `paidd_after_expiry` sebagai status khusus | ✅ |
+| 5 status + 2 jalur keluar | `ORDER_STATUSES` di contracts; `paid_after_expiry` sebagai status khusus | ✅ |
 | Status hanya maju, koreksi lewat audit | `FORWARD_TRANSITIONS`, `updateOrderStatusAdmin`, `audit_log` | ✅ |
 | Reservasi atomik + expiry malas | `capacity/reserve.ts`: expiry → reserve dalam satu transaksi | ✅ |
 | `hold_ceiling` | kolom per tanggal + validasi `HOLD_LIMIT` | ✅ |
@@ -60,7 +60,7 @@ mock · ⏳ fase berikutnya.
 | CAPTCHA sebelum hold | provider `challenge` (HMAC) / `turnstile` | ✅ |
 | Hold aktif per nomor (1) | `countActiveHolds` + `HOLD_LIMIT` | ✅ |
 | Hold per IP 3/jam | `rate_limits` kunci `order:ip:*` | ✅ |
-| Cap porsi per order 50 | `ORDER_TOO_LARGE` | ✅ |
+| Cap porsi per order 200 | `ORDER_TOO_LARGE` | ✅ |
 | Plafon hold per tanggal 50% | `hold_ceiling` | ✅ |
 | Idempotency-Key wajib | header + unique constraint + replay | ✅ |
 | Verifikasi signature webhook | HMAC-SHA256 + timestamp di payload | ✅ |
@@ -145,7 +145,7 @@ Fase 1a–1d selesai pada level thin slice (lihat README §7). Fase 2/3 belum.
 
 | Kriteria | Status |
 | :-- | :-- |
-| 5.000 checkout konkuren tidak melewati max | ✅ tes integrasi (level reservasi DB) |
+| 5.000 checkout konkuren tidak melewati max | 🟡 hanya level DB; kriteria PRD-nya adalah checkout |
 | Bot tidak melewati plafon hold; hold lepas tanpa job | ✅ tes integrasi |
 | Webhook duplikat/terbalik/signature salah/telat | ✅ tes integrasi (urutan terbalik: event `failed` setelah `settled` diabaikan sebagai duplikat status) |
 | Beban baca 280 rps CDN / 56 rps origin | ⏳ perlu k6 di environment uji (`scripts/load-checkout.js`) |

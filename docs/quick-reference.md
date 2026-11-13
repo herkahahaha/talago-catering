@@ -155,7 +155,7 @@ Cloudflare (CDN + WAF)
 - Partitions: `reserved_regular`, `held_regular`, `max_regular`, `hold_ceiling`
 - CHECK constraints in DB: `max_regular + max_po <= kitchen_max_total`, `held <= reserved`, non-negative
 - Reservations run in single transaction: lazy expiry → release → conditional reserve
-- 5000 concurrent reservation tests: only 4 succeed for 200+50 portions on capacity 200; never exceeds max
+- 5000 concurrent reservation tests: only 4 succeed for capacity 200 with 50 portions per trial; never exceeds max
 
 ### State Machine Order (one-way only)
 ```
@@ -191,7 +191,7 @@ Three separate compose files: `deploy/compose.dev.yml`, `deploy/compose.staging.
 
 ### Services
 - **API image** (`deploy/Dockerfile.api`): Two roles — `ROLE=web` (:3000) and `ROLE=worker` (no public port)
-- **Storefront** (`deploy/Dockerfile.web`): `:4321`, `VITE_API_URL` injected at build time
+- **Storefront** (`deploy/Dockerfile.web`): `:4321`, `PUBLIC_API_URL` injected at build time
 - **Dashboard** (`deploy/Dockerfile.dashboard`): `:3001`, `VITE_API_URL` injected at build time
 - **Migrate**: Runs before API/worker/web/dashboard; app waits for migration success
 
@@ -311,7 +311,7 @@ Defined in `:root` on `app.css`, mapped to Tailwind via `@theme inline`:
 ## Roadmap / Next Steps (from session summary)
 
 1. **Gateway pembayaran asli** (Midtrans/Xendit) — PaymentGateway + signature verification
-2. **Notifikasi nyata** (SMTP/Whatzap Business API) — outbox worker masih mock
+2. **Notifikasi nyata** (SMTP/Whatsap Business API) — outbox worker masih mock
 3. **CI pipeline** — build/push image ke registry + otomasi deploy ke server
 4. **Load test** (`scripts/load-checkout.js`) — uji restore/PITR, injeksi & otorisasi formal
 5. **CSP nonce** di Cloudflare/WAF, rate limit IP di edge
@@ -323,7 +323,7 @@ Defined in `:root` on `app.css`, mapped to Tailwind via `@theme inline`:
 - Gateway asli belum dipasang; perilaku QRIS/VA nyata (termasuk biaya refund) belum divalidasi
 - Parameter anti-bot (plafon hold, cap porsi) masih nilai awal; perlu disetel lewat load test & observasi soft launch
 - Jendela antar masih opsional karena keputusan #9 belum final
-- Data Mekajik/Kendixpress dari v1 tidak diverifikasi ulang; alur Kendixpress belum dijadikan acuan implementasi
+- Data Mejamakan/Kendixpress dari v1 tidak diverifikasi ulang; alur Kendixpress belum dijadikan acuan implementasi
 
 ## File References
 - `AGENTS.md` — Project context (this file)

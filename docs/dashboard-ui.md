@@ -272,7 +272,9 @@ Contoh hasil (emulasi media `print`): ![Cetak rekap produksi](screenshots/print-
 3. Untuk interaksi, pakai primitif Kobalte yang sesuai dan pastikan bisa SSR (portal hanya
    dirender saat terbuka).
 4. Tambahkan entri di tabel inventaris dokumen ini dan, bila perlu, contoh pemakaian.
-5. Jalankan `pnpm --filter @catering/dashboard lint typecheck build` lalu uji keyboard & mobile.
+5. Jalankan `pnpm --filter @catering/dashboard lint` lalu uji keyboard & mobile.
+6. Jalankan `pnpm --filter @catering/dashboard typecheck` lalu uji keyboard & mobile.
+7. Jalankan `pnpm --filter @catering/dashboard build` lalu uji keyboard & mobile.
 
 ---
 

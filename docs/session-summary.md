@@ -1,8 +1,6 @@
 # Session Summary — Platform Catering Online
 
-> **Status sesi:** development dijeda. Semua server aplikasi sudah dimatikan.
-> PostgreSQL tetap berjalan (sengaja) agar koneksi DBeaver tetap hidup.
-> Terakhir diperbarui: 3 November 2026.
+> Diperbarui setiap tanggal: 13.
 
 ## 1. Lokasi & status repo
 
@@ -74,7 +72,7 @@ Aturan modul ditegakkan `scripts/check-boundaries.mjs` (dipanggil `pnpm lint`).
 | Database test | `catering_test` |
 | Host / port | `127.0.0.1:5432` |
 | User / password | `catering` / `catering_dev_pw` |
-| Tabel | 25 tabel di schema `public` |
+| Tabel | 26 tabel di schema `public` |
 | Menu | 9 item (termasuk Tahu Goreng Spesial) |
 | Order | 7 order (seed + uji E2E; satu uji 200 porsi dibatalkan) |
 | Nov 10 | 0/200 porsi, hold ceiling 200 (siap dites order 200) |

@@ -78,7 +78,7 @@ Status verifikasi (dijalankan di mesin pengembangan):
 | Database | Container + volume, host port **5433** | Container + volume, host port **5434** | **Eksternal/terkelola** (atau overlay `db`) |
 | `NODE_ENV` | `development` | `production` | `production` |
 | Hot reload | Ya (bind mount `src/`) | Tidak | Tidak |
-| Seed | `run --rm seed` | Profil `seed` | Tidak tersedia |
+| Seed | `run --rm seed` | Profil `--profile seed` | Tidak tersedia |
 | Migrasi | Otomatis saat `up` | Otomatis saat `up` | One-shot service sebelum app |
 | Port host | 3000 / 3001 / 4321 | 3000 / 3001 / 4321 (dapat diubah) | 3000 / 3001 / 4321 (loopback, di belakang proxy) |
 
@@ -270,8 +270,6 @@ Catatan penting:
 - Bila ingin hostname/domain lain, ubah `PUBLIC_API_URL`, `APP_URL`, `DASHBOARD_URL` di
   `deploy/env/.env.staging` lalu **build ulang** `web` + `dashboard` (nilai di-inline saat
   build; tanpa rebuild browser tetap menembak URL lama).
-- Seed staging otomatis memakai `NODE_ENV=development` **hanya untuk container seed**, karena
-  simulasi pembayaran mock diblokir di `NODE_ENV=production`. Aplikasi tetap berjalan production.
 - Jika domain publik dipakai, ganti `PUBLIC_API_URL`, `APP_URL`, `DASHBOARD_URL` ke domain staging
   lalu **build ulang** `web` dan `dashboard` (nilainya di-inline saat build).
 - Hentikan stack dev dulu (`pnpm docker:dev:down`) atau override `API_PORT`/`WEB_PORT`/
@@ -301,7 +299,7 @@ di `deploy/env/.env.production` dan jalankan compose tanpa service `db`:
 docker compose --env-file deploy/env/.env.production -f deploy/compose.prod.yml up -d
 ```
 
-**Alternatif: Postgres self-hosted** di host yang sama, gunakan overlay:
+**Alternatif: Postgres self-hosted** di host yang sama tanpa PITR, gunakan overlay:
 
 ```bash
 # DATABASE_URL harus memakai host `db`
@@ -396,15 +394,17 @@ Untuk database terkelola, gunakan snapshot/PITR dari penyedia. Uji restore secar
 | Variabel | Wajib | Catatan |
 | :-- | :-- | :-- |
 | `DATABASE_URL` | ya | Gunakan `sslmode=require` untuk database terkelola |
-| `SESSION_SECRET` | ya | ≥ 16 karakter; rotasi membatalkan semua sesi |
+| `SESSION_SECRET` | ya | ≥ 16 karakter; semua tautan status lama & OTP batal; sesi tamu tetap valid (hash token disimpan) |
 | `CAPTCHA_SECRET` | ya | ≥ 16 karakter |
 | `PAYMENT_WEBHOOK_SECRET` | ya | Harus sama dengan yang di gateway |
 | `PUBLIC_API_URL` | ya | Build arg web + dashboard |
 | `APP_URL`, `DASHBOARD_URL` | ya | CORS API |
 | `PAYMENT_GATEWAY` | ya | `mock` hanya untuk non-production |
-| `ADMIN_EMAIL`, `ADMIN_PASSWORD` | seed | Dipakai saat seed; production tanpa seed |
+| `ADMIN_EMAIL`, `ADMIN_PASSWORD` | seed | Perintah CLI sekali jalan |
 
-`ROLE` di-override oleh compose (`web` untuk api, `worker` untuk worker).
+- Contoh `CLI sekali jalan`; `docker compose … run --rm migrate pnpm admin:create --email … --role admin`, password diminta lewat prompt namun dengan 3 aturan; 1. Menolak berjalan bila sudah ada admin, kecuali memakai flag eksplisit. 2. Menulis audit_log (aktor cli) dan tidak mencetak password. 3. Perintah yang sama dipakai untuk reset password dan membuat peran kitchen/courier, serta menghapus staff_sessions pengguna itu. Runbook §8 saat ini mencatat sesi aktif tidak batal otomatis saat password diubah.
+- Gunakan `INSERT manual` ke DB pembuatan `ADMIN_EMAIL`, `ADMIN_PASSWORD` sebagai prosedur darurat saja, dengan syarat dicatat manual di audit_log. Dengan `CLI sekali jalan`, tidak perlu menyimpan password admin di env production.
+- `ROLE` di-override oleh compose (`web` untuk api, `worker` untuk worker).
 
 ---
 

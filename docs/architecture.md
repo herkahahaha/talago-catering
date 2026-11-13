@@ -105,7 +105,7 @@ pending_payment ──paid──► paid ──► in_production ──► out_f
        ▼                    ▼
     expired          cancelled_refunded
        │
-       └── pembayaran telat ──► paid (jika ada sisa) / paid_after_expiry + refund (jika penuh)
+       └── pembayaran telat ──► paid (ini pengecualian eksplisit jika ada sisa) / paid_after_expiry + refund (jika penuh)
 ```
 
 Hanya transisi maju satu arah yang diizinkan lewat API admin; koreksi lain dicatat di
