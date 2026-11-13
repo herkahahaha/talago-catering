@@ -46,8 +46,8 @@ Content-Type: application/json
 {
   "serviceDate": "2026-11-06",
   "items": [
-    { "menuItemId": "…", "portions": 50 },
-    { "menuItemId": "…", "portions": 50 }
+    { "menuItemId": "…", "portions": 20 },
+    { "menuItemId": "…", "portions": 30 }
   ],
   "delivery": {
     "windowId": "…",

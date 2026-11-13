@@ -276,6 +276,3 @@ Lihat `.env.example`. Ringkasnya:
    [`docs/docker.md`](docs/docker.md).
 
 ---
-
-Handoff sesi terakhir (status server, keputusan, data lokal, langkah berikutnya):
-[`docs/session-summary.md`](docs/session-summary.md).
