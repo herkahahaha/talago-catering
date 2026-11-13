@@ -14,7 +14,7 @@
     "dev:dashboard": "pnpm --filter @catering/dashboard dev",
     "dev:worker": "pnpm --filter @catering/api dev:worker",
     "typecheck": "turbo run typecheck",
-    "lint": "turbo run lint && node scripts/check-boundaries.mjs",
+    "lint": "turbo run lint && node scripts/check-boundaries.mjs && node scripts/check-docs.mjs",
     "test": "turbo run test",
     "test:integration": "pnpm --filter @catering/core test:integration",
     "db:generate": "pnpm --filter @catering/core db:generate",
