@@ -8,7 +8,7 @@
         ┌─────────────────────┼─────────────────────────┐
         │                     │                         │
   apps/web (Astro SSR)  apps/api (Hono, ROLE=web)  apps/dashboard (TanStack Start)
-  storefront tamu       2 instance, autoscale 4     internal, origin terpisah
+  storefront tamu       1 host composer            internal, origin terpisah
         │                     │                         │
         └───────────┬─────────┴─────────────┬───────────┘
                     │                       │
@@ -115,6 +115,7 @@ Hanya transisi maju satu arah yang diizinkan lewat API admin; koreksi lain dicat
 
 1. Verifikasi signature HMAC atas raw body → gagal: 401 + audit, tanpa efek.
 2. Dedupe `event_id` (`webhook_events` unique). Duplikat → `duplicate`, tanpa efek ganda.
+   **Catatan:** Timestamp di payload **tidak divalidasi** sebagai jendela anti-replay (mis. tolak event >5 menit); hanya dedupe `event_id` yang ada.
 3. Cocokkan `gateway_ref` dan nominal; tidak cocok → diabaikan + audit.
 4. `settled`:
    - order `pending_payment` dan hold masih berlaku → `paid`, `held` dikurangi.
@@ -139,7 +140,7 @@ Hanya transisi maju satu arah yang diizinkan lewat API admin; koreksi lain dicat
 | :-- | :-- |
 | Tamu | cookie `cg_session` httpOnly, token 256-bit, hash SHA-256 di `guest_sessions`, 7 hari |
 | Tautan status order | token 256-bit; hanya hash yang disimpan; token diturunkan HMAC untuk replay idempoten |
-| Staf | password scrypt (`N=16384,r=8,p=1`), cookie `cg_staff`, sesi 8 jam, RBAC `admin/kitchen/courier` |
+| Staf | password scrypt (`N=16384,r=8,p=1`), cookie `cg_staff`, sesi 8 jam, RBAC `admin/dapur/kurir` |
 | OTP | 6 digit, hash HMAC, 5 menit, maks 5 percobaan, rate limit per nomor |
 | Rate limit | tabel `rate_limits`, jendela tetap, kunci per IP / sesi / nomor / staf |
 | CAPTCHA | provider `challenge` (HMAC) atau `turnstile` |
