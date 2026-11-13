@@ -1,7 +1,6 @@
 # AGENTS.md — konteks proyek
 
-Ringkasan mesin-baca ada di [`docs/quick-reference.md`](docs/quick-reference.md);
-ringkasan sesi terakhir ada di [`docs/session-summary.md`](docs/session-summary.md).
+Ringkasan mesin-baca ada di [`docs/quick-reference.md`](docs/quick-reference.md).
 
 ## Status
 - Development dijeda; stack Docker (`docker compose -f deploy/compose.dev.yml`) dimatikan.

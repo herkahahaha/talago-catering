@@ -1,109 +1,144 @@
 #!/usr/bin/env node
 /**
- * Validasi konsistensi dokumentasi dengan kontrak (PRD §6.2):
- *  - Kode error di docs/api.md harus sama dengan ERROR_CODES di packages/contracts/src/errors.ts
- *  - Status order di docs/quick-reference.md (diagram alur) harus sama dengan ORDER_STATUSES di packages/contracts/src/enums.ts
+ * Validasi konsistensi dokumentasi dengan kontrak (PRD §6.2).
+ *
+ * Pemeriksaan:
+ *  1. Kode error di docs/api.md (tabel "## Kode error") = ERROR_CODES di packages/contracts/src/errors.ts
+ *  2. Status order di docs/quick-reference.md (blok diagram "### Status Flow") = ORDER_STATUSES di packages/contracts/src/enums.ts
+ *  3. Setiap tautan berkas Markdown di docs/README.md ada di disk
+ *  4. Tidak ada path absolut lokal (/Users/, /home/, C:\) di docs/
+ *
+ * Env opsional:
+ *  CHECK_DOCS_ROOT  akar repo (dipakai tes fixture)
  */
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { readFileSync, readdirSync, existsSync, statSync } from 'node:fs';
+import { join, dirname, relative } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const ROOT = new URL('..', import.meta.url).pathname;
+const ROOT = process.env.CHECK_DOCS_ROOT
+  ? process.env.CHECK_DOCS_ROOT
+  : join(dirname(fileURLToPath(import.meta.url)), '..');
+
 const violations = [];
+const read = (rel) => readFileSync(join(ROOT, rel), 'utf8');
 
-// ========== ERROR CODES ==========
-// Baca ERROR_CODES dari contracts
-const errorsContent = readFileSync(join(ROOT, 'packages/contracts/src/errors.ts'), 'utf8');
-const errorCodesMatch = errorsContent.match(/export const ERROR_CODES = \[([\s\S]*?)\]/);
-if (!errorCodesMatch) {
-  violations.push('contracts/errors.ts: tidak ditemukan ERROR_CODES');
-} else {
-  const contractErrorCodes = errorCodesMatch[1]
+/** Ambil isi array konstanta TypeScript bernama `name` sebagai daftar string. */
+function readTsStringArray(relPath, name) {
+  const src = read(relPath);
+  const m = src.match(new RegExp(`export const ${name}\\s*=\\s*\\[([\\s\\S]*?)\\]\\s*(as const)?`));
+  if (!m) return null;
+  return m[1]
     .split(',')
-    .map((s) => s.trim().replace(/['"`]/g, ''))
+    .map((s) => s.trim().replace(/^['"`]|['"`]$/g, ''))
     .filter(Boolean);
-  // console.log('Contract error codes:', contractErrorCodes);
+}
 
-  // Baca kode error dari docs/api.md (tabel markdown)
-  const apiDocContent = readFileSync(join(ROOT, 'docs/api.md'), 'utf8');
-  const errorTableMatch = apiDocContent.match(/## Kode error([\s\S]*?)(?:\n##|\n$)/);
-  if (!errorTableMatch) {
-    violations.push('docs/api.md: tidak ditemukan bagian "## Kode error"');
+/** Ambil baris-baris di bawah heading `## <title>` sampai heading `##` berikutnya. */
+function sectionLines(md, title) {
+  const lines = md.split('\n');
+  const start = lines.findIndex((l) => l.trim() === `## ${title}`);
+  if (start === -1) return null;
+  const out = [];
+  for (let i = start + 1; i < lines.length; i++) {
+    if (/^## /.test(lines[i])) break;
+    out.push(lines[i]);
+  }
+  return out;
+}
+
+// ========== 1. KODE ERROR ==========
+{
+  const contractCodes = readTsStringArray('packages/contracts/src/errors.ts', 'ERROR_CODES');
+  if (!contractCodes) {
+    violations.push('contracts/errors.ts: ERROR_CODES tidak ditemukan atau tidak terbaca');
   } else {
-    const tableText = errorTableMatch[1];
-    // Parse tabel markdown: | `KODE` | HTTP | Arti |
-    const docErrorCodes = [];
-    for (const line of tableText.split('\n')) {
-      const trimmed = line.trim();
-      if (trimmed.startsWith('| `') && !trimmed.startsWith('| Kode')) {
-        const match = trimmed.match(/\| `([^`]+)` \|/);
-        if (match) docErrorCodes.push(match[1]);
+    const section = sectionLines(read('docs/api.md'), 'Kode error');
+    if (!section) {
+      violations.push('docs/api.md: bagian "## Kode error" tidak ditemukan');
+    } else {
+      const docCodes = [];
+      let badRows = 0;
+      for (const line of section) {
+        const t = line.trim();
+        if (!t.startsWith('|')) continue;
+        if (/^\|\s*Kode\s*\|/.test(t) || /^\|\s*:?--/.test(t)) continue; // header & pemisah
+        const m = t.match(/^\|\s*`([A-Z_]+)`\s*\|\s*\d{3}\s*\|/);
+        if (m) docCodes.push(m[1]);
+        else badRows++;
       }
-    }
-    // console.log('Doc error codes:', docErrorCodes);
-
-    // Bandingkan
-    const missingInDoc = contractErrorCodes.filter((c) => !docErrorCodes.includes(c));
-    const extraInDoc = docErrorCodes.filter((d) => !contractErrorCodes.includes(d));
-
-    if (missingInDoc.length > 0) {
-      violations.push(`Kode error di contracts tapi tidak di docs/api.md: ${missingInDoc.join(', ')}`);
-    }
-    if (extraInDoc.length > 0) {
-      violations.push(`Kode error di docs/api.md tapi tidak di contracts: ${extraInDoc.join(', ')}`);
-    }
-    if (missingInDoc.length === 0 && extraInDoc.length === 0) {
-      console.log(`Kode error OK (${contractErrorCodes.length} kode cocok).`);
+      if (badRows > 0) {
+        violations.push(`docs/api.md: ${badRows} baris tabel kode error tidak bisa dibaca (format harus | \`KODE\` | HTTP | Arti |)`);
+      }
+      const missing = contractCodes.filter((c) => !docCodes.includes(c));
+      const extra = docCodes.filter((d) => !contractCodes.includes(d));
+      if (missing.length) violations.push(`Kode di contracts tapi tidak di docs/api.md: ${missing.join(', ')}`);
+      if (extra.length) violations.push(`Kode di docs/api.md tapi tidak di contracts: ${extra.join(', ')}`);
+      if (!missing.length && !extra.length && !badRows) {
+        console.log(`Kode error OK (${contractCodes.length} kode).`);
+      }
     }
   }
 }
 
-// ========== ORDER STATUSES ==========
-// Baca ORDER_STATUSES dari contracts
-const enumsContent = readFileSync(join(ROOT, 'packages/contracts/src/enums.ts'), 'utf8');
-const orderStatusesMatch = enumsContent.match(/export const ORDER_STATUSES = \[([\s\S]*?)\]/);
-if (!orderStatusesMatch) {
-  violations.push('contracts/enums.ts: tidak ditemukan ORDER_STATUSES');
-} else {
-  const contractOrderStatuses = orderStatusesMatch[1]
-    .split(',')
-    .map((s) => s.trim().replace(/['"`]/g, ''))
-    .filter(Boolean);
-  // console.log('Contract order statuses:', contractOrderStatuses);
-
-  // Baca status order dari docs/quick-reference.md (diagram alur)
-  const quickRefContent = readFileSync(join(ROOT, 'docs/quick-reference.md'), 'utf8');
-  // Cari diagram alur status (bagian "### Status Flow" atau diagram mermaid-like)
-  const flowMatch = quickRefContent.match(/### Status Flow[\s\S]*?```([\s\S]*?)```/);
-  if (!flowMatch) {
-    violations.push('docs/quick-reference.md: tidak ditemukan bagian "### Status Flow" dengan diagram');
+// ========== 2. STATUS ORDER ==========
+{
+  const contractStatuses = readTsStringArray('packages/contracts/src/enums.ts', 'ORDER_STATUSES');
+  if (!contractStatuses) {
+    violations.push('contracts/enums.ts: ORDER_STATUSES tidak ditemukan atau tidak terbaca');
   } else {
-    const flowText = flowMatch[1];
-    // Ekstrak status dari diagram: pending_payment, paid, in_production, out_for_delivery, delivered, expired, cancelled_refunded, paid_after_expiry
-    const statusPattern = /\b(pending_payment|paid|in_production|out_for_delivery|delivered|expired|cancelled_refunded|paid_after_expiry)\b/g;
-    const docOrderStatuses = [...new Set(flowText.match(statusPattern) || [])].sort();
-    // console.log('Doc order statuses:', docOrderStatuses);
-
-    // Bandingkan
-    const missingInDoc = contractOrderStatuses.filter((c) => !docOrderStatuses.includes(c));
-    const extraInDoc = docOrderStatuses.filter((d) => !contractOrderStatuses.includes(d));
-
-    if (missingInDoc.length > 0) {
-      violations.push(`Status order di contracts tapi tidak di docs/quick-reference.md: ${missingInDoc.join(', ')}`);
-    }
-    if (extraInDoc.length > 0) {
-      violations.push(`Status order di docs/quick-reference.md tapi tidak di contracts: ${extraInDoc.join(', ')}`);
-    }
-    if (missingInDoc.length === 0 && extraInDoc.length === 0) {
-      console.log(`Status order OK (${contractOrderStatuses.length} status cocok).`);
+    const qr = read('docs/quick-reference.md');
+    const fm = qr.match(/### Status Flow[\s\S]*?```([\s\S]*?)```/);
+    if (!fm) {
+      violations.push('docs/quick-reference.md: "### Status Flow" dengan blok diagram tidak ditemukan');
+    } else {
+      // Isi blok kode di bawah "### Status Flow" hanya berisi diagram, jadi seluruh blok dipindai.
+      // Prosa di luar blok (mis. "paid" di kalimat biasa) tidak ikut terbaca.
+      const tokenPattern = new RegExp(`\\b(${contractStatuses.join('|')})\\b`, 'g');
+      const docStatuses = [...new Set(fm[1].match(tokenPattern) || [])].sort();
+      const sortedContract = [...contractStatuses].sort();
+      const missing = sortedContract.filter((s) => !docStatuses.includes(s));
+      const extra = docStatuses.filter((s) => !sortedContract.includes(s));
+      if (missing.length) violations.push(`Status di contracts tapi tidak di diagram quick-reference: ${missing.join(', ')}`);
+      if (extra.length) violations.push(`Status di diagram quick-reference tapi tidak di contracts: ${extra.join(', ')}`);
+      if (!missing.length && !extra.length) {
+        console.log(`Status order OK (${contractStatuses.length} status).`);
+      }
     }
   }
+}
+
+// ========== 3. TAUTAN README ==========
+{
+  const readme = read('docs/README.md');
+  const links = [...readme.matchAll(/\]\(([^)\s]+\.md)\)/g)].map((m) => m[1]);
+  const broken = links.filter((l) => !existsSync(join(ROOT, 'docs', l)));
+  if (broken.length) violations.push(`docs/README.md menaut berkas yang tidak ada: ${broken.join(', ')}`);
+  else console.log(`Tautan README OK (${links.length} tautan).`);
+}
+
+// ========== 4. PATH ABSOLUT LOKAL ==========
+{
+  const badPattern = /(\/Users\/[^\s`)]+|\/home\/[^\s`)]+|[A-Z]:\\[^\s`)]+)/g;
+  const files = [];
+  const walk = (dir) => {
+    for (const name of readdirSync(dir)) {
+      const p = join(dir, name);
+      if (statSync(p).isDirectory()) walk(p);
+      else if (name.endsWith('.md')) files.push(p);
+    }
+  };
+  walk(join(ROOT, 'docs'));
+  for (const f of files) {
+    const hits = readFileSync(f, 'utf8').match(badPattern) || [];
+    for (const h of hits) violations.push(`${relative(ROOT, f)}: path lokal "${h}"`);
+  }
+  if (!violations.some((v) => v.includes('path lokal'))) console.log(`Tidak ada path lokal (${files.length} berkas).`);
 }
 
 // ========== HASIL ==========
-if (violations.length > 0) {
-  console.error('\nDokumen tidak konsisten dengan kontrak:');
-  for (const violation of violations) console.error(`  ✗ ${violation}`);
+if (violations.length) {
+  console.error('\nDokumen tidak konsisten:');
+  for (const v of violations) console.error(`  ✗ ${v}`);
   process.exit(1);
 }
-
 console.log('\nSemua validasi dokumen lolos.');

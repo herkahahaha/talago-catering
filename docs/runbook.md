@@ -14,8 +14,7 @@ docker compose --env-file deploy/env/.env.production -f deploy/compose.prod.yml 
 docker compose --env-file deploy/env/.env.production -f deploy/compose.prod.yml ps
 curl -fsS http://127.0.0.1:3000/health
 
-# Optional
-docker compose deploy/compose.prod.yml run --rm migrate pnpm admin:create --email … --role admin
+# Admin pertama: lihat "Admin pertama (bootstrap)" di bawah. Belum ada perintah di repo.
 ```
 
 Compose menjalankan `migrate` lebih dulu; API/worker/web/dashboard baru dibuat setelah migrasi
@@ -34,6 +33,25 @@ pnpm build
 
 Urutan rilis: migrasi → API baru → worker baru → storefront → dashboard. Migrasi dirancang
 additive; bila ada perubahan destruktif, lakukan expand/contract dua langkah.
+
+### 1.3 Admin pertama (bootstrap)
+
+Satu-satunya sumber untuk prosedur ini. Status: **rencana, belum diimplementasikan** (tidak ada
+script `admin:create` di `package.json`).
+
+Rencana: CLI sekali jalan dijalankan lewat compose production, misalnya
+`docker compose --env-file deploy/env/.env.production -f deploy/compose.prod.yml run --rm migrate pnpm admin:create --email <email> --role admin`.
+
+Aturan yang harus dipenuhi sebelum dianggap selesai:
+
+1. Password diminta lewat prompt, tidak lewat argumen, dan tidak pernah dicetak.
+2. Menolak berjalan bila sudah ada admin, kecuali memakai flag eksplisit.
+3. Menulis `audit_log` dengan aktor `cli`.
+4. Perintah yang sama dipakai untuk reset password dan membuat peran `kitchen` atau `courier`.
+   Reset password juga menghapus `staff_sessions` milik pengguna itu.
+
+Sampai CLI tersedia, admin pertama dibuat dengan INSERT manual ke database. Catat langkah itu di
+`audit_log` secara manual. Jangan menyimpan password admin di env production.
 
 ## 2. Pemeriksaan harian
 

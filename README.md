@@ -131,6 +131,8 @@ Seed membuat 8 hidangan, jadwal & kapasitas 14 hari ke depan, jendela antar, sat
 | `pnpm lint` | ESLint + **pemeriksa batas modul** |
 | `pnpm test` | Tes unit |
 | `pnpm test:integration` | Tes integrasi pada `DATABASE_URL_TEST` |
+| `pnpm check:docs` | Cocokkan kode error dan status order di `docs/` dengan `packages/contracts`, cek tautan README, dan cari path lokal |
+| `pnpm test:docs` | Tes fixture untuk `check:docs` |
 | `pnpm db:generate` | Generate migrasi Drizzle dari skema |
 | `pnpm db:migrate` | Terapkan migrasi |
 | `pnpm db:seed` | Seed idempoten (katalog, kapasitas, akun, order demo) |
