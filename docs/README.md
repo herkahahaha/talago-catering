@@ -12,7 +12,7 @@ language: id-ID
 | [api.md](api.md) | Semua endpoint API v1 publik dan admin, contoh request/response, kode error |
 | [docker.md](docker.md) | Arsitektur container, cara menjalankan dev/staging/production, troubleshooting |
 | [dashboard-ui.md](dashboard-ui.md) | Design system shadcn/ui, token, komponen, pola pemakaian, screenshot |
-| [DESIGN.md](DESIGN.md) | Design system material 3, komponen, pola pemakaian untuk storefront `apps/web`, screenshot |
+| [design-web.md](design-web.md) | Design system material 3, komponen, pola pemakaian untuk storefront `apps/web`, screenshot |
 | [runbook.md](runbook.md) | Deploy pertama, pemeriksaan harian, refund, backup, insiden, go-live |
 | [prd-mapping.md](prd-mapping.md) | Pemetaan PRD §1–§13 ke implementasi, status per fitur |
 | [quick-reference.md](quick-reference.md) | Ringkasan cepat mesin-baca: stack, aturan bisnis, API, arsitektur, design system |
