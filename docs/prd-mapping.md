@@ -14,8 +14,8 @@ mock · ⏳ fase berikutnya.
 | :-- | :-- | :-- | :-- |
 | 1 | Minimal 50 porsi per order (total semua menu, ADR 0001 O1) | `order.min_portions = 50`; validasi `MIN_ORDER_NOT_MET` | ✅ |
 | 2 | 200 porsi/hari | `capacity.max_regular = 200` | ✅ |
-| 3 | Minimal 50 untuk target hanya indikator dapur | ditolak sebelum reservasi; produksi tetap berjalan walau target belum tercapai | ✅ |
-| 4 | PO 201–1000, kapasitas dapur bersama | `max_po` per tanggal + `kitchen_max_total` + CHECK constraint | ✅ |
+| 3 | Target minimum produksi hanya indikator dapur, bukan syarat checkout (ADR 0001 O2) | tidak memblokir checkout; produksi tetap berjalan walau target belum tercapai | ✅ |
+| 4 | PO di atas batas order (default >200), kapasitas dapur bersama | `max_po` per tanggal (default 500) + `kitchen_max_total` (default 1000) + CHECK constraint | ✅ |
 | 5 | Cut-off H-1 18.00 | `daily_capacity.cut_off_at`, default H-1 18:00 WIB | ✅ |
 | 6 | PO dibayar di muka | order PO `hold=true` sampai pembayaran; tunai langsung lunas | ✅ |
 | 7 | Refund manual soft launch | `refunds.status=queued` → admin menyelesaikan | ✅ |
@@ -138,14 +138,14 @@ Fase 1a–1d selesai pada level thin slice (lihat README §7). Fase 2/3 belum.
 | Bot tidak melewati plafon hold; hold lepas tanpa job | ✅ tes integrasi |
 | Webhook duplikat/terbalik/signature salah/telat | ✅ tes integrasi (urutan terbalik: event `failed` setelah `settled` diabaikan sebagai duplikat status) |
 | Beban baca 280 rps CDN / 56 rps origin | ⏳ perlu k6 di environment uji (`scripts/load-checkout.js`) |
-| Restore backup & RPO/RTO | ⏳ prosedur ada di runbook, belum dieksekusi |
+| Restore backup & RPO/RTO | ⏳ prosedur ada di docker, belum dieksekusi |
 | Uji injeksi catatan & otorisasi peran | 🟡 rendering teks aman; uji formal belum |
 | Simulasi satu hari penuh | ⏳ |
 
 ## §12 Metrik
 
 Belum ada instrumentasi APM. Yang tersedia: `audit_log`, `webhook_events`, status order, dan query
-SQL di runbook. Rekomendasi: tambahkan metrik Prometheus/OTel di fase 1d lanjutan (konversi,
+SQL di docker. Rekomendasi: tambahkan metrik Prometheus/OTel di fase 1d lanjutan (konversi,
 rasio hold→bayar, porsi terisi, refund, p95 latency).
 
 ## §13 Risiko

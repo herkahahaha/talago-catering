@@ -19,6 +19,7 @@ function fixture() {
     mkdirSync(join(dir, p), { recursive: true });
     cpSync(join(REPO, p), join(dir, p), { recursive: true });
   }
+  for (const f of ['README.md', 'AGENTS.md']) cpSync(join(REPO, f), join(dir, f));
   return dir;
 }
 
@@ -54,12 +55,12 @@ const cases = [
   },
   {
     name: 'kata "paid" di prosa tidak lagi memberi positif palsu',
-    mutate: (r) => mutate(r, 'docs/quick-reference.md', (s) => s.replace('### Status Flow', '### Status Flow\nKata paid di luar diagram.')),
+    mutate: (r) => mutate(r, 'docs/architecture.md', (s) => s.replace(/(## \d+\. State machine order)/, '$1\nKata paid di luar diagram.')),
     expectFail: false,
   },
   {
     name: 'status hilang dari diagram',
-    mutate: (r) => mutate(r, 'docs/quick-reference.md', (s) => s.replace(/paid_after_expiry/g, 'X_EXPIRY')),
+    mutate: (r) => mutate(r, 'docs/architecture.md', (s) => s.replace(/paid_after_expiry/g, 'X_EXPIRY')),
     expectFail: true,
     expectMsg: 'paid_after_expiry',
   },
@@ -70,8 +71,26 @@ const cases = [
     expectMsg: 'session-summary.md',
   },
   {
+    name: 'tautan rusak di README akar',
+    mutate: (r) => mutate(r, 'README.md', (s) => s + '\n[rusak](docs/design-web.md.md)\n'),
+    expectFail: true,
+    expectMsg: 'design-web.md.md',
+  },
+  {
+    name: 'rujukan `docs/...md` ke berkas yang tidak ada',
+    mutate: (r) => mutate(r, 'docs/architecture.md', (s) => s + '\n- `docs/DESIGN.md`\n'),
+    expectFail: true,
+    expectMsg: 'docs/DESIGN.md',
+  },
+  {
+    name: 'berkas docs/ tidak tertaut dari indeks',
+    mutate: (r) => writeFileSync(join(r, 'docs/yatim.md'), '# yatim\n'),
+    expectFail: true,
+    expectMsg: 'docs/yatim.md',
+  },
+  {
     name: 'path absolut pengguna terdeteksi',
-    mutate: (r) => mutate(r, 'docs/runbook.md', (s) => s + '\nLokasi: /Users/nama/proyek\n'),
+    mutate: (r) => mutate(r, 'docs/docker.md', (s) => s + '\nLokasi: /Users/nama/proyek\n'),
     expectFail: true,
     expectMsg: '/Users/',
   },

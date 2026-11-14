@@ -394,8 +394,6 @@ Untuk database terkelola, gunakan snapshot/PITR dari penyedia. Uji restore secar
 | `PAYMENT_GATEWAY` | ya | `mock` hanya untuk non-production |
 | `ADMIN_EMAIL`, `ADMIN_PASSWORD` | seed | Perintah CLI sekali jalan |
 
-- Pembuatan admin pertama: lihat [`runbook.md` §1.3](runbook.md). Itu satu-satunya sumber prosedurnya.
-- Sesi staf yang aktif tidak otomatis batal saat password diubah; lihat [`runbook.md` §9](runbook.md).
 - `ROLE` di-override oleh compose (`web` untuk api, `worker` untuk worker).
 
 ---
@@ -485,6 +483,12 @@ Health check yang tersedia:
 | Dashboard kosong setelah seed / login berputar ke `/login` | (a) seed belum pernah jalan; (b) cookie staf lintas-site seperti di atas; (c) tanggal demo (besok → +14 hari) jatuh di bulan berbeda dari filter | (a) jalankan seed profil; (b) `VITE_API_URL` kosongkan (default compose dev); (c) ganti filter bulan di halaman Pesanan |
 | Login dashboard staging/production berputar ke /login | Host browser ≠ host `PUBLIC_API_URL` (lintas-site, cookie Lax tidak dikirim; di production juga cek `APP_URL`/`DASHBOARD_URL` vs domain yang dibuka) | Samakan host, atau rebuild dengan URL baru |
 | `docker compose` error env file tidak ditemukan | Belum menyalin file example | `cp deploy/env/.env.<env>.example deploy/env/.env.<env>` |
+
+Catatan diagnosis (dari perbaikan dev-flow 2026-11-07):
+
+1. Untuk masalah cookie, reproduksi dulu dengan `curl -c/-b` lewat origin yang sama dengan browser. Ini membedakan cookie hilang dari CORS dalam satu langkah.
+2. `docker compose config --services` (dengan/tanpa `--profile`) adalah acuan "no such service"; jangan percaya perintah yang tertulis di dokumen.
+3. Proxy dev diverifikasi per frontend: Astro memakai `vite.server.proxy`, sedangkan dev server TanStack Start mengabaikannya (dashboard memakai plugin middleware `devApiProxy` di `vite.config.ts`). Uji `/api/v1/health` lewat tiap port setelah mengubah proxy.
 
 Validasi konfigurasi tanpa menyalakan service:
 

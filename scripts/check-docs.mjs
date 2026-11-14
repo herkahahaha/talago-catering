@@ -4,7 +4,7 @@
  *
  * Pemeriksaan:
  *  1. Kode error di docs/api.md (tabel "## Kode error") = ERROR_CODES di packages/contracts/src/errors.ts
- *  2. Status order di docs/quick-reference.md (blok diagram "### Status Flow") = ORDER_STATUSES di packages/contracts/src/enums.ts
+ *  2. Status order di docs/architecture.md (blok diagram "## N. State machine order") = ORDER_STATUSES di packages/contracts/src/enums.ts
  *  3. Setiap tautan berkas Markdown di docs/README.md ada di disk
  *  4. Tidak ada path absolut lokal (/Users/, /home/, C:\) di docs/
  *
@@ -86,20 +86,20 @@ function sectionLines(md, title) {
   if (!contractStatuses) {
     violations.push('contracts/enums.ts: ORDER_STATUSES tidak ditemukan atau tidak terbaca');
   } else {
-    const qr = read('docs/quick-reference.md');
-    const fm = qr.match(/### Status Flow[\s\S]*?```([\s\S]*?)```/);
+    const arch = read('docs/architecture.md');
+    const fm = arch.match(/## \d+\. State machine order[\s\S]*?```([\s\S]*?)```/);
     if (!fm) {
-      violations.push('docs/quick-reference.md: "### Status Flow" dengan blok diagram tidak ditemukan');
+      violations.push('docs/architecture.md: bagian "## N. State machine order" dengan blok diagram tidak ditemukan');
     } else {
-      // Isi blok kode di bawah "### Status Flow" hanya berisi diagram, jadi seluruh blok dipindai.
+      // Isi blok kode di bawah "State machine order" hanya berisi diagram, jadi seluruh blok dipindai.
       // Prosa di luar blok (mis. "paid" di kalimat biasa) tidak ikut terbaca.
       const tokenPattern = new RegExp(`\\b(${contractStatuses.join('|')})\\b`, 'g');
       const docStatuses = [...new Set(fm[1].match(tokenPattern) || [])].sort();
       const sortedContract = [...contractStatuses].sort();
       const missing = sortedContract.filter((s) => !docStatuses.includes(s));
       const extra = docStatuses.filter((s) => !sortedContract.includes(s));
-      if (missing.length) violations.push(`Status di contracts tapi tidak di diagram quick-reference: ${missing.join(', ')}`);
-      if (extra.length) violations.push(`Status di diagram quick-reference tapi tidak di contracts: ${extra.join(', ')}`);
+      if (missing.length) violations.push(`Status di contracts tapi tidak di diagram architecture: ${missing.join(', ')}`);
+      if (extra.length) violations.push(`Status di diagram architecture tapi tidak di contracts: ${extra.join(', ')}`);
       if (!missing.length && !extra.length) {
         console.log(`Status order OK (${contractStatuses.length} status).`);
       }
@@ -107,13 +107,48 @@ function sectionLines(md, title) {
   }
 }
 
-// ========== 3. TAUTAN README ==========
+// ========== 3. TAUTAN & RUJUKAN BERKAS ==========
+// Semua tautan Markdown ke .md (relatif terhadap berkas pemuat) dan rujukan `docs/....md`
+// (relatif terhadap akar repo) di docs/, README.md, dan AGENTS.md harus ada di disk.
+// Setiap berkas .md di docs/ (selain README) harus tertaut dari docs/README.md.
 {
-  const readme = read('docs/README.md');
-  const links = [...readme.matchAll(/\]\(([^)\s]+\.md)\)/g)].map((m) => m[1]);
-  const broken = links.filter((l) => !existsSync(join(ROOT, 'docs', l)));
-  if (broken.length) violations.push(`docs/README.md menaut berkas yang tidak ada: ${broken.join(', ')}`);
-  else console.log(`Tautan README OK (${links.length} tautan).`);
+  const docFiles = [];
+  const walkDocs = (dir) => {
+    for (const name of readdirSync(dir)) {
+      const p = join(dir, name);
+      if (statSync(p).isDirectory()) walkDocs(p);
+      else if (name.endsWith('.md')) docFiles.push(p);
+    }
+  };
+  walkDocs(join(ROOT, 'docs'));
+  const scanned = [...docFiles, ...['README.md', 'AGENTS.md'].map((n) => join(ROOT, n)).filter(existsSync)];
+
+  let checked = 0;
+  const broken = [];
+  for (const f of scanned) {
+    const src = readFileSync(f, 'utf8');
+    const rel = relative(ROOT, f);
+    const targets = [];
+    for (const m of src.matchAll(/\]\(([^)\s#]+\.md)(?:#[^)\s]*)?\)/g)) {
+      if (!/^[a-z][a-z0-9+.-]*:/i.test(m[1])) targets.push(join(dirname(f), m[1]));
+    }
+    for (const m of src.matchAll(/`(docs\/[A-Za-z0-9_./-]+\.md)`/g)) targets.push(join(ROOT, m[1]));
+    for (const t of targets) {
+      checked++;
+      if (!existsSync(t)) broken.push(`${rel} -> ${relative(ROOT, t)}`);
+    }
+  }
+  if (broken.length) violations.push(`Tautan/rujukan ke berkas yang tidak ada: ${broken.join('; ')}`);
+  else console.log(`Tautan & rujukan berkas OK (${checked} di ${scanned.length} berkas).`);
+
+  const indexPath = join(ROOT, 'docs/README.md');
+  const indexSrc = readFileSync(indexPath, 'utf8');
+  const linked = new Set(
+    [...indexSrc.matchAll(/\]\(([^)\s#]+\.md)(?:#[^)\s]*)?\)/g)].map((m) => join(dirname(indexPath), m[1])),
+  );
+  const orphans = docFiles.filter((f) => f !== indexPath && !linked.has(f)).map((f) => relative(ROOT, f));
+  if (orphans.length) violations.push(`Berkas docs/ tidak tertaut dari docs/README.md: ${orphans.join(', ')}`);
+  else console.log('Semua berkas docs/ tertaut dari docs/README.md.');
 }
 
 // ========== 4. PATH ABSOLUT LOKAL ==========
