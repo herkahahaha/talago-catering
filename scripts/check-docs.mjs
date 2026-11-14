@@ -86,10 +86,10 @@ function sectionLines(md, title) {
   if (!contractStatuses) {
     violations.push('contracts/enums.ts: ORDER_STATUSES tidak ditemukan atau tidak terbaca');
   } else {
-    const qr = read('docs/quick-reference.md');
+    const qr = read('docs/docker.md');
     const fm = qr.match(/### Status Flow[\s\S]*?```([\s\S]*?)```/);
     if (!fm) {
-      violations.push('docs/quick-reference.md: "### Status Flow" dengan blok diagram tidak ditemukan');
+      violations.push('docs/docker.md: "### Status Flow" dengan blok diagram tidak ditemukan');
     } else {
       // Isi blok kode di bawah "### Status Flow" hanya berisi diagram, jadi seluruh blok dipindai.
       // Prosa di luar blok (mis. "paid" di kalimat biasa) tidak ikut terbaca.
