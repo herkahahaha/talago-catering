@@ -20,6 +20,20 @@ Build & task runner: **Turborepo** + pnpm workspaces. Database: **PostgreSQL 16*
 
 ---
 
+## Indeks dokumen
+
+| Dokumen | Isi |
+| :-- | :-- |
+| [architecture.md](architecture.md) | Topologi, peta modul, kapasitas atomik, state machine, auth |
+| [api.md](api.md) | Semua endpoint API v1 publik dan admin, contoh request/response, kode error |
+| [docker.md](docker.md) | Arsitektur container, menjalankan dev/staging/production, operasional, troubleshooting |
+| [dashboard-ui.md](dashboard-ui.md) | Design system shadcn/ui untuk dashboard |
+| [design-web.md](design-web.md) | Design system Material 3 untuk storefront `apps/web` |
+| [prd-mapping.md](prd-mapping.md) | Pemetaan PRD §1–§13 ke implementasi, status per fitur |
+| [adr/0001-batas-order-dan-target-produksi.md](adr/0001-batas-order-dan-target-produksi.md) | ADR: batas porsi per order dan target minimum produksi |
+
+---
+
 ## 1. Yang sudah berjalan
 
 - **Kapasitas atomik** per tanggal: `reserved_regular`, `held_regular`, plafon hold, cut-off,
@@ -79,7 +93,7 @@ docker compose --profile seed -f deploy/compose.dev.yml run --rm seed   # sekali
 Dashboard <http://127.0.0.1:3001>, storefront <http://127.0.0.1:4321>, API
 <http://127.0.0.1:3000/health>. Database dev dipetakan ke `127.0.0.1:5433` agar tidak bentrok
 dengan PostgreSQL native. Panduan lengkap (staging, production, migrasi, backup):
-[`docs/docker.md`](docs/docker.md).
+[`docs/docker.md`](docker.md).
 
 ### 3.2 Native (tanpa Docker)
 
@@ -229,22 +243,22 @@ header keamanan; storefront mengirim CSP baseline. Origin dashboard terpisah dan
 
 | Storefront | Checkout | Status pesanan |
 | :-- | :-- | :-- |
-| ![Beranda](docs/screenshots/storefront-home.png) | ![Checkout](docs/screenshots/storefront-checkout.png) | ![Status](docs/screenshots/storefront-order.png) |
+| ![Beranda](screenshots/storefront-home.png) | ![Checkout](screenshots/storefront-checkout.png) | ![Status](screenshots/storefront-order.png) |
 
 | Dashboard pesanan (bulanan) | Pengaturan hari | Rekap produksi |
 | :-- | :-- | :-- |
-| ![Pesanan](docs/screenshots/dashboard-orders.png) | ![Pengaturan hari](docs/screenshots/dashboard-day-settings.png) | ![Rekap](docs/screenshots/dashboard-production.png) |
+| ![Pesanan](screenshots/dashboard-orders.png) | ![Pengaturan hari](screenshots/dashboard-day-settings.png) | ![Rekap](screenshots/dashboard-production.png) |
 
 | Pesanan saya (storefront) | Kelola menu (dashboard) |
 | :-- | :-- |
-| ![Pesanan saya](docs/screenshots/storefront-orders-lookup.png) | ![Menu](docs/screenshots/dashboard-menu.png) |
+| ![Pesanan saya](screenshots/storefront-orders-lookup.png) | ![Menu](screenshots/dashboard-menu.png) |
 
-Rincian pemetaan per bagian PRD: [`docs/prd-mapping.md`](docs/prd-mapping.md).
-Arsitektur & alur: [`docs/architecture.md`](docs/architecture.md).
-Operasional: [`docs/docker.md`](docs/docker.md).
-Kontrak API: [`docs/api.md`](docs/api.md).
-Design system dashboard: [`docs/dashboard-ui.md`](docs/dashboard-ui.md).
-Design system web: [`docs/design-web.md`](docs/design-web.md).
+Rincian pemetaan per bagian PRD: [`docs/prd-mapping.md`](prd-mapping.md).
+Arsitektur & alur: [`docs/architecture.md`](architecture.md).
+Operasional: [`docs/docker.md`](docker.md).
+Kontrak API: [`docs/api.md`](api.md).
+Design system dashboard: [`docs/dashboard-ui.md`](dashboard-ui.md).
+Design system web: [`docs/design-web.md`](design-web.md).
 
 ---
 
@@ -277,6 +291,6 @@ Lihat `.env.example`. Ringkasnya:
    catat RPO/RTO sebenarnya.
 6. **Image & deploy** — gunakan compose terpisah untuk staging dan production; build image dengan
    tag versi, jalankan migrasi sebagai service one-shot, lalu naikkan versi. Panduan lengkap:
-   [`docs/docker.md`](docs/docker.md).
+   [`docs/docker.md`](docker.md).
 
 ---

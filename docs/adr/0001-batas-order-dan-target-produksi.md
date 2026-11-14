@@ -3,7 +3,7 @@
 - **Status:** Diterima (O1–O3 diputuskan 2026-11-14; lihat §4)
 - **Tanggal:** 2026-11-13
 - **Pemilik keputusan:** Herka
-- **Sumber:** PRD System Design v2 (29 Okt 2026), `docs/prd-mapping.md` §2, `docs/api.md`, `docs/quick-reference.md`
+- **Sumber:** PRD System Design v2 (29 Okt 2026), `docs/prd-mapping.md` §2, `docs/api.md`
 
 ## 1. Konteks
 
@@ -74,7 +74,7 @@ Setelah O1–O3 diputuskan, ubah:
 
 - `docs/prd-mapping.md` §2 dan §5 (#1, #3, "Cap porsi per order 200").
 - `docs/api.md` contoh `PUT /admin/days/{date}` dan validasi.
-- `docs/quick-reference.md` bagian "Portions & Capacity".
+- `docs/README.md` §1 (batas porsi per order dan target minimum produksi).
 - `session-summary` (berkas sementara): sudah dihapus. Seluruh keputusannya tercakup di sini.
 
 ## 6. Alternatif yang ditolak
