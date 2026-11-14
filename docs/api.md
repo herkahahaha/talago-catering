@@ -216,7 +216,11 @@ storefront. Ketersediaan per tanggal tetap dapat diubah di `PUT /admin/days/{dat
 ```
 
 Validasi: `maxRegular + maxPo <= kitchenMaxTotal`; tidak boleh turun di bawah porsi terpesan;
-`holdCeiling <= maxRegular` dan `>= held` saat ini; `ceiling ≥ maxPo` Saat batas per order dinaikkan, `ensureMinimumHoldCeiling` menaikkan plafon hold hari-hari kedepan minimal sebesar batas tersebut (dibatasi `max_regular`).
+`holdCeiling <= maxRegular` dan `>= held` saat ini.
+
+Aturan ADR 0001 O3: `holdCeiling >= order.max_portions_per_order`. Aturan ini **belum ditegakkan di kode**.
+
+Saat batas per order dinaikkan, `ensureMinimumHoldCeiling` menaikkan plafon hold hari-hari kedepan minimal sebesar batas tersebut (dibatasi `max_regular`). Fungsi ini sudah ada di `packages/core`.
 
 ## Kode error
 

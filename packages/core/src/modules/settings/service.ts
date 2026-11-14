@@ -126,7 +126,7 @@ export async function getOrderConfig(exec: Executor): Promise<OrderConfig> {
   };
   return {
     minPortions: num('order.min_portions', 50),
-    maxPortionsPerOrder: num('order.max_portions_per_order', 50),
+    maxPortionsPerOrder: num('order.max_portions_per_order', 200),
     holdMinutes: num('order.hold_minutes', 10),
   };
 }
