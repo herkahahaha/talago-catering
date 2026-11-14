@@ -1,4 +1,7 @@
-# Project Summary — Deepseek Harness
+---
+language: en-US
+---
+# Project Summary — Catering Talago
 
 ## Project Overview
 - **Type**: Monorepo Turborepo + pnpm
@@ -23,7 +26,7 @@
 
 ### Database
 - **Migration**: `pnpm db:migrate`; reset+seed dev: `pnpm db:reset`
-- PostgreSQL 16 native at `127.0.0.1:5432` (db `catering_dev` / `catering_test`, user `catering`, password `catering_dev_pw`)
+- PostgreSQL 16 native at `127.0.0.1:5432`
 - Container dev uses host port `5433`
 
 ## Key Business Rules
@@ -190,3 +193,4 @@ Only forward transitions allowed via API admin; corrections recorded in audit lo
 - `docs/runbook.md` — Operational runbook (deploy, check, refund, backup, incidents)
 - `docs/docker.md` — Docker dev/staging/prod guides
 - `docs/dashboard-ui.md` — shadcn/ui design system for dashboard
+- `docs/DESIGN.md` — material 3 design system for storefront

@@ -220,14 +220,6 @@ docker compose -f deploy/compose.dev.yml run --rm api pnpm test:integration
 
 > Tes integrasi mereset schema `DATABASE_URL_TEST`; jangan arahkan ke database berisi data penting.
 
-### 6.7 (OPTIONAL) Catatan port database
-
-PostgreSQL native (bila ada) memakai `5432`, karena itu container dev dipetakan ke **5433**. Dari
-host gunakan `DATABASE_URL_HOST` yang sudah disediakan di env development:
-
-```bash
-psql 'postgres://catering:catering_dev_pw@127.0.0.1:5433/catering_dev'
-```
 
 Di dalam container, hostname database adalah `db:5432`.
 

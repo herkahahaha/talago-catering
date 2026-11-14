@@ -1,3 +1,7 @@
+---
+language: id-ID
+---
+
 # Arsitektur
 
 ## 1. Topologi
@@ -8,7 +12,7 @@
         ┌─────────────────────┼─────────────────────────┐
         │                     │                         │
   apps/web (Astro SSR)  apps/api (Hono, ROLE=web)  apps/dashboard (TanStack Start)
-  storefront tamu       1 host composer            internal, origin terpisah
+  storefront tamu       backend orkestrasi         internal, origin terpisah
         │                     │                         │
         └───────────┬─────────┴─────────────┬───────────┘
                     │                       │
