@@ -1,4 +1,5 @@
 ---
+import '@fontsource-variable/plus-jakarta-sans';
 import '../styles/global.css';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
@@ -23,13 +24,13 @@ const path = new URL(Astro.request.url).pathname;
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
-    <meta name="theme-color" content="#17251d" />
+    <meta name="theme-color" content="#8a3b0c" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
     <link
       rel="icon"
-      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='50' fill='%2317251d'/%3E%3Ctext x='50' y='68' font-family='Georgia' font-size='52' fill='%23fbf7ee' text-anchor='middle'%3ESK%3C/text%3E%3C/svg%3E"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='28' fill='%238a3b0c'/%3E%3Ctext x='50' y='66' font-family='Arial' font-weight='800' font-size='44' fill='%23ffffff' text-anchor='middle'%3ESK%3C/text%3E%3C/svg%3E"
     />
   </head>
   <body>

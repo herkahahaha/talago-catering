@@ -117,104 +117,121 @@ export default function MenuBrowser(props: Props) {
   }
 
   return (
-    <div>
-      <p class="tiny" style="margin: 0 0 0.65rem">
-        Tanggal dipilih: <strong>{selectedLabel()}</strong> · cut-off H-1 pukul 18.00 WIB · minimal{' '}
-        {props.minPortions} porsi
-      </p>
-      <div class="date-strip" role="group" aria-label="Pilih tanggal layanan">
-        <For each={openDays()}>
-          {(day) => (
-            <button
-              type="button"
-              class="date-chip"
-              classList={{ 'is-active': day.date === date() }}
-              onClick={() => void pickDay(day.date)}
-              aria-pressed={day.date === date()}
-            >
-              <span>{labelFor(day.date).weekday}</span>
-              <strong>{labelFor(day.date).date}</strong>
-              <span>{day.remainingRegular} porsi</span>
-            </button>
-          )}
-        </For>
-      </div>
-
-      <Show when={error()}>
-        <div class="alert alert-error" style="margin-top: 1rem" role="alert">
-          {error()}
-        </div>
-      </Show>
-
-      <Show
-        when={items().length > 0}
-        fallback={
-          <div class="panel empty" style="margin-top: 1.2rem">
-            <p>Belum ada menu yang dijadwalkan untuk tanggal ini.</p>
-            <p class="tiny">Pilih tanggal lain, atau hubungi dapur lewat WhatsApp.</p>
-          </div>
-        }
-      >
-        <div class="menu-grid" style="margin-top: 1.4rem">
-          <For each={items()}>
-            {(item) => {
-              const qty = () => portionsOf(item.id);
-              return (
-                <article class="dish">
-                  <div class="dish-media" data-category={item.category} aria-hidden="true">
-                    <Show
-                      when={item.imageUrl}
-                      fallback={<span class="dish-glyph">{initials(item.name)}</span>}
-                    >
-                      <img src={item.imageUrl!} alt="" loading="lazy" />
-                    </Show>
-                  </div>
-                  <div class="dish-body">
-                    <div class="dish-title">
-                      <h3>{item.name}</h3>
-                      <span class="dish-price">{rp(item.price)}</span>
-                    </div>
-                    <p class="dish-desc">{item.description}</p>
-                    <div class="dish-actions">
-                      <span class="tiny">per porsi</span>
-                      <div class="qty">
-                        <button
-                          type="button"
-                          aria-label={`Kurangi porsi ${item.name}`}
-                          disabled={qty() === 0}
-                          onClick={() => updateQty(item, qty() - 5)}
-                        >
-                          −
-                        </button>
-                        <input
-                          class="qty-input"
-                          type="number"
-                          min={0}
-                          max={props.maxPortions}
-                          aria-label={`Jumlah porsi ${item.name}`}
-                          value={qty()}
-                          onInput={(event) => updateQty(item, Number(event.currentTarget.value) || 0)}
-                        />
-                        <button
-                          type="button"
-                          aria-label={`Tambah porsi ${item.name}`}
-                          disabled={maxReached()}
-                          onClick={() => updateQty(item, qty() + 5)}
-                        >
-                          +
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </article>
-              );
-            }}
+    <div class="menu-layout">
+      <div>
+        <p class="tiny" style="margin: 0 0 0.65rem">
+          Tanggal dipilih: <strong>{selectedLabel()}</strong> · cut-off H-1 pukul 18.00 WIB · minimal{' '}
+          {props.minPortions} porsi
+        </p>
+        <div class="date-strip" role="group" aria-label="Pilih tanggal layanan">
+          <For each={openDays()}>
+            {(day) => (
+              <button
+                type="button"
+                class="date-chip"
+                classList={{ 'is-active': day.date === date() }}
+                onClick={() => void pickDay(day.date)}
+                aria-pressed={day.date === date()}
+              >
+                <span>{labelFor(day.date).weekday}</span>
+                <strong>{labelFor(day.date).date}</strong>
+                <span>{day.remainingRegular} porsi</span>
+              </button>
+            )}
           </For>
         </div>
-      </Show>
+
+        <Show when={error()}>
+          <div class="alert alert-error" style="margin-top: 1rem" role="alert">
+            {error()}
+          </div>
+        </Show>
+
+        <Show
+          when={items().length > 0}
+          fallback={
+            <div class="panel empty" style="margin-top: 1.2rem">
+              <p>Belum ada menu yang dijadwalkan untuk tanggal ini.</p>
+              <p class="tiny">Pilih tanggal lain, atau hubungi dapur lewat WhatsApp.</p>
+            </div>
+          }
+        >
+          <div class="menu-grid menu-grid--list" style="margin-top: 1.4rem">
+            <For each={items()}>
+              {(item) => {
+                const qty = () => portionsOf(item.id);
+                return (
+                  <article class="dish">
+                    <div class="dish-media" data-category={item.category} aria-hidden="true">
+                      <Show
+                        when={item.imageUrl}
+                        fallback={<span class="dish-glyph">{initials(item.name)}</span>}
+                      >
+                        <img src={item.imageUrl!} alt="" loading="lazy" />
+                      </Show>
+                    </div>
+                    <div class="dish-body">
+                      <div class="dish-title">
+                        <h3>{item.name}</h3>
+                        <span class="dish-price">{rp(item.price)}</span>
+                      </div>
+                      <p class="dish-desc">{item.description}</p>
+                      <div class="dish-actions">
+                        <span class="tiny">per porsi</span>
+                        <div class="qty">
+                          <button
+                            type="button"
+                            aria-label={`Kurangi porsi ${item.name}`}
+                            disabled={qty() === 0}
+                            onClick={() => updateQty(item, qty() - 5)}
+                          >
+                            −
+                          </button>
+                          <input
+                            class="qty-input"
+                            type="number"
+                            min={0}
+                            max={props.maxPortions}
+                            aria-label={`Jumlah porsi ${item.name}`}
+                            value={qty()}
+                            onInput={(event) => updateQty(item, Number(event.currentTarget.value) || 0)}
+                          />
+                          <button
+                            type="button"
+                            aria-label={`Tambah porsi ${item.name}`}
+                            disabled={maxReached()}
+                            onClick={() => updateQty(item, qty() + 5)}
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </article>
+                );
+              }}
+            </For>
+          </div>
+        </Show>
+      </div>
 
       <div class="cart-bar">
         <div class="cart-bar-inner">
+          <span class="cart-title">Keranjang pesanan</span>
+          <Show when={cart().length > 0}>
+            <div class="cart-lines">
+              <For each={cart()}>
+                {(entry) => (
+                  <div class="cart-item">
+                    <span>
+                      {entry.name} <span class="tiny">· {entry.portions} porsi</span>
+                    </span>
+                    <span>{rp(entry.price * entry.portions)}</span>
+                  </div>
+                )}
+              </For>
+            </div>
+          </Show>
           <div>
             <strong>{totalPortions()} porsi</strong>
             <small>
@@ -229,11 +246,7 @@ export default function MenuBrowser(props: Props) {
           </div>
           <Show
             when={canCheckout()}
-            fallback={
-              <span class="btn btn-ghost btn-sm" style="color: #cfc8b6; border-color: #4b5a4f">
-                Pilih menu dulu
-              </span>
-            }
+            fallback={<span class="btn btn-ghost btn-sm cart-hint">Pilih menu dulu</span>}
           >
             <a class="btn btn-amber" href="/checkout">
               Lanjut ke checkout

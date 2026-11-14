@@ -190,17 +190,17 @@ const badgeClass = !order
                 <span class="eyebrow" style="color: var(--amber-bright)">
                   Selesaikan pembayaran
                 </span>
-                <p style="color: #d8d1c0; margin: 0.5rem 0 0; font-size: 0.9rem">
+                <p style="color: #ffe3d0; margin: 0.5rem 0 0; font-size: 0.9rem">
                   {payment
                     ? `Tagihan ${payment.method === 'qris' ? 'QRIS' : 'Virtual Account'}`
                     : 'Tagihan belum dibuat'}
                 </p>
                 <span class="reference">{payment?.reference ?? '—'}</span>
                 <p style="font-weight: 700; font-size: 1.5rem; margin: 0 0 0.6rem">{rp(order.total)}</p>
-                <p style="color: #cfc8b6; font-size: 0.84rem">
+                <p style="color: #ffdcc4; font-size: 0.84rem">
                   {payment?.expiresAt ? `Tagihan berlaku sampai ${formatTime(payment.expiresAt)}` : ''}
                 </p>
-                <p style="color: #b9b2a0; font-size: 0.8rem">
+                <p style="color: #f5c9a8; font-size: 0.8rem">
                   {payment
                     ? 'Mode simulasi aktif: gunakan tombol simulasi di bawah untuk melunasi, atau bayar lewat aplikasi bank sungguhan bila gateway asli sudah dipasang.'
                     : 'Muat ulang halaman beberapa saat lagi atau buat tagihan ulang.'}
