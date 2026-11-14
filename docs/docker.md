@@ -394,8 +394,6 @@ Untuk database terkelola, gunakan snapshot/PITR dari penyedia. Uji restore secar
 | `PAYMENT_GATEWAY` | ya | `mock` hanya untuk non-production |
 | `ADMIN_EMAIL`, `ADMIN_PASSWORD` | seed | Perintah CLI sekali jalan |
 
-- Pembuatan admin pertama: lihat [`runbook.md` §1.3](runbook.md). Itu satu-satunya sumber prosedurnya.
-- Sesi staf yang aktif tidak otomatis batal saat password diubah; lihat [`runbook.md` §9](runbook.md).
 - `ROLE` di-override oleh compose (`web` untuk api, `worker` untuk worker).
 
 ---

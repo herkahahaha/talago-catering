@@ -90,7 +90,7 @@ const cases = [
   },
   {
     name: 'path absolut pengguna terdeteksi',
-    mutate: (r) => mutate(r, 'docs/runbook.md', (s) => s + '\nLokasi: /Users/nama/proyek\n'),
+    mutate: (r) => mutate(r, 'docs/docker.md', (s) => s + '\nLokasi: /Users/nama/proyek\n'),
     expectFail: true,
     expectMsg: '/Users/',
   },

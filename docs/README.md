@@ -13,7 +13,7 @@ language: id-ID
 | [docker.md](docker.md) | Arsitektur container, cara menjalankan dev/staging/production, troubleshooting |
 | [dashboard-ui.md](dashboard-ui.md) | Design system shadcn/ui, token, komponen, pola pemakaian, screenshot |
 | [design-web.md](design-web.md) | Design system material 3, komponen, pola pemakaian untuk storefront `apps/web`, screenshot |
-| [runbook.md](runbook.md) | Deploy pertama, pemeriksaan harian, refund, backup, insiden, go-live |
+| [docker.md](docker.md) | Deploy pertama, pemeriksaan harian, refund, backup, insiden, go-live |
 | [prd-mapping.md](prd-mapping.md) | Pemetaan PRD §1–§13 ke implementasi, status per fitur |
 | [quick-reference.md](quick-reference.md) | Ringkasan cepat mesin-baca: stack, aturan bisnis, API, arsitektur, design system |
 | [adr/0001-batas-order-dan-target-produksi.md](adr/0001-batas-order-dan-target-produksi.md) | ADR: batas porsi per order dan target minimum produksi |

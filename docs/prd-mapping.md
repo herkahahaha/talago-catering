@@ -138,14 +138,14 @@ Fase 1a–1d selesai pada level thin slice (lihat README §7). Fase 2/3 belum.
 | Bot tidak melewati plafon hold; hold lepas tanpa job | ✅ tes integrasi |
 | Webhook duplikat/terbalik/signature salah/telat | ✅ tes integrasi (urutan terbalik: event `failed` setelah `settled` diabaikan sebagai duplikat status) |
 | Beban baca 280 rps CDN / 56 rps origin | ⏳ perlu k6 di environment uji (`scripts/load-checkout.js`) |
-| Restore backup & RPO/RTO | ⏳ prosedur ada di runbook, belum dieksekusi |
+| Restore backup & RPO/RTO | ⏳ prosedur ada di docker, belum dieksekusi |
 | Uji injeksi catatan & otorisasi peran | 🟡 rendering teks aman; uji formal belum |
 | Simulasi satu hari penuh | ⏳ |
 
 ## §12 Metrik
 
 Belum ada instrumentasi APM. Yang tersedia: `audit_log`, `webhook_events`, status order, dan query
-SQL di runbook. Rekomendasi: tambahkan metrik Prometheus/OTel di fase 1d lanjutan (konversi,
+SQL di docker. Rekomendasi: tambahkan metrik Prometheus/OTel di fase 1d lanjutan (konversi,
 rasio hold→bayar, porsi terisi, refund, p95 latency).
 
 ## §13 Risiko

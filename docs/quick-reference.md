@@ -190,8 +190,7 @@ Diagram: see **Status Flow** above. Only forward transitions are allowed via adm
 - `docs/api.md` — Full API v1 specification
 - `docs/architecture.md` — System architecture & module map
 - `docs/prd-mapping.md` — PRD → implementation mapping table
-- `docs/runbook.md` — Operational runbook (deploy, check, refund, backup, incidents)
-- `docs/docker.md` — Docker dev/staging/prod guides
+- `docs/docker.md` — Operational docker (deploy, check, refund, backup, incidents)
 - `docs/dashboard-ui.md` — shadcn/ui design system for dashboard
 - `docs/design-web.md` — material 3 design system for storefront
 - `docs/adr/0001-batas-order-dan-target-produksi.md` — decision record for order limit and production target

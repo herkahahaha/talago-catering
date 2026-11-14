@@ -165,7 +165,7 @@ packages/
   contracts/    Zod + DTO + enum + label, dipakai ketiga frontend dan API
 deploy/         Dockerfile (api/web/dashboard/migrate/dev) + compose dev/staging/prod + env
 scripts/        check-boundaries.mjs (lint arsitektur)
-docs/           arsitektur, runbook, API, pemetaan PRD
+docs/           arsitektur, docker, API, pemetaan PRD
 ```
 
 ### Aturan modul
@@ -217,7 +217,7 @@ header keamanan; storefront mengirim CSP baseline. Origin dashboard terpisah dan
 | 1a — repo/CI/skema/kapasitas atomik | Selesai; tes konkurensi 5.000 lolos |
 | 1b — alur tamu, menu, anti-bot dasar | Selesai; CAPTCHA & rate limit database |
 | 1c — checkout, hold, webhook, job expiry, notifikasi | Selesai dengan gateway & kanal mock |
-| 1d — dashboard admin, rekap, audit, refund manual, load test, restore | Dashboard/rekap/audit/refund selesai; load test HTTP & uji restore masih manual (lihat runbook) |
+| 1d — dashboard admin, rekap, audit, refund manual, load test, restore | Dashboard/rekap/audit/refund selesai; load test HTTP & uji restore masih manual (lihat docker) |
 | 2 — kurir PWA, refund otomatis, ubah order, invoice, quotation/PO, multi-tanggal | Belum; tabel & endpoint dasar quotation/PO sudah disiapkan |
 | 3 — akun & loyalitas, read replica, pemecahan aplikasi | Belum |
 
@@ -237,11 +237,10 @@ header keamanan; storefront mengirim CSP baseline. Origin dashboard terpisah dan
 
 Rincian pemetaan per bagian PRD: [`docs/prd-mapping.md`](docs/prd-mapping.md).
 Arsitektur & alur: [`docs/architecture.md`](docs/architecture.md).
-Operasional: [`docs/runbook.md`](docs/runbook.md).
+Operasional: [`docs/docker.md`](docs/docker.md).
 Kontrak API: [`docs/api.md`](docs/api.md).
 Design system dashboard: [`docs/dashboard-ui.md`](docs/dashboard-ui.md).
 Design system web: [`docs/design-web.md`](docs/design-web.md).
-Docker (dev/staging/production): [`docs/docker.md`](docs/docker.md).
 
 ---
 
