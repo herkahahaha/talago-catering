@@ -107,13 +107,48 @@ function sectionLines(md, title) {
   }
 }
 
-// ========== 3. TAUTAN README ==========
+// ========== 3. TAUTAN & RUJUKAN BERKAS ==========
+// Semua tautan Markdown ke .md (relatif terhadap berkas pemuat) dan rujukan `docs/....md`
+// (relatif terhadap akar repo) di docs/, README.md, dan AGENTS.md harus ada di disk.
+// Setiap berkas .md di docs/ (selain README) harus tertaut dari docs/README.md.
 {
-  const readme = read('docs/README.md');
-  const links = [...readme.matchAll(/\]\(([^)\s]+\.md)\)/g)].map((m) => m[1]);
-  const broken = links.filter((l) => !existsSync(join(ROOT, 'docs', l)));
-  if (broken.length) violations.push(`docs/README.md menaut berkas yang tidak ada: ${broken.join(', ')}`);
-  else console.log(`Tautan README OK (${links.length} tautan).`);
+  const docFiles = [];
+  const walkDocs = (dir) => {
+    for (const name of readdirSync(dir)) {
+      const p = join(dir, name);
+      if (statSync(p).isDirectory()) walkDocs(p);
+      else if (name.endsWith('.md')) docFiles.push(p);
+    }
+  };
+  walkDocs(join(ROOT, 'docs'));
+  const scanned = [...docFiles, ...['README.md', 'AGENTS.md'].map((n) => join(ROOT, n)).filter(existsSync)];
+
+  let checked = 0;
+  const broken = [];
+  for (const f of scanned) {
+    const src = readFileSync(f, 'utf8');
+    const rel = relative(ROOT, f);
+    const targets = [];
+    for (const m of src.matchAll(/\]\(([^)\s#]+\.md)(?:#[^)\s]*)?\)/g)) {
+      if (!/^[a-z][a-z0-9+.-]*:/i.test(m[1])) targets.push(join(dirname(f), m[1]));
+    }
+    for (const m of src.matchAll(/`(docs\/[A-Za-z0-9_./-]+\.md)`/g)) targets.push(join(ROOT, m[1]));
+    for (const t of targets) {
+      checked++;
+      if (!existsSync(t)) broken.push(`${rel} -> ${relative(ROOT, t)}`);
+    }
+  }
+  if (broken.length) violations.push(`Tautan/rujukan ke berkas yang tidak ada: ${broken.join('; ')}`);
+  else console.log(`Tautan & rujukan berkas OK (${checked} di ${scanned.length} berkas).`);
+
+  const indexPath = join(ROOT, 'docs/README.md');
+  const indexSrc = readFileSync(indexPath, 'utf8');
+  const linked = new Set(
+    [...indexSrc.matchAll(/\]\(([^)\s#]+\.md)(?:#[^)\s]*)?\)/g)].map((m) => join(dirname(indexPath), m[1])),
+  );
+  const orphans = docFiles.filter((f) => f !== indexPath && !linked.has(f)).map((f) => relative(ROOT, f));
+  if (orphans.length) violations.push(`Berkas docs/ tidak tertaut dari docs/README.md: ${orphans.join(', ')}`);
+  else console.log('Semua berkas docs/ tertaut dari docs/README.md.');
 }
 
 // ========== 4. PATH ABSOLUT LOKAL ==========

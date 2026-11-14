@@ -4,7 +4,7 @@ language: id-ID
 
 # AGENTS.md — konteks proyek
 
-Ringkasan mesin-baca ada di [`docs/quick-reference.md`](docs/quick-reference.md);
+Ringkasan mesin-baca ada di [`docs/quick-reference.md`](docs/quick-reference.md). Indeks seluruh dokumen: [`docs/README.md`](docs/README.md).
 
 ## Status
 - Development dijeda; stack Docker (`docker compose -f deploy/compose.dev.yml`) dimatikan.

@@ -35,7 +35,7 @@ language: en-US
 - **Default max portions per order**: 200 (was 50 in initial PRD, now configurable by admin)
 - **Minimum per order**: 50 total semua menu (hard validation before reserve; ADR 0001 O1)
 - **Per-day partitions**: `max_regular` + `max_po <= kitchen_max_total`
-- **PO (Purchase Order)**: 500–1000 portions, separate from regular capacity but shared kitchen total
+- **PO (Purchase Order)**: orders above the per-order limit (default >200) go through quotation; `max_po` defaults to 500 per day, separate from regular capacity but sharing `kitchen_max_total` (default 1000)
 - **Target minimum produksi**: Indicator only for dapur; does NOT limit checkout (ADR 0001 O2)
 - **Hold ceiling**: Default 50% of `max_regular`, bounded by `max_regular` and current held count. Must be ≥ min(`max_portions_per_order`, `max_regular`) (ADR 0001 O3, enforced in `updateDay`)
 
@@ -89,8 +89,18 @@ pending_payment ──paid──► paid ──► in_production ──► out_f
 - `GET /orders/{token}` — Status via signed token (30 min) or raw token hash
 - `POST /orders/{id}/cancel` — Cancel before cut-off
 - `POST /orders/{id}/payment-retry` — New charge while hold valid
+- `POST /quotes` — Quotation request for orders above the per-order limit
+- `POST /webhooks/payment` — Payment gateway webhook (HMAC signature, idempotent per `eventId`)
+- `POST /dev/payments/{gatewayRef}/settle` — Dev-only mock settlement
+- `GET /health` — Health check
 
-### Admin Routes (need `cg_staff` cookie)
+### Admin Routes (need `cg_staff` cookie, except `/admin/auth/*`)
+- `POST /admin/auth/login`, `POST /admin/auth/logout`, `GET /admin/auth/me` — Staff session
+- `POST /admin/auth/otp`, `POST /admin/auth/verify` — Adaptive OTP challenge
+- `PATCH /admin/orders/{id}/status` — Forward-only status transition (audited)
+- `POST /admin/orders/{id}/notes`, `GET /admin/orders/{id}/refunds` — Order notes, refunds of one order
+- `GET|PUT /admin/days/{date}/menu` — Menu schedule for one date
+- `PUT /admin/days/week/{date}` — Apply weekly settings (Mon–Sun)
 - `GET /admin/overview?month=YYYY-MM` — Total orders, revenue, portions, daily breakdown
 - `GET /admin/settings/order` — Global checkout rules (min, max per order, hold)
 - `PUT /admin/settings/order` — Update checkout rules
@@ -161,17 +171,7 @@ Cloudflare (CDN + WAF)
 - 5000 concurrent reservation tests: only 4 succeed for capacity 200 with 50 portions per trial; never exceeds max
 
 ### State Machine Order (one-way only)
-```
-pending_payment ──paid──► paid ──► in_production ──► out_for_delivery ──► delivered
-      │                    │
-      │ hold habis         │ dibatalkan
-      ▼                    ▼
-   expired          cancelled_refunded
-      │
-      └── pembayaran telat ──► paid (if sisa) / paid_after_expiry + refund (jika penuh)
-```
-
-Only forward transitions allowed via API admin; corrections recorded in audit log.
+Diagram: see **Status Flow** above. Only forward transitions are allowed via admin API; corrections are recorded in the audit log.
 
 ### Webhook Payment (PRD §4.3)
 1. Verify HMAC-SHA256 signature on raw body → fail: 401 + audit, no effect
@@ -193,4 +193,6 @@ Only forward transitions allowed via API admin; corrections recorded in audit lo
 - `docs/runbook.md` — Operational runbook (deploy, check, refund, backup, incidents)
 - `docs/docker.md` — Docker dev/staging/prod guides
 - `docs/dashboard-ui.md` — shadcn/ui design system for dashboard
-- `docs/DESIGN.md` — material 3 design system for storefront
+- `docs/design-web.md` — material 3 design system for storefront
+- `docs/adr/0001-batas-order-dan-target-produksi.md` — decision record for order limit and production target
+- `docs/README.md` — index of all docs

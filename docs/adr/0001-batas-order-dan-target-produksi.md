@@ -75,7 +75,7 @@ Setelah O1–O3 diputuskan, ubah:
 - `docs/prd-mapping.md` §2 dan §5 (#1, #3, "Cap porsi per order 200").
 - `docs/api.md` contoh `PUT /admin/days/{date}` dan validasi.
 - `docs/quick-reference.md` bagian "Portions & Capacity".
-- `docs/session-summary.md`: **hapus** setelah ADR ini disetujui. Seluruh keputusannya sudah tercakup di sini.
+- `session-summary` (berkas sementara): sudah dihapus. Seluruh keputusannya tercakup di sini.
 
 ## 6. Alternatif yang ditolak
 

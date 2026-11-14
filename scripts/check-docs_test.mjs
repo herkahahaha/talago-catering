@@ -19,6 +19,7 @@ function fixture() {
     mkdirSync(join(dir, p), { recursive: true });
     cpSync(join(REPO, p), join(dir, p), { recursive: true });
   }
+  for (const f of ['README.md', 'AGENTS.md']) cpSync(join(REPO, f), join(dir, f));
   return dir;
 }
 
@@ -68,6 +69,24 @@ const cases = [
     mutate: (r) => mutate(r, 'docs/README.md', (s) => s + '\n[hilang](session-summary.md)\n'),
     expectFail: true,
     expectMsg: 'session-summary.md',
+  },
+  {
+    name: 'tautan rusak di README akar',
+    mutate: (r) => mutate(r, 'README.md', (s) => s + '\n[rusak](docs/design-web.md.md)\n'),
+    expectFail: true,
+    expectMsg: 'design-web.md.md',
+  },
+  {
+    name: 'rujukan `docs/...md` ke berkas yang tidak ada',
+    mutate: (r) => mutate(r, 'docs/quick-reference.md', (s) => s + '\n- `docs/DESIGN.md`\n'),
+    expectFail: true,
+    expectMsg: 'docs/DESIGN.md',
+  },
+  {
+    name: 'berkas docs/ tidak tertaut dari indeks',
+    mutate: (r) => writeFileSync(join(r, 'docs/yatim.md'), '# yatim\n'),
+    expectFail: true,
+    expectMsg: 'docs/yatim.md',
   },
   {
     name: 'path absolut pengguna terdeteksi',

@@ -14,8 +14,8 @@ mock · ⏳ fase berikutnya.
 | :-- | :-- | :-- | :-- |
 | 1 | Minimal 50 porsi per order (total semua menu, ADR 0001 O1) | `order.min_portions = 50`; validasi `MIN_ORDER_NOT_MET` | ✅ |
 | 2 | 200 porsi/hari | `capacity.max_regular = 200` | ✅ |
-| 3 | Minimal 50 untuk target hanya indikator dapur | ditolak sebelum reservasi; produksi tetap berjalan walau target belum tercapai | ✅ |
-| 4 | PO 201–1000, kapasitas dapur bersama | `max_po` per tanggal + `kitchen_max_total` + CHECK constraint | ✅ |
+| 3 | Target minimum produksi hanya indikator dapur, bukan syarat checkout (ADR 0001 O2) | tidak memblokir checkout; produksi tetap berjalan walau target belum tercapai | ✅ |
+| 4 | PO di atas batas order (default >200), kapasitas dapur bersama | `max_po` per tanggal (default 500) + `kitchen_max_total` (default 1000) + CHECK constraint | ✅ |
 | 5 | Cut-off H-1 18.00 | `daily_capacity.cut_off_at`, default H-1 18:00 WIB | ✅ |
 | 6 | PO dibayar di muka | order PO `hold=true` sampai pembayaran; tunai langsung lunas | ✅ |
 | 7 | Refund manual soft launch | `refunds.status=queued` → admin menyelesaikan | ✅ |

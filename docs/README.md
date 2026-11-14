@@ -16,7 +16,7 @@ language: id-ID
 | [runbook.md](runbook.md) | Deploy pertama, pemeriksaan harian, refund, backup, insiden, go-live |
 | [prd-mapping.md](prd-mapping.md) | Pemetaan PRD §1–§13 ke implementasi, status per fitur |
 | [quick-reference.md](quick-reference.md) | Ringkasan cepat mesin-baca: stack, aturan bisnis, API, arsitektur, design system |
-| [dev-cookie-and-seed-fix.md](dev-cookie-and-seed-fix.md) | Analisis bug cookie/seed dev-flow (2026-11-07) |
+| [adr/0001-batas-order-dan-target-produksi.md](adr/0001-batas-order-dan-target-produksi.md) | ADR: batas porsi per order dan target minimum produksi |
 
 ## Screenshot
 

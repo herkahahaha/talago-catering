@@ -240,8 +240,7 @@ Arsitektur & alur: [`docs/architecture.md`](docs/architecture.md).
 Operasional: [`docs/runbook.md`](docs/runbook.md).
 Kontrak API: [`docs/api.md`](docs/api.md).
 Design system dashboard: [`docs/dashboard-ui.md`](docs/dashboard-ui.md).
-Design system web: [`docs/design-web.mdmd`](docs/design-web.md.md).
-Design system dashboard: [`docs/dashboard-ui.md`](docs/dashboard-ui.md).
+Design system web: [`docs/design-web.md`](docs/design-web.md).
 Docker (dev/staging/production): [`docs/docker.md`](docs/docker.md).
 
 ---
