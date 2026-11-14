@@ -5,6 +5,9 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
@@ -17,7 +20,7 @@ jobs:
         image: postgres:16
         env:
           POSTGRES_USER: catering
-          POSTGRES_PASSWORD: catering_dev_pw
+          POSTGRES_PASSWORD: ci-only-postgres-password
           POSTGRES_DB: catering_dev
         ports:
           - 5432:5432
@@ -27,8 +30,10 @@ jobs:
           --health-timeout 3s
           --health-retries 10
     env:
-      DATABASE_URL: postgres://catering:catering_dev_pw@127.0.0.1:5432/catering_dev
-      DATABASE_URL_TEST: postgres://catering:catering_dev_pw@127.0.0.1:5432/catering_test
+      # Password hanya untuk container Postgres sementara di job ini; bukan kredensial nyata.
+      CI_PG_PASSWORD: ci-only-postgres-password
+      DATABASE_URL: postgres://catering:ci-only-postgres-password@127.0.0.1:5432/catering_dev
+      DATABASE_URL_TEST: postgres://catering:ci-only-postgres-password@127.0.0.1:5432/catering_test
       SESSION_SECRET: ci-session-secret-0123456789abcdef
       CAPTCHA_SECRET: ci-captcha-secret-0123456789abcdef
       PAYMENT_WEBHOOK_SECRET: ci-webhook-secret
@@ -46,7 +51,7 @@ jobs:
           cache: pnpm
 
       - name: Buat database tes
-        run: PGPASSWORD=catering_dev_pw createdb -h 127.0.0.1 -U catering catering_test
+        run: PGPASSWORD="$CI_PG_PASSWORD" createdb -h 127.0.0.1 -U catering catering_test
 
       - name: Install
         run: pnpm install --frozen-lockfile

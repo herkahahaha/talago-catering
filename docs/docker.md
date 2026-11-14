@@ -394,8 +394,8 @@ Untuk database terkelola, gunakan snapshot/PITR dari penyedia. Uji restore secar
 | `PAYMENT_GATEWAY` | ya | `mock` hanya untuk non-production |
 | `ADMIN_EMAIL`, `ADMIN_PASSWORD` | seed | Perintah CLI sekali jalan |
 
-- Contoh `CLI sekali jalan`; `docker compose … run --rm migrate pnpm admin:create --email … --role admin`, password diminta lewat prompt namun dengan 3 aturan; 1. Menolak berjalan bila sudah ada admin, kecuali memakai flag eksplisit. 2. Menulis audit_log (aktor cli) dan tidak mencetak password. 3. Perintah yang sama dipakai untuk reset password dan membuat peran kitchen/courier, serta menghapus staff_sessions pengguna itu. Runbook §8 saat ini mencatat sesi aktif tidak batal otomatis saat password diubah.
-- Gunakan `INSERT manual` ke DB pembuatan `ADMIN_EMAIL`, `ADMIN_PASSWORD` sebagai prosedur darurat saja, dengan syarat dicatat manual di audit_log. Dengan `CLI sekali jalan`, tidak perlu menyimpan password admin di env production.
+- Pembuatan admin pertama: lihat [`runbook.md` §1.3](runbook.md). Itu satu-satunya sumber prosedurnya.
+- Sesi staf yang aktif tidak otomatis batal saat password diubah; lihat [`runbook.md` §9](runbook.md).
 - `ROLE` di-override oleh compose (`web` untuk api, `worker` untuk worker).
 
 ---

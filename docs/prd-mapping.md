@@ -12,7 +12,7 @@ mock · ⏳ fase berikutnya.
 
 | # | Keputusan | Default di `settings` | Status |
 | :-- | :-- | :-- | :-- |
-| 1 | Porsi, minimal order 20 qty dari setiap menu | `order.min_portions = 20`; validasi `MIN_ORDER_NOT_MET` | ✅ |
+| 1 | Minimal 50 porsi per order (total semua menu, ADR 0001 O1) | `order.min_portions = 50`; validasi `MIN_ORDER_NOT_MET` | ✅ |
 | 2 | 200 porsi/hari | `capacity.max_regular = 200` | ✅ |
 | 3 | Minimal 50 untuk target hanya indikator dapur | ditolak sebelum reservasi; produksi tetap berjalan walau target belum tercapai | ✅ |
 | 4 | PO 201–1000, kapasitas dapur bersama | `max_po` per tanggal + `kitchen_max_total` + CHECK constraint | ✅ |

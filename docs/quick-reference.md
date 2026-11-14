@@ -33,11 +33,11 @@ language: en-US
 
 ### Portions & Capacity
 - **Default max portions per order**: 200 (was 50 in initial PRD, now configurable by admin)
-- **Minimum per order**: 50 (hard validation before reserve)
+- **Minimum per order**: 50 total semua menu (hard validation before reserve; ADR 0001 O1)
 - **Per-day partitions**: `max_regular` + `max_po <= kitchen_max_total`
 - **PO (Purchase Order)**: 500–1000 portions, separate from regular capacity but shared kitchen total
-- **Target minimum produksi**: Indicator only for dapur; does NOT limit checkout
-- **Hold ceiling**: Default 50% of `max_regular`, bounded by `max_regular` and current held count
+- **Target minimum produksi**: Indicator only for dapur; does NOT limit checkout (ADR 0001 O2)
+- **Hold ceiling**: Default 50% of `max_regular`, bounded by `max_regular` and current held count. Must be ≥ min(`max_portions_per_order`, `max_regular`) (ADR 0001 O3, enforced in `updateDay`)
 
 ### Checkout Rules
 - **Minimal 50 porsi** per order; **default max 200** (configurable admin via `PUT /admin/settings/order`)

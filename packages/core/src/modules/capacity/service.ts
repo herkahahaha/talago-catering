@@ -196,9 +196,23 @@ export async function updateDay(
     throw new AppError('VALIDATION_ERROR', 'cutOffAt bukan tanggal ISO yang valid.');
   }
 
-  const holdCeiling = input.holdCeiling ?? Math.floor(input.maxRegular * 0.5);
+  // ADR 0001 O3: plafon hold minimal sebesar batas porsi per order, tetapi
+  // tidak lebih dari max_regular (order sebesar batas tidak mungkin ditahan melebihi kapasitas).
+  const orderConfig = await getOrderConfig(exec);
+  const minHoldCeiling = Math.min(input.maxRegular, orderConfig.maxPortionsPerOrder);
+  const holdCeiling =
+    input.holdCeiling ?? Math.max(Math.floor(input.maxRegular * 0.5), minHoldCeiling);
   if (holdCeiling > input.maxRegular) {
     throw new AppError('VALIDATION_ERROR', 'Plafon hold tidak boleh melebihi kapasitas reguler.');
+  }
+  if (holdCeiling < minHoldCeiling) {
+    throw new AppError(
+      'CAPACITY_RULE_VIOLATION',
+      'Plafon hold tidak boleh di bawah batas porsi per order.',
+      {
+        hint: `Batas porsi per order ${orderConfig.maxPortionsPerOrder}; plafon minimal ${minHoldCeiling}.`,
+      },
+    );
   }
   if (holdCeiling < before.heldRegular) {
     throw new AppError(
