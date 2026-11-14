@@ -173,11 +173,13 @@ export default function MenuBrowser(props: Props) {
                     <div class="dish-body">
                       <div class="dish-title">
                         <h3>{item.name}</h3>
-                        <span class="dish-price">{rp(item.price)}</span>
                       </div>
                       <p class="dish-desc">{item.description}</p>
                       <div class="dish-actions">
-                        <span class="tiny">per porsi</span>
+                        <span class="dish-price">
+                          {rp(item.price)}
+                          <span class="sr-only"> per porsi</span>
+                        </span>
                         <div class="qty">
                           <button
                             type="button"
