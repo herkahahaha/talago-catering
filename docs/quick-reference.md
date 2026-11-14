@@ -26,7 +26,7 @@ language: en-US
 
 ### Database
 - **Migration**: `pnpm db:migrate`; reset+seed dev: `pnpm db:reset`
-- PostgreSQL 16 native at `127.0.0.1:5432` (db `catering_dev` / `catering_test`, user `catering`, password `catering_dev_pw`)
+- PostgreSQL 16 native at `127.0.0.1:5432`
 - Container dev uses host port `5433`
 
 ## Key Business Rules
