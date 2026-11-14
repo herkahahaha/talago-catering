@@ -4,7 +4,7 @@ import MenuBrowser from '../islands/MenuBrowser';
 import { serverApi } from '../lib/api';
 
 const availability = await serverApi.availability(30).catch(() => null);
-const minPortions = availability?.minPortions ?? 50;
+const minPortions = availability?.minPortions ?? 0;
 const openDays =
   availability?.days.filter(
     (day) => day.isOpen && !day.cutoffPassed && day.remainingRegular >= minPortions,
