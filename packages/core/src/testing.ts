@@ -23,11 +23,8 @@ const TEST_MENU = [
 
 /** Database tes bersih + fixture minimal. Aman dijalankan berulang. */
 export async function setupTestDatabase(connectionString?: string): Promise<TestContext> {
-  const url =
-    connectionString ??
-    process.env.DATABASE_URL_TEST ??
-    process.env.DATABASE_URL ??
-    'postgres://catering:catering_dev_pw@127.0.0.1:5432/catering_test';
+  const url = connectionString ?? process.env.DATABASE_URL_TEST ?? process.env.DATABASE_URL;
+  if (!url) throw new Error('DATABASE_URL_TEST belum diatur. Isi di .env (lihat .env.example).');
 
   await resetDatabase(url);
   const handle = createDatabase(url, { max: 30 });

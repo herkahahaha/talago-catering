@@ -8,12 +8,18 @@ if (existsSync(envFile)) {
   process.loadEnvFile(envFile);
 }
 
+function requireEnv(name: string): string {
+  const value = process.env[name];
+  if (!value) throw new Error(`${name} belum diatur. Isi di .env (lihat .env.example).`);
+  return value;
+}
+
 export default defineConfig({
   dialect: 'postgresql',
   schema: './src/modules/*/schema.ts',
   out: './drizzle',
   dbCredentials: {
-    url: process.env.DATABASE_URL ?? 'postgres://catering:catering_dev_pw@127.0.0.1:5432/catering_dev',
+    url: requireEnv('DATABASE_URL'),
   },
   verbose: true,
   strict: true,

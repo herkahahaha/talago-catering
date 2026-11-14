@@ -16,12 +16,20 @@ import {
   updateOrderStatusAdmin,
   countOrdersForDate,
 } from '../../src/index';
-import { configureDay, expireHold, guestSession, orderState, placeOrder } from '../helpers';
+import {
+  configureDay,
+  expireHold,
+  guestSession,
+  orderState,
+  placeOrder,
+  useTestOrderLimit,
+} from '../helpers';
 
 let ctx: TestContext;
 
 beforeAll(async () => {
   ctx = await setupTestDatabase();
+  await useTestOrderLimit(ctx);
 });
 
 afterAll(async () => {
