@@ -66,7 +66,7 @@ Ketiga butir ini sudah diputuskan. Kolom terakhir mencatat keputusannya.
 |---|---|---|---|
 | O1 | "Minimal 50" berlaku **per order** atau **per menu dalam order**? | `prd-mapping.md` #1: "minimal order 50 qty dari setiap menu". `api.md` dan D2: "minimal 50 porsi per order". | **(a) per order total.** Dokumen sudah disesuaikan. |
 | O2 | Target minimum produksi: indikator (D3) atau syarat keras? | `prd-mapping.md` #3 menulis "syarat keras"; `session-summary` §4 dan `quick-reference` menulis indikator. | **(a) indikator.** D3 berlaku; `prd-mapping` #3 sudah diubah. |
-| O3 | Plafon hold harus ≥ batas per order? | `api.md` menulis `ceiling ≥ maxPo` dan `holdCeiling ≤ maxRegular`, tetapi tidak menyebut batas per order. Dengan batas 200 dan plafon 100, order 150 porsi selalu ditolak `HOLD_LIMIT`. | **(a) validasi `holdCeiling ≥ maxPortionsPerOrder`.** Belum ditegakkan di kode; lihat `api.md`. |
+| O3 | Plafon hold harus ≥ batas per order? | `api.md` menulis `ceiling ≥ maxPo` dan `holdCeiling ≤ maxRegular`, tetapi tidak menyebut batas per order. Dengan batas 200 dan plafon 100, order 150 porsi selalu ditolak `HOLD_LIMIT`. | **(a) validasi `holdCeiling ≥ min(maxPortionsPerOrder, maxRegular)`.** Ditegakkan di `updateDay`; lihat `api.md`. |
 
 ## 5. Konsekuensi dokumen
 
