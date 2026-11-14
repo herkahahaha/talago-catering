@@ -4,7 +4,7 @@
  *
  * Pemeriksaan:
  *  1. Kode error di docs/api.md (tabel "## Kode error") = ERROR_CODES di packages/contracts/src/errors.ts
- *  2. Status order di docs/quick-reference.md (blok diagram "### Status Flow") = ORDER_STATUSES di packages/contracts/src/enums.ts
+ *  2. Status order di docs/architecture.md (blok diagram "## N. State machine order") = ORDER_STATUSES di packages/contracts/src/enums.ts
  *  3. Setiap tautan berkas Markdown di docs/README.md ada di disk
  *  4. Tidak ada path absolut lokal (/Users/, /home/, C:\) di docs/
  *
@@ -86,20 +86,20 @@ function sectionLines(md, title) {
   if (!contractStatuses) {
     violations.push('contracts/enums.ts: ORDER_STATUSES tidak ditemukan atau tidak terbaca');
   } else {
-    const qr = read('docs/docker.md');
-    const fm = qr.match(/### Status Flow[\s\S]*?```([\s\S]*?)```/);
+    const arch = read('docs/architecture.md');
+    const fm = arch.match(/## \d+\. State machine order[\s\S]*?```([\s\S]*?)```/);
     if (!fm) {
-      violations.push('docs/docker.md: "### Status Flow" dengan blok diagram tidak ditemukan');
+      violations.push('docs/architecture.md: bagian "## N. State machine order" dengan blok diagram tidak ditemukan');
     } else {
-      // Isi blok kode di bawah "### Status Flow" hanya berisi diagram, jadi seluruh blok dipindai.
+      // Isi blok kode di bawah "State machine order" hanya berisi diagram, jadi seluruh blok dipindai.
       // Prosa di luar blok (mis. "paid" di kalimat biasa) tidak ikut terbaca.
       const tokenPattern = new RegExp(`\\b(${contractStatuses.join('|')})\\b`, 'g');
       const docStatuses = [...new Set(fm[1].match(tokenPattern) || [])].sort();
       const sortedContract = [...contractStatuses].sort();
       const missing = sortedContract.filter((s) => !docStatuses.includes(s));
       const extra = docStatuses.filter((s) => !sortedContract.includes(s));
-      if (missing.length) violations.push(`Status di contracts tapi tidak di diagram quick-reference: ${missing.join(', ')}`);
-      if (extra.length) violations.push(`Status di diagram quick-reference tapi tidak di contracts: ${extra.join(', ')}`);
+      if (missing.length) violations.push(`Status di contracts tapi tidak di diagram architecture: ${missing.join(', ')}`);
+      if (extra.length) violations.push(`Status di diagram architecture tapi tidak di contracts: ${extra.join(', ')}`);
       if (!missing.length && !extra.length) {
         console.log(`Status order OK (${contractStatuses.length} status).`);
       }

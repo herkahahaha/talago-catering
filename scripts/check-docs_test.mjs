@@ -55,12 +55,12 @@ const cases = [
   },
   {
     name: 'kata "paid" di prosa tidak lagi memberi positif palsu',
-    mutate: (r) => mutate(r, 'docs/quick-reference.md', (s) => s.replace('### Status Flow', '### Status Flow\nKata paid di luar diagram.')),
+    mutate: (r) => mutate(r, 'docs/architecture.md', (s) => s.replace(/(## \d+\. State machine order)/, '$1\nKata paid di luar diagram.')),
     expectFail: false,
   },
   {
     name: 'status hilang dari diagram',
-    mutate: (r) => mutate(r, 'docs/quick-reference.md', (s) => s.replace(/paid_after_expiry/g, 'X_EXPIRY')),
+    mutate: (r) => mutate(r, 'docs/architecture.md', (s) => s.replace(/paid_after_expiry/g, 'X_EXPIRY')),
     expectFail: true,
     expectMsg: 'paid_after_expiry',
   },
@@ -78,7 +78,7 @@ const cases = [
   },
   {
     name: 'rujukan `docs/...md` ke berkas yang tidak ada',
-    mutate: (r) => mutate(r, 'docs/quick-reference.md', (s) => s + '\n- `docs/DESIGN.md`\n'),
+    mutate: (r) => mutate(r, 'docs/architecture.md', (s) => s + '\n- `docs/DESIGN.md`\n'),
     expectFail: true,
     expectMsg: 'docs/DESIGN.md',
   },
