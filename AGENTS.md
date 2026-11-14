@@ -9,7 +9,7 @@ Ringkasan mesin-baca ada di [`docs/quick-reference.md`](docs/quick-reference.md)
 - Dashboard memakai design system shadcn/ui light mode (Tailwind v4 + Kobalte); lihat
   [`docs/dashboard-ui.md`](docs/dashboard-ui.md).
 - PostgreSQL 16 native tetap berjalan di `127.0.0.1:5432` (db `catering_dev` / `catering_test`,
-  user `catering`, password `catering_dev_pw`). Container dev memakai port host `5433`.
+  user `catering`, password di `.env`). Container dev memakai port host `5433`.
 - Semua tes/build/lint terakhir hijau: 18 unit + 26 integrasi.
 
 ## Stack & perintah

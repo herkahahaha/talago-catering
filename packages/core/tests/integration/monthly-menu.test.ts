@@ -19,12 +19,13 @@ import {
   updateMenuItem,
   verifyOrderViewToken,
 } from '../../src/index';
-import { configureDay, guestSession, placeOrder } from '../helpers';
+import { configureDay, guestSession, placeOrder, useTestOrderLimit } from '../helpers';
 
 let ctx: TestContext;
 
 beforeAll(async () => {
   ctx = await setupTestDatabase();
+  await useTestOrderLimit(ctx);
 });
 
 afterAll(async () => {

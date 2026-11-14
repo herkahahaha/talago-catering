@@ -12,8 +12,10 @@ if (existsSync(envFile)) {
   }
 }
 
-const testDatabaseUrl =
-  process.env.DATABASE_URL_TEST ?? 'postgres://catering:catering_dev_pw@127.0.0.1:5432/catering_test';
+const testDatabaseUrl = process.env.DATABASE_URL_TEST;
+if (!testDatabaseUrl) {
+  throw new Error('DATABASE_URL_TEST belum diatur. Isi di .env (lihat .env.example).');
+}
 
 export default defineConfig({
   test: {

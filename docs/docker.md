@@ -226,7 +226,7 @@ PostgreSQL native (bila ada) memakai `5432`, karena itu container dev dipetakan 
 host gunakan `DATABASE_URL_HOST` yang sudah disediakan di env development:
 
 ```bash
-psql 'postgres://catering:catering_dev_pw@127.0.0.1:5433/catering_dev'
+psql "$DATABASE_URL_HOST"
 ```
 
 Di dalam container, hostname database adalah `db:5432`.

@@ -5,7 +5,20 @@ import { createGuestOrder } from '../src/modules/checkout/index';
 import { defaultCutoffAt, ensureDay, getDayRow, getWindows, updateDay } from '../src/index';
 import { getOrderRowById } from '../src/modules/orders/index';
 import { scheduleMenuForDate } from '../src/modules/catalog/index';
+import { updateOrderSettings } from '../src/modules/settings/index';
 import type { TestContext } from '../src/testing';
+
+/**
+ * Batas porsi per order untuk tes integrasi: 50 (sesuai porsi order tes).
+ * Dengan batas 200, plafon hold 100 ditolak aturan ADR 0001 O3 (plafon >= min(batas, max_regular)).
+ */
+export async function useTestOrderLimit(ctx: TestContext): Promise<void> {
+  await updateOrderSettings(
+    ctx.db,
+    { minPortions: 50, maxPortionsPerOrder: 50, holdMinutes: 10 },
+    { label: 'Tes Integrasi' },
+  );
+}
 
 export async function configureDay(
   ctx: TestContext,

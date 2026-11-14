@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { useTestOrderLimit } from '../helpers';
 import { sql } from 'drizzle-orm';
 import { addDays, defaultCutoffAt, todayWib } from '../../src/lib/time';
 import { scheduleMenuForDate } from '../../src/modules/catalog/index';
@@ -22,6 +23,7 @@ let ctx: TestContext;
 
 beforeAll(async () => {
   ctx = await setupTestDatabase();
+  await useTestOrderLimit(ctx);
 });
 
 afterAll(async () => {
