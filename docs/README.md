@@ -2,21 +2,10 @@
 language: id-ID
 ---
 
-# Platform Catering Online — Monorepo
+# Project Documents Catering Talago
 
 Implementasi thin slice dari **System Design v2: Platform Catering Online** (PRD revisi CTO,
 29 Okt 2026). Satu monolith modular, satu PostgreSQL, tiga frontend untuk tiga persona.
-
-| Persona | Aplikasi | Stack |
-| :-- | :-- | :-- |
-| Pelanggan | `apps/web` — storefront | Astro 7 (SSR, adapter Node) + SolidJS islands |
-| Admin / dapur / kurir | `apps/dashboard` — dashboard internal | TanStack Start + SolidJS + TanStack Query, UI shadcn/ui (Tailwind v4) |
-| Sistem | `apps/api` — API + worker | Hono di Node, `ROLE=web` atau `ROLE=worker` |
-| Domain | `packages/core` | TypeScript + Drizzle ORM + SQL atomik |
-| Kontrak | `packages/contracts` | Zod schema, enum, DTO, label UI |
-
-Build & task runner: **Turborepo** + pnpm workspaces. Database: **PostgreSQL 16**. Antrian latar:
-**pg-boss** (tanpa Redis/broker tambahan).
 
 ---
 
