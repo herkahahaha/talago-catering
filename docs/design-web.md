@@ -173,6 +173,23 @@ spacing:
   space-3xl: 3rem
 ---
 
+## Revamp 2026-11 (berlaku untuk `apps/web`)
+
+Arah visual diperbarui mengikuti mockup desktop (beranda, menu & tanggal, checkout, status pesanan, cek pesanan).
+Bagian di bawah ini **menggantikan** aturan warna, tipografi, dan breakpoint lama bila bertentangan; nilai
+front-matter di atas belum disinkronkan dan akan dirapikan pada siklus berikutnya.
+
+- **Warna** (seed M3 `#E97814`): primary `#8a3b0c` (hover `#722f08`), aksen teks `#b84a08`, tombol aksen
+  `#f58a2e` dengan teks `#2b1100`, kanvas `#fff7f2`, permukaan `#fffdfb`, garis `#f3dccd` / `#e6c7b2`.
+  Nama token CSS lama (`--ink`, `--cream`, `--amber`, ...) dipertahankan; hanya nilainya yang berubah.
+- **Tipografi**: Plus Jakarta Sans (variabel, di-host sendiri lewat `@fontsource-variable/plus-jakarta-sans`
+  agar sesuai CSP `font-src 'self'`). Judul bobot 800, tanpa serif.
+- **Breakpoint** (window size class M3): compact < 600, medium 600–839, expanded 840–1199, large ≥ 1200.
+  Di bawah 840px tata letak satu kolom; keranjang menu menjadi bar melayang. Mulai 840px keranjang menjadi
+  panel samping.
+- **Bentuk**: kartu 24px, field 12px, tombol dan chip pil. Efek tiket miring pada beranda dihapus.
+- **Aturan perubahan**: restyle tidak boleh mengubah rute, handler island, nama field form, atau panggilan API.
+
 ## Brand & Style
 
 The design system embodies an artisan culinary storefront tailored for communal catering, family feasts, and celebration orders. Rooted in west sumatera culinary craft, hospitality, and tactile food aesthetics, the interface communicates heritage, generosity, and meticulous care. 

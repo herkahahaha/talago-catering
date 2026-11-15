@@ -226,7 +226,12 @@ export default function CheckoutFlow(props: Props) {
           <form class="checkout-grid" onSubmit={submit}>
             <div class="card">
               <section class="form-section">
-                <h3>1. Identitas</h3>
+                <h3>
+                  <span class="step-badge" aria-hidden="true">
+                    1
+                  </span>
+                  Identitas
+                </h3>
                 <p class="muted">Kami pakai nomor HP untuk konfirmasi pesanan.</p>
                 <div class="field-row">
                   <div class="field">
@@ -269,7 +274,12 @@ export default function CheckoutFlow(props: Props) {
               </section>
 
               <section class="form-section">
-                <h3>2. Pengantaran</h3>
+                <h3>
+                  <span class="step-badge" aria-hidden="true">
+                    2
+                  </span>
+                  Pengantaran
+                </h3>
                 <p class="muted">Area layanan saat ini: Pontianak (ongkir gratis).</p>
                 <div class="field">
                   <label for="line">Alamat lengkap</label>
@@ -329,7 +339,12 @@ export default function CheckoutFlow(props: Props) {
               </section>
 
               <section class="form-section">
-                <h3>3. Pembayaran</h3>
+                <h3>
+                  <span class="step-badge" aria-hidden="true">
+                    3
+                  </span>
+                  Pembayaran
+                </h3>
                 <div class="radio-group">
                   <label class="radio-card">
                     <input
@@ -362,7 +377,12 @@ export default function CheckoutFlow(props: Props) {
               </section>
 
               <section class="form-section">
-                <h3>4. Konfirmasi</h3>
+                <h3>
+                  <span class="step-badge" aria-hidden="true">
+                    4
+                  </span>
+                  Konfirmasi
+                </h3>
                 <div class="field">
                   <label for="captcha">Verifikasi manusia — {challenge()?.question ?? 'memuat…'}</label>
                   <input
