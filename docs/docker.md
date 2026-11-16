@@ -1,3 +1,7 @@
+---
+language: id-ID
+---
+
 # Menjalankan Platform di Docker
 
 Dokumen ini menjelaskan containerisasi seluruh aplikasi (API, worker, storefront, dashboard,

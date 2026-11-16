@@ -1,3 +1,7 @@
+---
+language: id-ID
+---
+
 # Dashboard — Design System shadcn/ui
 
 Dokumen ini menjelaskan bagaimana dashboard internal (`apps/dashboard`) diubah dari UI bawaan
