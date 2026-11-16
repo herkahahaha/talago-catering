@@ -1,55 +1,45 @@
-# ─────────────────────────────────────────────────────────────────────────────
-# Cloudflare Tunnel untuk DEVELOPMENT saja (overlay di atas compose.dev.yml).
-# Token tunnel bersifat remote-managed: rute hostname diatur di dashboard Cloudflare.
-#
-#   # isi CLOUDFLARED_TUNNEL_TOKEN di deploy/env/.env.development
-#   docker compose --env-file deploy/env/.env.development -f deploy/compose.dev.yml -f deploy/compose.tunnel.dev.yml \
-#     --profile tunnel up --build
-#
-# Hostname publik (dilindungi Cloudflare Access):
-#   catering-talago.id   -> http://web:4321        (storefront)
-#   admin.catering-talago.id -> http://dashboard:3001  (admin)
-#   api.catering-talago.id   -> http://api:3000        (cek langsung / health)
-#
-# Overlay ini hanya menimpa variabel URL publik; service lain tidak berubah.
-# Tanpa --profile tunnel, service cloudflared tidak dijalankan.
-# ─────────────────────────────────────────────────────────────────────────────
-x-public-env: &public-env
-  APP_URL: 'https://catering-talago.id'
-  DASHBOARD_URL: 'https://admin.catering-talago.id'
-  PAYMENT_MOCK_BASE_URL: 'https://catering-talago.id/api/v1/webhooks/payment'
-
 services:
-  api:
-    environment:
-      <<: *public-env
-
-  worker:
-    environment:
-      <<: *public-env
-
-  web:
-    environment:
-      <<: *public-env
-
-  dashboard:
-    environment:
-      <<: *public-env
-
-  cloudflared:
-    image: cloudflare/cloudflared:2025.11.1
-    command: tunnel --no-autoupdate run --token ${CLOUDFLARED_TUNNEL_TOKEN:?CLOUDFLARED_TUNNEL_TOKEN wajib diisi di deploy/env/.env.development}
+  cloudflared-web:
+    image: cloudflare/cloudflared:latest
+    command:
+      - tunnel
+      - --no-autoupdate
+      - --url
+      - http://web:4321
     profiles: ['tunnel']
     depends_on:
       web:
         condition: service_started
+    restart: unless-stopped
+    networks:
+      - default
+
+  cloudflared-dashboard:
+    image: cloudflare/cloudflared:latest
+    command:
+      - tunnel
+      - --no-autoupdate
+      - --url
+      - http://dashboard:3001
+    profiles: ['tunnel']
+    depends_on:
       dashboard:
         condition: service_started
+    restart: unless-stopped
+    networks:
+      - default
+
+  cloudflared-api:
+    image: cloudflare/cloudflared:latest
+    command:
+      - tunnel
+      - --no-autoupdate
+      - --url
+      - http://api:3000
+    profiles: ['tunnel']
+    depends_on:
       api:
         condition: service_started
     restart: unless-stopped
-    logging:
-      driver: json-file
-      options:
-        max-size: '10m'
-        max-file: '3'
+    networks:
+      - default

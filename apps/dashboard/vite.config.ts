@@ -62,8 +62,7 @@ function devApiProxy(target: string): Plugin {
 }
 
 export default defineConfig({
-  // Host publik tunnel dev (catering-talago.id); awalan titik mencakup subdomain.
-  server: { port: 3001, host: true, allowedHosts: ['.catering-talago.id'] },
+  server: { port: 3001, host: true, allowedHosts: ['.trycloudflare.com'], },
   resolve: { tsconfigPaths: true },
   plugins: [devApiProxy(apiTarget), tailwindcss(), tanstackStart(), viteSolid({ ssr: true }), nitro()],
 });
