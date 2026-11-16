@@ -96,3 +96,11 @@ grep -rn "ensureMinimumHoldCeiling" packages/core/src | head
 ```
 
 Saya tidak menjalankan perintah ini karena hanya membaca dokumen.
+
+## Amendments
+
+### 2026-11-16
+
+`docs/README.md` dokumen ini dihapus karena pemadatan dan penyesuaian informasi yang terlalu banyak duplikasi prihal instruksi.
+
+Keputusan asli tetap tidak berubah.
