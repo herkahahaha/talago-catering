@@ -1,0 +1,47 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Quick Tunnel untuk DEVELOPMENT (tanpa domain & tanpa akun Cloudflare).
+# Hostname acak *.trycloudflare.com; berubah setiap tunnel dijalankan ulang.
+# Cocok untuk menguji webhook payment gateway. Jangan dipakai untuk produksi.
+#
+#   1. Jalankan tunnel dan storefront:
+#      docker compose -f deploy/compose.dev.yml -f deploy/compose.quicktunnel.dev.yml \
+#        --profile quicktunnel up -d web cloudflared-quick
+#   2. Ambil URL acak dari log:
+#      docker compose -f deploy/compose.dev.yml -f deploy/compose.quicktunnel.dev.yml \
+#        logs cloudflared-quick | grep -o 'https://[a-z0-9-]*\.trycloudflare\.com' | tail -1
+#   3. Set PUBLIC_APP_URL ke URL itu (shell atau deploy/env/.env.development), lalu
+#      restart service yang membaca URL publik:
+#      docker compose ... up -d api worker web
+#
+# Overlay ini tidak dipakai bersama compose.tunnel.dev.yml (token tunnel).
+# ─────────────────────────────────────────────────────────────────────────────
+x-public-env: &public-env
+  APP_URL: ${PUBLIC_APP_URL:-http://127.0.0.1:4321}
+  PAYMENT_MOCK_BASE_URL: ${PUBLIC_APP_URL:-http://127.0.0.1:3000}/api/v1/webhooks/payment
+
+services:
+  api:
+    environment:
+      <<: *public-env
+
+  worker:
+    environment:
+      <<: *public-env
+
+  web:
+    environment:
+      <<: *public-env
+
+  cloudflared-quick:
+    image: cloudflare/cloudflared:2025.11.1
+    command: tunnel --no-autoupdate --url http://web:4321
+    profiles: ['quicktunnel']
+    depends_on:
+      web:
+        condition: service_started
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '3'
