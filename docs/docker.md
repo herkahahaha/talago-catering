@@ -554,9 +554,9 @@ tunnel.
 1. Di dashboard Cloudflare (zone `catering-talago.id`), buat tunnel dengan tipe *remote-managed*
    dan salin tokennya ke `CLOUDFLARED_TUNNEL_TOKEN` di `deploy/env/.env.development`.
 2. Tambahkan public hostname:
-   - `dev-app.catering-talago.id` → `http://web:4321`
-   - `dev-admin.catering-talago.id` → `http://dashboard:3001`
-   - `dev-api.catering-talago.id` → `http://api:3000`
+   - `catering-talago.id` → `http://web:4321`
+   - `admin.catering-talago.id` → `http://dashboard:3001`
+   - `api.catering-talago.id` → `http://api:3000`
 3. Pasang kebijakan **Cloudflare Access** pada ketiga hostname. Dev memakai kode hot-reload dan
    data seed, jadi jangan dibiarkan terbuka.
 4. Jalankan:
