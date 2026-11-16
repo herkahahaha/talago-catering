@@ -65,12 +65,6 @@ const cases = [
     expectMsg: 'paid_after_expiry',
   },
   {
-    name: 'tautan README ke berkas yang tidak ada',
-    mutate: (r) => mutate(r, 'docs/README.md', (s) => s + '\n[hilang](session-summary.md)\n'),
-    expectFail: true,
-    expectMsg: 'session-summary.md',
-  },
-  {
     name: 'tautan rusak di README akar',
     mutate: (r) => mutate(r, 'README.md', (s) => s + '\n[rusak](docs/design-web.md.md)\n'),
     expectFail: true,
@@ -81,12 +75,6 @@ const cases = [
     mutate: (r) => mutate(r, 'docs/architecture.md', (s) => s + '\n- `docs/DESIGN.md`\n'),
     expectFail: true,
     expectMsg: 'docs/DESIGN.md',
-  },
-  {
-    name: 'berkas docs/ tidak tertaut dari indeks',
-    mutate: (r) => writeFileSync(join(r, 'docs/yatim.md'), '# yatim\n'),
-    expectFail: true,
-    expectMsg: 'docs/yatim.md',
   },
   {
     name: 'path absolut pengguna terdeteksi',

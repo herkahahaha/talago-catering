@@ -132,7 +132,7 @@ per tanggal) ✅, rekap produksi + cetak ✅, rute antar ⏳ (fase 2).
 
 ## §10 Roadmap
 
-Fase 1a–1d selesai pada level thin slice (lihat `docs/README.md` §7). Fase 2/3 belum.
+Fase 1a–1d selesai pada level thin slice (README indeks docs/ yang berisi §7 sudah dihapus 2026-11-16). Fase 2/3 belum.
 
 ## §11 Pengujian & go-live
 
