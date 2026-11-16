@@ -540,3 +540,57 @@ deploy/
 
 File `deploy/docker-compose.yml` versi lama (hanya database dev) sudah digantikan
 `compose.dev.yml`.
+
+---
+
+## 9. Quick Tunnel (development)
+
+Overlay `deploy/compose.tunnel.dev.yml` mengekspos tiga service development ke internet melalui
+Cloudflare Quick Tunnel: storefront (`web`), dashboard (`dashboard`), dan API (`api`). Setiap
+service punya tunnel sendiri dengan hostname acak `*.trycloudflare.com`. Tidak butuh domain,
+akun, atau token. Hanya untuk development dan pengujian (mis. webhook payment); jangan dipakai
+untuk staging atau production.
+
+**Menjalankan**
+
+```bash
+docker compose --env-file deploy/env/.env.development \
+  -f deploy/compose.dev.yml -f deploy/compose.tunnel.dev.yml \
+  --profile tunnel up -d --build
+```
+
+**Mengambil URL**
+
+Hostname acak muncul di log setiap tunnel:
+
+```bash
+docker compose -f deploy/compose.dev.yml -f deploy/compose.tunnel.dev.yml logs \
+  cloudflared-web cloudflared-dashboard cloudflared-api | grep -o 'https://[a-z0-9-]*\.trycloudflare\.com' | sort -u
+```
+
+**Mengatur URL publik**
+
+Overlay ini tidak lagi menimpa `APP_URL`, `DASHBOARD_URL`, dan `PAYMENT_MOCK_BASE_URL`. Isi
+nilainya di `deploy/env/.env.development` dengan URL dari langkah sebelumnya, lalu restart
+service yang membacanya:
+
+```
+APP_URL=https://<web>.trycloudflare.com
+DASHBOARD_URL=https://<dashboard>.trycloudflare.com
+PAYMENT_MOCK_BASE_URL=https://<web>.trycloudflare.com/api/v1/webhooks/payment
+```
+
+```bash
+docker compose --env-file deploy/env/.env.development \
+  -f deploy/compose.dev.yml -f deploy/compose.tunnel.dev.yml \
+  --profile tunnel up -d api worker web
+```
+
+**Catatan**
+
+- Hostname berubah setiap tunnel dijalankan ulang. Perbarui env dan restart service setiap kali.
+- `vite.config.ts` dashboard mengizinkan host `.trycloudflare.com` lewat `server.allowedHosts`.
+- `PUBLIC_API_URL` dan `VITE_API_URL` tetap kosong sehingga browser memakai proxy `/api`
+  se-origin; cookie sesi tetap first-party.
+- Postgres tetap hanya di `127.0.0.1`; cloudflared tidak memublikasikan port.
+- Berhenti: `docker compose ... --profile tunnel stop cloudflared-web cloudflared-dashboard cloudflared-api`.

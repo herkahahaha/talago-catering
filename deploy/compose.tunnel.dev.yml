@@ -1,0 +1,45 @@
+services:
+  cloudflared-web:
+    image: cloudflare/cloudflared:latest
+    command:
+      - tunnel
+      - --no-autoupdate
+      - --url
+      - http://web:4321
+    profiles: ['tunnel']
+    depends_on:
+      web:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - default
+
+  cloudflared-dashboard:
+    image: cloudflare/cloudflared:latest
+    command:
+      - tunnel
+      - --no-autoupdate
+      - --url
+      - http://dashboard:3001
+    profiles: ['tunnel']
+    depends_on:
+      dashboard:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - default
+
+  cloudflared-api:
+    image: cloudflare/cloudflared:latest
+    command:
+      - tunnel
+      - --no-autoupdate
+      - --url
+      - http://api:3000
+    profiles: ['tunnel']
+    depends_on:
+      api:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - default
