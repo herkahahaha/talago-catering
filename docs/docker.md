@@ -540,3 +540,38 @@ deploy/
 
 File `deploy/docker-compose.yml` versi lama (hanya database dev) sudah digantikan
 `compose.dev.yml`.
+
+---
+
+## 9. Cloudflare Tunnel (development)
+
+Overlay `deploy/compose.tunnel.dev.yml` mengekspos stack **development** ke internet melalui
+Cloudflare Tunnel (token remote-managed). Hanya untuk dev; staging dan production belum memakai
+tunnel.
+
+**Setup**
+
+1. Di dashboard Cloudflare (zone `catering-talago.id`), buat tunnel dengan tipe *remote-managed*
+   dan salin tokennya ke `CLOUDFLARED_TUNNEL_TOKEN` di `deploy/env/.env.development`.
+2. Tambahkan public hostname:
+   - `dev-app.catering-talago.id` → `http://web:4321`
+   - `dev-admin.catering-talago.id` → `http://dashboard:3001`
+   - `dev-api.catering-talago.id` → `http://api:3000`
+3. Pasang kebijakan **Cloudflare Access** pada ketiga hostname. Dev memakai kode hot-reload dan
+   data seed, jadi jangan dibiarkan terbuka.
+4. Jalankan:
+
+   ```bash
+   docker compose --env-file deploy/env/.env.development -f deploy/compose.dev.yml -f deploy/compose.tunnel.dev.yml --profile tunnel up --build
+   ```
+
+**Catatan**
+
+- Overlay menimpa `APP_URL`, `DASHBOARD_URL`, dan `PAYMENT_MOCK_BASE_URL` ke hostname publik.
+  Nilai di `.env.development` tetap untuk akses lokal.
+- `PUBLIC_API_URL` dan `VITE_API_URL` tetap kosong sehingga browser memakai proxy `/api`
+  se-origin; cookie sesi tetap first-party.
+- Vite menerima host `*.catering-talago.id` lewat `server.allowedHosts`.
+- Postgres tetap hanya di `127.0.0.1`; cloudflared tidak memublikasikan port.
+- Berhenti: `docker compose ... stop cloudflared`. Rotasi token: buat ulang di dashboard, ubah
+  env, lalu `up -d cloudflared`.
