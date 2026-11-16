@@ -74,7 +74,7 @@ Setelah O1–O3 diputuskan, ubah:
 
 - `docs/prd-mapping.md` §2 dan §5 (#1, #3, "Cap porsi per order 200").
 - `docs/api.md` contoh `PUT /admin/days/{date}` dan validasi.
-- `docs/README.md` §1 (batas porsi per order dan target minimum produksi).
+- README indeks `docs/` §1 (batas porsi per order dan target minimum produksi); dihapus 2026-11-16, lihat catatan di bawah.
 - `session-summary` (berkas sementara): sudah dihapus. Seluruh keputusannya tercakup di sini.
 
 ## 6. Alternatif yang ditolak
@@ -101,6 +101,6 @@ Saya tidak menjalankan perintah ini karena hanya membaca dokumen.
 
 ### 2026-11-16
 
-`docs/README.md` dokumen ini dihapus karena pemadatan dan penyesuaian informasi yang terlalu banyak duplikasi prihal instruksi.
+README indeks docs/ (dihapus 2026-11-16) — dokumen ini dihapus karena pemadatan dan penyesuaian informasi yang terlalu banyak duplikasi prihal instruksi.
 
 Keputusan asli tetap tidak berubah.

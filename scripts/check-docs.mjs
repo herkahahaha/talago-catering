@@ -5,7 +5,7 @@
  * Pemeriksaan:
  *  1. Kode error di docs/api.md (tabel "## Kode error") = ERROR_CODES di packages/contracts/src/errors.ts
  *  2. Status order di docs/architecture.md (blok diagram "## N. State machine order") = ORDER_STATUSES di packages/contracts/src/enums.ts
- *  3. Setiap tautan berkas Markdown di docs/README.md ada di disk
+ *  3. Setiap tautan berkas Markdown di docs/, README.md, dan AGENTS.md ada di disk
  *  4. Tidak ada path absolut lokal (/Users/, /home/, C:\) di docs/
  *
  * Env opsional:
@@ -110,7 +110,7 @@ function sectionLines(md, title) {
 // ========== 3. TAUTAN & RUJUKAN BERKAS ==========
 // Semua tautan Markdown ke .md (relatif terhadap berkas pemuat) dan rujukan `docs/....md`
 // (relatif terhadap akar repo) di docs/, README.md, dan AGENTS.md harus ada di disk.
-// Setiap berkas .md di docs/ (selain README) harus tertaut dari docs/README.md.
+// Tidak ada lagi indeks wajib di docs/ (docs/README.md dihapus 2026-11-16, lihat ADR 0001).
 {
   const docFiles = [];
   const walkDocs = (dir) => {
@@ -141,14 +141,6 @@ function sectionLines(md, title) {
   if (broken.length) violations.push(`Tautan/rujukan ke berkas yang tidak ada: ${broken.join('; ')}`);
   else console.log(`Tautan & rujukan berkas OK (${checked} di ${scanned.length} berkas).`);
 
-  const indexPath = join(ROOT, 'docs/README.md');
-  const indexSrc = readFileSync(indexPath, 'utf8');
-  const linked = new Set(
-    [...indexSrc.matchAll(/\]\(([^)\s#]+\.md)(?:#[^)\s]*)?\)/g)].map((m) => join(dirname(indexPath), m[1])),
-  );
-  const orphans = docFiles.filter((f) => f !== indexPath && !linked.has(f)).map((f) => relative(ROOT, f));
-  if (orphans.length) violations.push(`Berkas docs/ tidak tertaut dari docs/README.md: ${orphans.join(', ')}`);
-  else console.log('Semua berkas docs/ tertaut dari docs/README.md.');
 }
 
 // ========== 4. PATH ABSOLUT LOKAL ==========
