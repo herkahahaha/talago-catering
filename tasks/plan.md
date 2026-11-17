@@ -119,12 +119,15 @@ Client ── Cloudflare (CDN + WAF) ── Nginx :80/443 ─┬─ web        :
 | Duplicate security headers (Nginx + Astro middleware) | Low | Task 7. |
 | Staging/prod drift from dev Nginx config | Medium | One shared `deploy/nginx/` base with per-env includes. |
 
+## Decisions (answered by owner, 2026-11-17)
+- **Routing: single host with paths.** Storefront at `/`, API at `/api/v1/*`, dashboard at `/admin/*`. Cookies stay first-party on one host, so Task 2 reduces to confirming the path routing (no subdomain cookie scope work).
+- **Dashboard protection: Cloudflare Access** on the `/admin` path (not an IP allow-list).
+- **Staleness: as proposed.** `/availability` ≤ 60 s, `/menu` ≤ 5 min. Purge-on-write deferred (Task 5 uses TTL only).
+- **TLS: Cloudflare-managed certificate only.** No origin certificate for now; Nginx listens on plain HTTP behind Cloudflare. Revisit "Full (strict)" when the origin goes to prod.
+- **Tunnel stays as the connector.** `cloudflared` keeps pointing at Nginx (`http://nginx:80`) instead of replacing it. Rationale: development is still being shaped; this avoids changing the connector while the routing is new.
+
 ## Open Questions
-- Domain names for storefront, API and dashboard (single host with paths, or subdomains)? This decides cookie scope and whether Task 2 is needed.
-- Is Cloudflare Access available for the dashboard, or should it use an IP allow-list?
-- Acceptable staleness for menu and availability (proposed: availability ≤ 60 s, menu ≤ 5 min)?
-- TLS: Cloudflare-managed certificate only, or also a certificate on the origin (Cloudflare "Full (strict)")?
-- Should the Cloudflare tunnel (`compose.tunnel.dev.yml`) be replaced by Nginx upstream, or stay as the origin connector?
+- Dashboard path name: `/admin` assumed. Confirm before Task 1 if a different path is preferred.
 
 ## Human review
 - [ ] Human has reviewed and approved this plan before Phase 1 starts.
