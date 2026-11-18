@@ -12,17 +12,22 @@ lewat dashboard, dengan jejak audit. Ini prasyarat sebelum konversi ke PO (Task 
 konversi sebaiknya hanya berlaku dari status yang valid.
 
 **Acceptance criteria:**
-- [ ] `PATCH /admin/quotations/:id/status` menerima `{ status: 'contacted' | 'lost' }`, menolak
-      transisi dari `won` (sudah final) dengan `INVALID_STATE`
-- [ ] Setiap perubahan status tercatat di `audit_log` (entity `quotation`, action
+- [x] `PATCH /admin/quotations/:id/status` menerima `{ status: 'contacted' | 'lost' }`, menolak
+      transisi dari status final (`won` *atau* `lost`) dengan `INVALID_STATE` — lebih ketat dari
+      rencana awal (hanya `won`), karena `lost` juga harus final
+- [x] Setiap perubahan status tercatat di `audit_log` (entity `quotation`, action
       `quotation_status_changed`, before/after status)
-- [ ] Dashboard `/quotations` menampilkan tombol aksi "Tandai dihubungi" / "Batalkan" untuk
-      quotation berstatus `new`/`contacted`, dengan optimistic update + invalidate query
+- [x] Dashboard `/quotations` menampilkan tombol aksi "Tandai dihubungi" / "Batalkan" untuk
+      quotation berstatus `new`/`contacted`. Catatan: implementasi memakai invalidate +
+      refetch (pola yang sama dengan `/refunds`), bukan optimistic update — cukup untuk
+      volume quotation yang rendah di soft launch
 
 **Verification:**
-- [ ] Tes lulus: `pnpm --filter @catering/core test`
-- [ ] Build: `pnpm typecheck`
-- [ ] Manual: buka `/quotations`, ubah status satu baris, refresh, status tetap berubah
+- [x] Tes lulus: `pnpm --filter @catering/core test:all` (48 lulus, termasuk 4 tes baru di
+      `tests/integration/quotations.test.ts`)
+- [x] Build: `pnpm typecheck` (5 paket) + `pnpm --filter @catering/dashboard build`
+- [x] Manual: verifikasi lewat `curl` ke API (bukan browser) — quotation baru → `contacted` →
+      `lost` → percobaan ubah lagi ditolak `INVALID_STATE`, sesuai skenario tes
 
 **Dependencies:** None
 

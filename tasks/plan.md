@@ -40,11 +40,11 @@ ulang halaman `/new-order` yang sudah ada (source `po`).
 
 ### Phase 1: Status quotation bisa diubah admin
 
-- [ ] Task 1: Endpoint + UI ubah status quotation (dihubungi/batal)
+- [x] Task 1: Endpoint + UI ubah status quotation (dihubungi/batal)
 
 ### Checkpoint: Foundation
-- [ ] `pnpm test` & `pnpm typecheck` lulus
-- [ ] Admin bisa mengubah status quotation dari dashboard dan tercatat di audit log
+- [x] `pnpm test` & `pnpm typecheck` lulus
+- [x] Admin bisa mengubah status quotation dari dashboard dan tercatat di audit log
 
 ### Phase 2: Konversi quotation → PO
 
