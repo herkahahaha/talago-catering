@@ -1,25 +1,54 @@
-import { For, Show } from 'solid-js';
+import { For, Show, createSignal } from 'solid-js';
 import { createFileRoute } from '@tanstack/solid-router';
-import { useQuery } from '@tanstack/solid-query';
+import { useQuery, useQueryClient } from '@tanstack/solid-query';
 import type { QuoteRequestDto } from '@catering/contracts';
 import { FileText } from 'lucide-solid';
 import { AppShell } from '~/components/AppShell';
-import { api } from '~/lib/api';
+import { api, ApiError } from '~/lib/api';
 import { formatDate, formatDateTime } from '~/lib/format';
-import { Badge } from '~/components/ui/badge';
+import { Alert, AlertDescription } from '~/components/ui/alert';
+import { Badge, type BadgeProps } from '~/components/ui/badge';
+import { Button } from '~/components/ui/button';
 import { Card } from '~/components/ui/card';
 import { EmptyState } from '~/components/ui/empty-state';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '~/components/ui/table';
+import { Toast } from '~/components/ui/toast';
 
 export const Route = createFileRoute('/quotations')({
   component: QuotationsPage,
 });
 
+const statusVariant: Record<QuoteRequestDto['status'], BadgeProps['variant']> = {
+  new: 'warning',
+  contacted: 'secondary',
+  won: 'success',
+  lost: 'destructive',
+};
+
 function QuotationsPage() {
+  const queryClient = useQueryClient();
   const quotes = useQuery(() => ({
     queryKey: ['quotations'],
     queryFn: () => api.get<QuoteRequestDto[]>('/admin/quotations'),
   }));
+  const [busyId, setBusyId] = createSignal<string | null>(null);
+  const [error, setError] = createSignal<string | null>(null);
+  const [toast, setToast] = createSignal<string | null>(null);
+
+  async function changeStatus(quote: QuoteRequestDto, status: 'contacted' | 'lost') {
+    setBusyId(quote.id);
+    setError(null);
+    try {
+      await api.patch(`/admin/quotations/${quote.id}/status`, { status });
+      await queryClient.invalidateQueries({ queryKey: ['quotations'] });
+      setToast(`Status ${quote.name} diubah jadi "${status}".`);
+      window.setTimeout(() => setToast(null), 2500);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Gagal mengubah status quotation.');
+    } finally {
+      setBusyId(null);
+    }
+  }
 
   return (
     <AppShell
@@ -37,7 +66,13 @@ function QuotationsPage() {
           <Badge variant="secondary">{quotes.data?.length ?? 0} permintaan</Badge>
         </div>
 
-        <Table class="min-w-[900px] md:min-w-0">
+        <Show when={error()}>
+          <Alert variant="destructive" class="m-4 mb-0">
+            <AlertDescription>{error()}</AlertDescription>
+          </Alert>
+        </Show>
+
+        <Table class="min-w-[1000px] md:min-w-0">
           <TableHeader>
             <TableRow class="hover:bg-transparent">
               <TableHead>Masuk</TableHead>
@@ -46,6 +81,7 @@ function QuotationsPage() {
               <TableHead>Tanggal acara</TableHead>
               <TableHead>Porsi</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Aksi</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -53,7 +89,7 @@ function QuotationsPage() {
               when={quotes.data?.length}
               fallback={
                 <TableRow class="hover:bg-transparent">
-                  <TableCell colspan={6} class="p-0">
+                  <TableCell colspan={7} class="p-0">
                     <EmptyState
                       icon={<FileText />}
                       title={quotes.isLoading ? 'Memuat penawaran…' : 'Belum ada permintaan penawaran'}
@@ -81,7 +117,34 @@ function QuotationsPage() {
                     <TableCell class="whitespace-nowrap">{formatDate(quote.serviceDate)}</TableCell>
                     <TableCell class="tabular-nums">{quote.portions}</TableCell>
                     <TableCell>
-                      <Badge variant="warning">{quote.status}</Badge>
+                      <Badge variant={statusVariant[quote.status]}>{quote.status}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Show
+                        when={quote.status === 'new' || quote.status === 'contacted'}
+                        fallback={<span class="text-muted-foreground text-xs">—</span>}
+                      >
+                        <div class="flex flex-wrap gap-1.5">
+                          <Show when={quote.status === 'new'}>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={busyId() === quote.id}
+                              onClick={() => changeStatus(quote, 'contacted')}
+                            >
+                              Tandai dihubungi
+                            </Button>
+                          </Show>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            disabled={busyId() === quote.id}
+                            onClick={() => changeStatus(quote, 'lost')}
+                          >
+                            Batalkan
+                          </Button>
+                        </div>
+                      </Show>
                     </TableCell>
                   </TableRow>
                 )}
@@ -90,6 +153,8 @@ function QuotationsPage() {
           </TableBody>
         </Table>
       </Card>
+
+      <Toast message={toast()} variant="success" />
     </AppShell>
   );
 }

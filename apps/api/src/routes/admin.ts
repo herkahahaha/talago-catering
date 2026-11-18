@@ -3,6 +3,7 @@ import { getCookie } from 'hono/cookie';
 import {
   adminCompleteRefundSchema,
   adminCreateOrderSchema,
+  adminQuotationStatusSchema,
   adminMenuAvailabilitySchema,
   adminMenuCreateSchema,
   adminMenuUpdateSchema,
@@ -52,6 +53,7 @@ import {
   updateMenuItem,
   updateOrderSettings,
   updateOrderStatusAdmin,
+  updateQuotationStatus,
   updateWeek,
 } from '@catering/core';
 import type { AppEnv } from '../types';
@@ -299,6 +301,18 @@ export function adminRoutes(): Hono<AppEnv> {
     const staff = await requireStaff(c, db);
     assertRole(staff.user, ['admin']);
     return ok(c, await listQuotations(db));
+  });
+
+  admin.patch('/quotations/:id/status', async (c) => {
+    const db = c.get('db');
+    const staff = await requireStaff(c, db);
+    assertRole(staff.user, ['admin']);
+    const input = await parseBody(c, adminQuotationStatusSchema);
+    const updated = await updateQuotationStatus(db, c.req.param('id'), input.status, {
+      id: staff.user.id,
+      label: staff.user.name,
+    });
+    return ok(c, updated);
   });
 
   admin.get('/catalog', async (c) => {

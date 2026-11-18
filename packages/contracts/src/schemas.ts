@@ -168,6 +168,11 @@ export const quotationRequestSchema = z.object({
 });
 export type QuotationRequestInput = z.infer<typeof quotationRequestSchema>;
 
+export const adminQuotationStatusSchema = z.object({
+  status: z.enum(['contacted', 'lost']),
+});
+export type AdminQuotationStatusInput = z.infer<typeof adminQuotationStatusSchema>;
+
 /* ─────────────────────────── admin: auth ─────────────────────────── */
 
 export const adminLoginSchema = z.object({
