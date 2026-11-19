@@ -1,7 +1,7 @@
 import { For, Show, createMemo, createSignal } from 'solid-js';
 import { Link, createFileRoute } from '@tanstack/solid-router';
 import { useQuery } from '@tanstack/solid-query';
-import type { AdminMenuItemDto, CreatedOrderDto } from '@catering/contracts';
+import type { AdminMenuItemDto, CreatedOrderDto, DaySettingsDto, OrderSettingsDto } from '@catering/contracts';
 import { ArrowLeft, CircleAlert, CircleCheck, Plus, Trash2 } from 'lucide-solid';
 import { AppShell } from '~/components/AppShell';
 import { StatusBadge } from '~/components/StatusBadge';
@@ -55,6 +55,35 @@ function NewOrderPage() {
     queryKey: ['admin-catalog'],
     queryFn: () => api.get<AdminMenuItemDto[]>('/admin/catalog'),
   }));
+
+  // Reguler: dibatasi batas porsi per order global. PO: acuan negosiasi marketing
+  // adalah kapasitas dapur harian, bukan batas per-order — order besar yang
+  // disepakati lewat PO/quotation tidak dimaksudkan tunduk pada batas itu.
+  // Belum ada validasi keras di sini; ini hanya referensi, supaya saat fitur
+  // approval PO dibangun (fase 2), ia tinggal memakai `dayCapacity` yang sama.
+  const orderSettings = useQuery(() => ({
+    queryKey: ['admin-order-settings'],
+    queryFn: () => api.get<OrderSettingsDto>('/admin/settings/order'),
+    enabled: source() === 'manual',
+  }));
+  const dayCapacity = useQuery(() => ({
+    queryKey: ['admin-day-capacity', serviceDate()],
+    queryFn: () => api.get<DaySettingsDto>(`/admin/days/${serviceDate()}`),
+    enabled: source() === 'po',
+  }));
+
+  const portionsCeilingLabel = createMemo(() => {
+    if (source() === 'po') {
+      const kitchenMaxTotal = dayCapacity.data?.kitchenMaxTotal;
+      return kitchenMaxTotal
+        ? `Order PO dapat sampai kapasitas dapur harian (${kitchenMaxTotal} porsi) sebagai acuan negosiasi.`
+        : 'Order PO mengacu ke kapasitas dapur harian sebagai batas negosiasi.';
+    }
+    const maxPortionsPerOrder = orderSettings.data?.maxPortionsPerOrder;
+    return maxPortionsPerOrder
+      ? `Minimal 1 hidangan, maksimal ${maxPortionsPerOrder} porsi per order.`
+      : 'Minimal 1 hidangan.';
+  });
 
   const activeItems = createMemo(() => (catalog.data ?? []).filter((item) => item.isActive));
 
@@ -292,7 +321,7 @@ function NewOrderPage() {
                 <div class="flex flex-wrap items-start justify-between gap-2">
                   <div class="grid gap-1.5">
                     <CardTitle>Hidangan</CardTitle>
-                    <CardDescription>Minimal 1 hidangan, maksimal 200 porsi per order.</CardDescription>
+                    <CardDescription>{portionsCeilingLabel()}</CardDescription>
                   </div>
                   <Button
                     type="button"
