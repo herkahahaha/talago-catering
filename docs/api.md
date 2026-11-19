@@ -140,6 +140,8 @@ Semua rute admin memerlukan cookie `cg_staff` dan dibatasi 300 permintaan/menit 
 | GET | `/admin/overview?month=YYYY-MM` | staf | Total pesanan, pendapatan, nilai order, porsi & rincian harian satu bulan |
 | GET | `/admin/settings/order` | staf | Aturan checkout global (min, maks per order, hold) |
 | PUT | `/admin/settings/order` | admin | Ubah aturan checkout global |
+| GET | `/admin/settings/notifications` | staf | Nomor WhatsApp admin untuk notifikasi quotation |
+| PUT | `/admin/settings/notifications` | admin | Ubah nomor WhatsApp admin (kosong = matikan) |
 | PUT | `/admin/days/week/{date}` | admin | Terapkan kapasitas/cut-off/jendela antar ke Senin–Minggu |
 | GET | `/admin/catalog` | staf | Katalog admin lengkap dengan status aktif & jumlah jadwal |
 | POST | `/admin/menu` | admin | Tambah hidangan (otomatis dijadwalkan 14 hari) |
@@ -157,7 +159,11 @@ Semua rute admin memerlukan cookie `cg_staff` dan dibatasi 300 permintaan/menit 
 | GET | `/admin/refunds?status=` | admin | Daftar refund |
 | POST | `/admin/refunds/{id}/complete` | admin | Catat penyelesaian refund |
 | GET | `/admin/audit?date=&entity=&limit=` | admin | Audit log |
-| GET | `/admin/quotations` | admin | Permintaan penawaran |
+| GET | `/admin/quotations` | admin | Permintaan penawaran + PO tertaut |
+| GET | `/admin/quotations/{id}` | admin | Satu quotation (dipakai pre-fill `/new-order`) |
+| PATCH | `/admin/quotations/{id}/status` | admin | Tandai `contacted` / `lost` |
+| POST | `/admin/quotations/{id}/convert` | admin | Konversi ke PO (`agreedTotal`, `dueAt?`), status jadi `won` |
+| PATCH | `/admin/purchase-orders/{id}/link-order` | admin | Tautkan PO ke order nyata |
 
 ### Contoh: `GET /admin/overview?month=2026-11`
 
@@ -200,6 +206,20 @@ menjumlahkan seluruh order (termasuk pending dan batal).
 
 Hidangan aktif otomatis mendapat jadwal untuk 14 hari ke depan sehingga langsung tampil di
 storefront. Ketersediaan per tanggal tetap dapat diubah di `PUT /admin/days/{date}/menu`.
+
+### Contoh: `POST /admin/quotations/{id}/convert`
+
+```json
+{
+  "agreedTotal": 12500000,
+  "dueAt": "2026-11-24T17:00:00+07:00"
+}
+```
+
+Balasan `201` berisi satu baris PO: `{ "id", "poNumber": "PO-261119-K7QP", "agreedTotal",
+"dueAt", "orderId": null, "orderNo": null }`. Status quotation berubah jadi `won`. PO yang
+belum punya `orderId` ditautkan lewat `PATCH /admin/purchase-orders/{id}/link-order`
+`{ "orderId": "…" }` — endpoint ini menolak menimpa tautan ke order lain (`INVALID_STATE`).
 
 ### Contoh: `PUT /admin/days/{date}`
 

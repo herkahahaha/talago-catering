@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import type { AdminOrderSettingsInput } from '@catering/contracts';
+import type { AdminNotificationSettingsInput, AdminOrderSettingsInput } from '@catering/contracts';
 import { settings } from './schema';
 import { recordAudit } from '../audit/index';
 import { AppError } from '../../lib/ids';
@@ -36,6 +36,8 @@ export const SETTING_DEFAULTS = {
   'privacy.consent_version': '2026-10-01',
   'zone.default_name': 'Pontianak',
   'catalog.days_ahead': 14,
+  // Nomor WhatsApp admin untuk notifikasi quotation masuk. Kosong = dimatikan.
+  'notifications.admin_whatsapp': '',
 } as const;
 
 export type SettingKey = keyof typeof SETTING_DEFAULTS;
@@ -157,6 +159,37 @@ export async function updateOrderSettings(
     entity: 'settings',
     entityId: 'order',
     action: 'order_settings_updated',
+    before: { ...before },
+    after: { ...after },
+  });
+
+  return after;
+}
+
+export interface NotificationConfig {
+  /** Kosong berarti notifikasi quotation ke admin dimatikan. */
+  adminWhatsapp: string;
+}
+
+export async function getNotificationConfig(exec: Executor): Promise<NotificationConfig> {
+  const value = await getSetting(exec, 'notifications.admin_whatsapp');
+  return { adminWhatsapp: typeof value === 'string' ? value : '' };
+}
+
+export async function updateNotificationConfig(
+  exec: Executor,
+  input: AdminNotificationSettingsInput,
+  actor: { id?: string | null; label: string },
+): Promise<NotificationConfig> {
+  const before = await getNotificationConfig(exec);
+  await setSetting(exec, 'notifications.admin_whatsapp', input.adminWhatsapp.trim(), actor.label);
+  const after = await getNotificationConfig(exec);
+
+  await recordAudit(exec, {
+    actor: { type: 'staff', id: actor.id ?? null, label: actor.label },
+    entity: 'settings',
+    entityId: 'notifications',
+    action: 'notification_settings_updated',
     before: { ...before },
     after: { ...after },
   });

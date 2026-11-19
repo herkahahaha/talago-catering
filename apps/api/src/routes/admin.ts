@@ -2,7 +2,10 @@ import { Hono } from 'hono';
 import { getCookie } from 'hono/cookie';
 import {
   adminCompleteRefundSchema,
+  adminConvertQuotationSchema,
   adminCreateOrderSchema,
+  adminLinkPurchaseOrderSchema,
+  adminNotificationSettingsSchema,
   adminQuotationStatusSchema,
   adminMenuAvailabilitySchema,
   adminMenuCreateSchema,
@@ -26,6 +29,7 @@ import {
   assertRole,
   cancelOrder,
   completeRefund,
+  convertQuotationToPO,
   createAdminOrder,
   createMenuItem,
   ensureMinimumHoldCeiling,
@@ -33,12 +37,15 @@ import {
   getAdminStats,
   getDaySettings,
   getMonthOverview,
+  getNotificationConfig,
   getOrderConfig,
   getOrderDtoById,
   getMenuAvailabilityForDate,
   getProductionSummary,
+  getQuotationById,
   getRefundDtosForOrder,
   setMenuAvailabilityForDate,
+  linkPurchaseOrderToOrder,
   listAdminMenuItems,
   listAdminOrders,
   listAudit,
@@ -51,6 +58,7 @@ import {
   todayWib,
   updateDay,
   updateMenuItem,
+  updateNotificationConfig,
   updateOrderSettings,
   updateOrderStatusAdmin,
   updateQuotationStatus,
@@ -213,6 +221,24 @@ export function adminRoutes(): Hono<AppEnv> {
     return ok(c, { ...updated, adjustedHoldCeilings: adjusted });
   });
 
+  admin.get('/settings/notifications', async (c) => {
+    const db = c.get('db');
+    await requireStaff(c, db);
+    return ok(c, await getNotificationConfig(db));
+  });
+
+  admin.put('/settings/notifications', async (c) => {
+    const db = c.get('db');
+    const staff = await requireStaff(c, db);
+    assertRole(staff.user, ['admin']);
+    const input = await parseBody(c, adminNotificationSettingsSchema);
+    const updated = await updateNotificationConfig(db, input, {
+      id: staff.user.id,
+      label: staff.user.name,
+    });
+    return ok(c, updated);
+  });
+
   admin.put('/days/week/:date', async (c) => {
     const db = c.get('db');
     const staff = await requireStaff(c, db);
@@ -303,6 +329,13 @@ export function adminRoutes(): Hono<AppEnv> {
     return ok(c, await listQuotations(db));
   });
 
+  admin.get('/quotations/:id', async (c) => {
+    const db = c.get('db');
+    const staff = await requireStaff(c, db);
+    assertRole(staff.user, ['admin']);
+    return ok(c, await getQuotationById(db, c.req.param('id')));
+  });
+
   admin.patch('/quotations/:id/status', async (c) => {
     const db = c.get('db');
     const staff = await requireStaff(c, db);
@@ -313,6 +346,30 @@ export function adminRoutes(): Hono<AppEnv> {
       label: staff.user.name,
     });
     return ok(c, updated);
+  });
+
+  admin.post('/quotations/:id/convert', async (c) => {
+    const db = c.get('db');
+    const staff = await requireStaff(c, db);
+    assertRole(staff.user, ['admin']);
+    const input = await parseBody(c, adminConvertQuotationSchema);
+    const result = await convertQuotationToPO(db, c.req.param('id'), input, {
+      id: staff.user.id,
+      label: staff.user.name,
+    });
+    return ok(c, result.purchaseOrder, 201);
+  });
+
+  admin.patch('/purchase-orders/:id/link-order', async (c) => {
+    const db = c.get('db');
+    const staff = await requireStaff(c, db);
+    assertRole(staff.user, ['admin']);
+    const input = await parseBody(c, adminLinkPurchaseOrderSchema);
+    const order = await linkPurchaseOrderToOrder(db, c.req.param('id'), input.orderId, {
+      id: staff.user.id,
+      label: staff.user.name,
+    });
+    return ok(c, order);
   });
 
   admin.get('/catalog', async (c) => {

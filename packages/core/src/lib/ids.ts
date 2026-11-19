@@ -39,6 +39,11 @@ export function makeQuoteNo(serviceDate: string): string {
   return `QT-${serviceDate.slice(2).replace(/-/g, '')}-${randomCode(4)}`;
 }
 
+/** Nomor PO formal: PO-261103-K7QP (pola sama dengan nomor order/quotation). */
+export function makePoNo(serviceDate: string): string {
+  return `PO-${serviceDate.slice(2).replace(/-/g, '')}-${randomCode(4)}`;
+}
+
 export function slugify(value: string): string {
   return value
     .toLowerCase()

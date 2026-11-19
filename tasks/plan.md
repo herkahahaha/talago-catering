@@ -48,45 +48,46 @@ ulang halaman `/new-order` yang sudah ada (source `po`).
 
 ### Phase 2: Konversi quotation → PO
 
-- [ ] Task 2: Service `convertQuotationToPO` + nomor PO + audit
-- [ ] Task 3: Endpoint `POST /admin/quotations/:id/convert`
-- [ ] Task 4: Dialog konversi di dashboard + tampilkan info PO di tabel
+- [x] Task 2: Service `convertQuotationToPO` + nomor PO + audit
+- [x] Task 3: Endpoint `POST /admin/quotations/:id/convert`
+- [x] Task 4: Dialog konversi di dashboard + tampilkan info PO di tabel
 
 ### Checkpoint: Core — PO record
-- [ ] `pnpm test` & `pnpm typecheck` lulus
-- [ ] Admin bisa mengonversi quotation `won` jadi baris PO dengan nomor, harga disepakati, jatuh
-      tempo, dan status quotation berubah jadi `won`
+- [x] `pnpm test` & `pnpm typecheck` lulus
+- [x] Admin bisa mengonversi quotation jadi baris PO dengan nomor, harga disepakati, jatuh
+      tempo, dan status quotation berubah jadi `won` (tes integrasi + service)
 
 ### Phase 3: Tautkan PO ke order nyata
 
-- [ ] Task 5: Pre-fill `/new-order` dari quotation + endpoint link PO↔order
-- [ ] Task 6: Tombol "Buat order" di baris quotation yang sudah jadi PO tapi belum ada order
+- [x] Task 5: Pre-fill `/new-order` dari quotation + endpoint link PO↔order
+- [x] Task 6: Tombol "Buat order" di baris quotation yang sudah jadi PO tapi belum ada order
 
 ### Checkpoint: Loop tertutup end-to-end
-- [ ] `pnpm test` & `pnpm typecheck` lulus
-- [ ] Manual: quotation baru → admin tandai won & konversi → klik "Buat order" → order
-      PO-partition tercipta dan tertaut ke PO yang sama, terlihat di `/quotations`
+- [x] `pnpm test` & `pnpm typecheck` lulus
+- [ ] Manual browser: quotation baru → admin tandai won & konversi → klik "Buat order" → order
+      PO-partition tercipta dan tertaut ke PO yang sama, terlihat di `/quotations` (belum diuji
+      di browser; jalur service `convert` + `link-order` ditutup tes integrasi)
 
 ### Phase 4: Notifikasi admin saat quotation baru masuk
 
-- [ ] Task 7: Setting nomor WhatsApp admin + enqueue notifikasi saat quotation dibuat
-- [ ] Task 8: Form kecil untuk mengatur nomor WhatsApp admin di dashboard
+- [x] Task 7: Setting nomor WhatsApp admin + enqueue notifikasi saat quotation dibuat
+- [x] Task 8: Form kecil untuk mengatur nomor WhatsApp admin di dashboard
 
 ### Checkpoint: Notifikasi
-- [ ] `pnpm test` & `pnpm typecheck` lulus
-- [ ] Manual: quotation baru menghasilkan baris `notifications` status `queued` ke nomor admin
-      yang dikonfigurasi (worker outbox tetap mock — belum mengirim keluar, sesuai status
-      kanal nyata di `docs/prd-mapping.md` §13)
+- [x] `pnpm test` & `pnpm typecheck` lulus
+- [x] Manual: quotation baru menghasilkan baris `notifications` status `queued` ke nomor admin
+      yang dikonfigurasi — diverifikasi lewat tes integrasi (worker outbox tetap mock)
 
 ### Phase 5: Tes & dokumentasi
 
-- [ ] Task 9: Tes integrasi untuk status transition, convert-to-PO, link-order
-- [ ] Task 10: Perbarui `docs/prd-mapping.md` §7 & §13
+- [x] Task 9: Tes integrasi untuk status transition, convert-to-PO, link-order
+- [x] Task 10: Perbarui `docs/prd-mapping.md` §7 & §13
 
 ### Checkpoint: Selesai
-- [ ] Semua acceptance criteria terpenuhi
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test` lulus di seluruh monorepo
-- [ ] Siap direview
+- [x] Semua acceptance criteria terpenuhi
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test` (+ `test:all` & dashboard build) lulus di
+      seluruh monorepo
+- [x] Siap direview
 
 ## Risks and Mitigations
 

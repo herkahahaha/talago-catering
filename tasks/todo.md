@@ -48,21 +48,23 @@ baris ke `purchase_orders` (nomor PO, `agreedTotal`, `dueAt` opsional), dengan F
 `quotations.id` ditambahkan lewat migrasi terpisah mengikuti konvensi `0001_foreign_keys.sql`.
 
 **Acceptance criteria:**
-- [ ] `makePoNo(serviceDate)` di `packages/core/src/lib/ids.ts` menghasilkan format `PO-YYMMDD-XXXX`
+- [x] `makePoNo(serviceDate)` di `packages/core/src/lib/ids.ts` menghasilkan format `PO-YYMMDD-XXXX`
       (pola sama dengan `makeQuoteNo`)
-- [ ] `convertQuotationToPO(exec, quotationId, input)` menolak jika quotation berstatus `lost`
+- [x] `convertQuotationToPO(exec, quotationId, input)` menolak jika quotation berstatus `lost`
       atau sudah punya baris `purchase_orders` (tidak boleh dobel) → `INVALID_STATE`
-- [ ] Transaksi tunggal: update `quotations.status = 'won'` + insert `purchase_orders` (gagal
+- [x] Transaksi tunggal: update `quotations.status = 'won'` + insert `purchase_orders` (gagal
       salah satu → rollback keduanya)
-- [ ] Audit tercatat: entity `quotation`, action `quotation_converted_to_po`, after berisi
+- [x] Audit tercatat: entity `quotation`, action `quotation_converted_to_po`, after berisi
       `poNumber`, `agreedTotal`
-- [ ] Migrasi baru menambah FK `purchase_orders.quotation_id → quotations.id` dan
-      `purchase_orders.order_id → orders.id` (nullable, `ON DELETE SET NULL`)
+- [x] Migrasi baru menambah FK `purchase_orders.quotation_id → quotations.id` dan
+      `purchase_orders.order_id → orders.id` (nullable, `ON DELETE SET NULL`). Catatan: FK
+      sudah ada di `0001_foreign_keys.sql`; migrasi `0002_purchase_order_links.sql` menambah
+      indeks unik `quotation_id` (pengaman dobel di level DB) + indeks `order_id`
 
 **Verification:**
-- [ ] Tes lulus: `pnpm --filter @catering/core test`
-- [ ] `pnpm db:generate` menghasilkan migrasi bersih tanpa mengubah migrasi lama
-- [ ] Build: `pnpm typecheck`
+- [x] Tes lulus: `pnpm --filter @catering/core test:all` (57 lulus)
+- [x] `pnpm db:generate` menghasilkan migrasi bersih tanpa mengubah migrasi lama
+- [x] Build: `pnpm typecheck`
 
 **Dependencies:** Task 1 (status `won`/`lost` sudah bisa diubah; convert butuh validasi status)
 
@@ -81,17 +83,20 @@ baris ke `purchase_orders` (nomor PO, `agreedTotal`, `dueAt` opsional), dengan F
 **Description:** Ekspos `convertQuotationToPO` lewat API admin, dengan validasi input Zod.
 
 **Acceptance criteria:**
-- [ ] `POST /admin/quotations/:id/convert` menerima `{ agreedTotal: number, dueAt?: string }`,
+- [x] `POST /admin/quotations/:id/convert` menerima `{ agreedTotal: number, dueAt?: string }`,
       balas `201` dengan data PO (`poNumber`, `agreedTotal`, `dueAt`, `orderId: null`)
-- [ ] Role admin saja (`assertRole(staff.user, ['admin'])`), sama seperti endpoint quotation
+- [x] Role admin saja (`assertRole(staff.user, ['admin'])`), sama seperti endpoint quotation
       lain
-- [ ] `GET /admin/quotations` memuat info PO terkait (join sederhana) agar dashboard tahu mana
-      yang sudah dikonversi tanpa request tambahan
+- [x] `GET /admin/quotations` memuat info PO terkait (join sederhana) agar dashboard tahu mana
+      yang sudah dikonversi tanpa request tambahan. Ditambah `GET /admin/quotations/:id` untuk
+      pre-fill `/new-order` dan `PATCH /admin/purchase-orders/:id/link-order`
 
 **Verification:**
-- [ ] Tes lulus: `pnpm --filter @catering/core test` + tes rute di `apps/api` jika ada harness-nya
-- [ ] Build: `pnpm typecheck`
-- [ ] Manual: `curl`/Postman ke endpoint dengan token staff admin
+- [x] Tes lulus: `pnpm --filter @catering/core test:all` (rute API belum punya harness terpisah)
+- [x] Build: `pnpm typecheck`
+- [x] Manual: `curl` ke API Docker yang berjalan — `GET /admin/settings/notifications`,
+      `GET /admin/quotations` (PO ikut), dan `POST /admin/quotations/:id/convert` pada quotation
+      ber-PO mengembalikan `409 INVALID_STATE`
 
 **Dependencies:** Task 2
 
@@ -112,14 +117,16 @@ PO" yang membuka dialog isi `agreedTotal` + `dueAt`. Setelah konversi, baris tab
 nomor PO dan status "belum ada order" / "order: <nomor>".
 
 **Acceptance criteria:**
-- [ ] Dialog memvalidasi `agreedTotal > 0` sebelum submit, menampilkan error dari API jika ada
-- [ ] Setelah sukses, badge status berubah jadi `won` dan kolom baru menampilkan nomor PO
-- [ ] Baris dengan PO tapi tanpa order tertaut menampilkan indikator berbeda dari baris yang
-      sudah ada order (disiapkan untuk Task 6)
+- [x] Dialog memvalidasi `agreedTotal > 0` sebelum submit, menampilkan error dari API jika ada
+- [x] Setelah sukses, badge status berubah jadi `won` dan kolom baru menampilkan nomor PO
+      (invalidate + refetch, pola sama dengan Task 1)
+- [x] Baris dengan PO tapi tanpa order tertaut menampilkan indikator berbeda ("Belum ada order")
+      dari baris yang sudah ada order (nomor order)
 
 **Verification:**
-- [ ] Build: `pnpm --filter @catering/dashboard build`
-- [ ] Manual: konversi satu quotation `contacted`, cek tampilan tabel berubah tanpa reload
+- [x] Build: `pnpm --filter @catering/dashboard build`
+- [ ] Manual browser: konversi satu quotation `contacted`, cek tampilan tabel berubah tanpa
+      reload — belum dijalankan (verifikasi lewat build/typecheck + tes integrasi service)
 
 **Dependencies:** Task 3
 
@@ -139,18 +146,18 @@ berhasil dibuat, panggil endpoint baru untuk menautkan `orderId` ke baris `purch
 yang sesuai.
 
 **Acceptance criteria:**
-- [ ] `PATCH /admin/purchase-orders/:id/link-order` menerima `{ orderId }`, menolak jika PO
+- [x] `PATCH /admin/purchase-orders/:id/link-order` menerima `{ orderId }`, menolak jika PO
       sudah punya `orderId` lain (tidak overwrite diam-diam) → `INVALID_STATE`
-- [ ] `/new-order?quotationId=<id>` pre-fill field dari data quotation (fetch
-      `GET /admin/quotations/:id` atau reuse data list yang sudah di-cache)
-- [ ] Setelah order berhasil dibuat dari konteks ini, link-order dipanggil otomatis dan user
+- [x] `/new-order?quotationId=<id>` pre-fill field dari data quotation (memakai
+      `GET /admin/quotations/:id`), termasuk email & catatan, dan mengunci `source = 'po'`
+- [x] Setelah order berhasil dibuat dari konteks ini, link-order dipanggil otomatis dan user
       diarahkan kembali ke `/quotations` dengan toast sukses
 
 **Verification:**
-- [ ] Tes lulus: `pnpm --filter @catering/core test`
-- [ ] Build: `pnpm typecheck` + `pnpm --filter @catering/dashboard build`
-- [ ] Manual: dari quotation yang sudah PO, buat order baru lewat alur ini, cek
-      `purchase_orders.order_id` terisi
+- [x] Tes lulus: `pnpm --filter @catering/core test:all`
+- [x] Build: `pnpm typecheck` + `pnpm --filter @catering/dashboard build`
+- [ ] Manual browser: dari quotation yang sudah PO, buat order lewat alur ini, cek
+      `purchase_orders.order_id` terisi — belum dijalankan; jalur service ditutup tes integrasi
 
 **Dependencies:** Task 2, Task 4
 
@@ -170,13 +177,13 @@ yang sesuai.
 `/orders/:orderId` sebagai gantinya.
 
 **Acceptance criteria:**
-- [ ] Tombol "Buat order" hanya muncul untuk PO tanpa order tertaut
-- [ ] PO dengan order tertaut menampilkan link ke halaman detail order tersebut
+- [x] Tombol "Buat order" hanya muncul untuk PO tanpa order tertaut
+- [x] PO dengan order tertaut menampilkan link ke halaman detail order tersebut
 
 **Verification:**
-- [ ] Build: `pnpm --filter @catering/dashboard build`
-- [ ] Manual: ikuti satu quotation dari `new` → `contacted` → konversi → "Buat order" → cek
-      baris berubah jadi link ke order
+- [x] Build: `pnpm --filter @catering/dashboard build`
+- [ ] Manual browser: ikuti satu quotation dari `new` → `contacted` → konversi → "Buat order" →
+      cek baris berubah jadi link ke order — belum dijalankan di browser
 
 **Dependencies:** Task 5
 
@@ -195,20 +202,21 @@ mengenqueue notifikasi WhatsApp ke nomor itu (template baru `quotation_requested
 dilewati (skip, bukan error) jika nomor belum diisi.
 
 **Acceptance criteria:**
-- [ ] `GET /admin/settings/notifications` & `PUT /admin/settings/notifications` bekerja sama
+- [x] `GET /admin/settings/notifications` & `PUT /admin/settings/notifications` bekerja sama
       seperti pola `settings/order` yang sudah ada
-- [ ] `NotificationTemplate` di `packages/core/src/modules/notifications/service.ts` menambah
+- [x] `NotificationTemplate` di `packages/core/src/modules/notifications/service.ts` menambah
       `'quotation_requested_admin'`
-- [ ] Saat quotation baru dibuat dan setting nomor admin terisi, satu baris baru muncul di
+- [x] Saat quotation baru dibuat dan setting nomor admin terisi, satu baris baru muncul di
       tabel `notifications` dengan `channel: 'whatsapp'`, `recipient` = nomor admin,
       `status: 'queued'`
-- [ ] Saat setting nomor admin kosong, tidak ada baris notifikasi admin yang dibuat (tidak
+- [x] Saat setting nomor admin kosong, tidak ada baris notifikasi admin yang dibuat (tidak
       error, tidak membuat baris dengan recipient kosong)
 
 **Verification:**
-- [ ] Tes lulus: `pnpm --filter @catering/core test`
-- [ ] Build: `pnpm typecheck`
-- [ ] Manual: isi setting, buat quotation baru via `POST /quotes`, cek tabel `notifications`
+- [x] Tes lulus: `pnpm --filter @catering/core test:all`
+- [x] Build: `pnpm typecheck`
+- [x] Manual: PUT/GET setting lewat `curl` ke API Docker (set lalu dikosongkan lagi); enqueue
+      notifikasi diverifikasi di tes integrasi
 
 **Dependencies:** None (independen dari Phase 2–3, bisa paralel setelah Task 1 selesai)
 
@@ -231,12 +239,13 @@ dua task)
 situ).
 
 **Acceptance criteria:**
-- [ ] Field menampilkan nilai tersimpan saat halaman dibuka
-- [ ] Simpan berhasil menampilkan toast konfirmasi; gagal menampilkan pesan error dari API
+- [x] Field menampilkan nilai tersimpan saat halaman dibuka
+- [x] Simpan berhasil menampilkan toast konfirmasi; gagal menampilkan pesan error dari API
 
 **Verification:**
-- [ ] Build: `pnpm --filter @catering/dashboard build`
-- [ ] Manual: ubah nomor, reload halaman, nilai baru tetap tersimpan
+- [x] Build: `pnpm --filter @catering/dashboard build`
+- [ ] Manual browser: ubah nomor, reload halaman, nilai baru tetap tersimpan — belum dijalankan
+      di browser; persistensi setting diverifikasi lewat `curl` PUT/GET
 
 **Dependencies:** Task 7
 
@@ -254,16 +263,18 @@ penolakan (status `lost` tidak bisa dikonversi, PO tidak bisa dobel, link-order 
 overwrite).
 
 **Acceptance criteria:**
-- [ ] Tes: quotation `new` → `contacted` → `won` (convert) → link order, semua status & FK
+- [x] Tes: quotation `new` → `contacted` → `won` (convert) → link order, semua status & FK
       sesuai ekspektasi di tiap langkah
-- [ ] Tes: convert quotation `lost` ditolak `INVALID_STATE`
-- [ ] Tes: convert quotation yang sudah punya PO ditolak `INVALID_STATE`
-- [ ] Tes: link-order ke PO yang sudah punya `orderId` lain ditolak `INVALID_STATE`
-- [ ] Tes: `createQuotationRequest` meng-enqueue notifikasi admin hanya jika setting terisi
+- [x] Tes: convert quotation `lost` ditolak `INVALID_STATE`
+- [x] Tes: convert quotation yang sudah punya PO ditolak `INVALID_STATE`
+- [x] Tes: link-order ke PO yang sudah punya `orderId` lain ditolak `INVALID_STATE`
+      (+ idempoten saat menautkan ke order yang sama)
+- [x] Tes: `createQuotationRequest` meng-enqueue notifikasi admin hanya jika setting terisi
 
 **Verification:**
-- [ ] `pnpm --filter @catering/core test` lulus, termasuk tes baru ini
-- [ ] Tidak menurunkan cakupan tes yang sudah ada
+- [x] `pnpm --filter @catering/core test:all` lulus — 57 tes, termasuk 7 tes baru di
+      `tests/integration/quotations.test.ts`
+- [x] Tidak menurunkan cakupan tes yang sudah ada
 
 **Dependencies:** Task 1, 2, 5, 7
 
@@ -280,17 +291,16 @@ overwrite).
 dan hapus/koreksi baris risiko terkait "alur quotation → PO belum ada" di §13.
 
 **Acceptance criteria:**
-- [ ] §7 baris `quotations, purchase_orders`: hapus catatan "`purchase_orders` belum dipakai
-      kode", tambahkan status baru (✅/🟡 sesuai kenyataan — konversi manual ada, approval
-      berjenjang belum)
-- [ ] §13 baris terakhir ("Alur quotation → PO belum ada...") diperbarui atau dihapus sesuai
-      kondisi setelah Task 1–9 selesai
-- [ ] Baris "Terakhir ditinjau terhadap commit" di atas tabel diperbarui ke commit hasil kerja
-      ini
+- [x] §7 baris `quotations, purchase_orders`: catatan "belum dipakai kode" dihapus; status
+      diperbarui jadi 🟡 (konversi manual + tautan order ada, approval berjenjang belum)
+- [x] §13 baris terakhir ("Alur quotation → PO belum ada...") diganti risiko yang masih nyata:
+      harga PO vs total order belum direkonsiliasi + approval berjenjang belum ada
+- [x] Baris "Terakhir ditinjau terhadap commit" diperbarui ke working tree di atas `cadc5ad`
+      (belum di-commit saat task ini ditutup) — plus `docs/api.md` memuat endpoint baru
 
 **Verification:**
-- [ ] `pnpm check:docs` lulus (jika memeriksa referensi ini)
-- [ ] Review manual: baca ulang §7 & §13, pastikan tidak ada klaim yang melebihi kode nyata
+- [x] `pnpm check:docs` lulus
+- [x] Review manual: §7 & §13 dibaca ulang, tidak ada klaim melebihi kode
 
 **Dependencies:** Task 1–9 (dokumentasi mengikuti kode, bukan sebaliknya)
 

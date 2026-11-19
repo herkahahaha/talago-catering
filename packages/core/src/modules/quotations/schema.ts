@@ -31,5 +31,10 @@ export const purchaseOrders = pgTable(
     dueAt: timestamp('due_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [uniqueIndex('purchase_orders_number_uq').on(t.poNumber)],
+  (t) => [
+    uniqueIndex('purchase_orders_number_uq').on(t.poNumber),
+    // Satu quotation hanya boleh naik jadi satu PO (permintaan 'tidak boleh dobel').
+    uniqueIndex('purchase_orders_quotation_uq').on(t.quotationId),
+    index('purchase_orders_order_idx').on(t.orderId),
+  ],
 );

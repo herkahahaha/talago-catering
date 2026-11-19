@@ -212,6 +212,14 @@ function DayForm(props: { day: DaySettingsDto; date: string }) {
     props.day.maxRegular > 0 ? Math.min(100, (props.day.reservedRegular / props.day.maxRegular) * 100) : 0;
   const reservedPoRatio = () =>
     props.day.maxPo > 0 ? Math.min(100, (props.day.reservedPo / props.day.maxPo) * 100) : 0;
+  const dayStatus = (): { label: string; variant: 'neutral' | 'warning' | 'success' } => {
+    if (!isOpen()) return { label: 'Tidak menerima pesanan', variant: 'neutral' };
+    if (props.day.cutoffPassed) return { label: 'Cut-off lewat', variant: 'neutral' };
+    if (props.day.maxRegular > 0 && props.day.reservedRegular >= props.day.maxRegular) {
+      return { label: 'Kapasitas penuh', variant: 'warning' };
+    }
+    return { label: 'Menerima pesanan', variant: 'success' };
+  };
 
   function dayPayload() {
     return {
@@ -674,21 +682,7 @@ function DayForm(props: { day: DaySettingsDto; date: string }) {
             </div>
             <div class="flex items-center justify-between text-sm">
               <span class="text-muted-foreground">Status</span>
-              <Badge
-                variant={
-                  props.day.cutoffPassed
-                    ? 'neutral'
-                    : props.day.maxRegular > 0 && props.day.reservedRegular >= props.day.maxRegular
-                      ? 'warning'
-                      : 'success'
-                }
-              >
-                {props.day.cutoffPassed
-                  ? 'Cut-off lewat'
-                  : props.day.maxRegular > 0 && props.day.reservedRegular >= props.day.maxRegular
-                    ? 'Kapasitas penuh'
-                    : 'Menerima pesanan'}
-              </Badge>
+              <Badge variant={dayStatus().variant}>{dayStatus().label}</Badge>
             </div>
           </CardContent>
         </Card>
