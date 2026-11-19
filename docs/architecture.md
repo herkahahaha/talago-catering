@@ -57,7 +57,8 @@ Satu baris `daily_capacity` per tanggal adalah kunci atomik:
 reserved_regular  porsi yang sudah dipesan (hold + lunas)
 held_regular      porsi yang masih berstatus pending_payment
 max_regular       batas partisi reguler
-hold_ceiling      plafon porsi berstatus hold (default 50% max_regular)
+hold_ceiling      plafon porsi hold partisi reguler (default 50% max_regular);
+                  partisi PO tidak memakainya, cukup dibatasi max_po
 ```
 
 Reservasi (`capacity/reserve.ts`) berjalan dalam transaksi:
@@ -67,7 +68,9 @@ Reservasi (`capacity/reserve.ts`) berjalan dalam transaksi:
 2. **Pelepasan** — `reserved_*`/`held_*` dikurangi sejumlah porsi yang dilepas; stop jendela antar
    dikembalikan.
 3. **Reservasi** — satu `UPDATE daily_capacity` bersyarat:
-   `is_open AND now() < cut_off_at AND reserved + n <= max AND held + n <= hold_ceiling`.
+   `is_open AND now() < cut_off_at AND reserved + n <= max AND held + n <= plafon`.
+   Plafon adalah `hold_ceiling` untuk partisi reguler dan `max_po` untuk partisi PO
+   (order PO dibuat admin, bukan slot web anti-bot).
    0 baris = penuh/tutup/cut-off; API memetakan ke `CAPACITY_FULL`, `DAY_CLOSED`,
    `CUTOFF_PASSED`, atau `HOLD_LIMIT`.
 4. Order + item + delivery + audit ditulis, lalu `COMMIT`.

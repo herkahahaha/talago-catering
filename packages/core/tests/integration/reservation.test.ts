@@ -168,6 +168,26 @@ describe('kapasitas atomik', () => {
     expect(day!.heldRegular).toBeLessThanOrEqual(day!.holdCeiling);
   });
 
+  it('hold PO besar dibatasi kapasitas PO, bukan plafon hold reguler', async () => {
+    const date = addDays(todayWib(), 24);
+    await ensureDay(ctx.db, date);
+    await configureDay(date, { maxRegular: 200, maxPo: 500, holdCeiling: 100 });
+
+    const outcome = await withTransaction(ctx.db, async (tx) =>
+      reservePortions(tx, { date, portions: 400, partition: 'po', hold: true }),
+    );
+
+    expect(outcome).toMatchObject({ ok: true, reserved: 400, max: 500 });
+    const day = await getDayRow(ctx.db, date);
+    expect(day?.heldPo).toBe(400);
+    expect(day?.heldRegular).toBe(0);
+
+    const overflow = await withTransaction(ctx.db, async (tx) =>
+      reservePortions(tx, { date, portions: 150, partition: 'po', hold: true }),
+    );
+    expect(overflow).toMatchObject({ ok: false, reason: 'capacity_full', remaining: 100 });
+  });
+
   it('hold kedaluwarsa dilepas malas saat reservasi baru, tanpa menunggu job', async () => {
     const date = addDays(todayWib(), 22);
     await ensureDay(ctx.db, date);
