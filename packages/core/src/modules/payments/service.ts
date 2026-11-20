@@ -201,6 +201,71 @@ export async function createPaymentForOrder(
   return { payment, instructions: toInstructionsDto(payment) };
 }
 
+/** Batas pembayaran parsial per invoice/order (ADR 0002 O4, ADR 0004 T1). */
+export const MAX_PARTIAL_PAYMENTS_PER_ORDER = 2;
+
+const PARTIAL_PAYMENT_KIND = 'partial';
+
+export interface RecordPartialPaymentInput {
+  orderId: string;
+  amount: number;
+  /** Bukti pembayaran, mis. URL nota atau nomor referensi kas. */
+  proof: string;
+  method?: PaymentMethod;
+  paidAt?: Date;
+}
+
+/**
+ * Catat pembayaran parsial untuk satu order/invoice.
+ *
+ * ADR 0002 O4: maksimal dua pembayaran parsial per order dan tiap pembayaran
+ * wajib punya bukti. Bukti disimpan di `payload` jsonb agar tidak perlu kolom
+ * atau migrasi baru. Fungsi ini **belum** mengubah status order — alur
+ * pelunasan menyusul terpisah.
+ */
+export async function recordPartialPayment(
+  exec: Executor,
+  input: RecordPartialPaymentInput,
+): Promise<PaymentRow> {
+  if (!Number.isInteger(input.amount) || input.amount <= 0) {
+    throw new AppError('VALIDATION_ERROR', 'Nominal pembayaran parsial harus lebih dari 0.');
+  }
+  const proof = input.proof?.trim();
+  if (!proof) {
+    throw new AppError('VALIDATION_ERROR', 'Bukti pembayaran parsial wajib diisi.');
+  }
+
+  const partialCount = (await listPaymentsForOrder(exec, input.orderId)).filter(
+    (row) => (row.payload as { kind?: unknown } | null)?.kind === PARTIAL_PAYMENT_KIND,
+  ).length;
+  if (partialCount >= MAX_PARTIAL_PAYMENTS_PER_ORDER) {
+    throw new AppError(
+      'INVALID_STATE',
+      `Order ini sudah punya ${MAX_PARTIAL_PAYMENTS_PER_ORDER} pembayaran parsial.`,
+    );
+  }
+
+  const paidAt = input.paidAt ?? new Date();
+  const [payment] = await exec
+    .insert(payments)
+    .values({
+      orderId: input.orderId,
+      gatewayRef: `PARTIAL-${randomToken(12)}`,
+      method: input.method ?? 'cash',
+      status: 'paid',
+      amount: input.amount,
+      reference: proof,
+      instructions: 'Pembayaran parsial dicatat oleh admin.',
+      payload: { kind: PARTIAL_PAYMENT_KIND, proof },
+      expiresAt: paidAt,
+      paidAt,
+    })
+    .returning();
+
+  if (!payment) throw new AppError('PAYMENT_ERROR', 'Gagal mencatat pembayaran parsial.');
+  return payment;
+}
+
 export async function markPaymentPaid(
   exec: Executor,
   paymentId: string,

@@ -35,6 +35,7 @@ export const purchaseOrders = pgTable(
     uniqueIndex('purchase_orders_number_uq').on(t.poNumber),
     // Satu quotation hanya boleh naik jadi satu PO (permintaan 'tidak boleh dobel').
     uniqueIndex('purchase_orders_quotation_uq').on(t.quotationId),
-    index('purchase_orders_order_idx').on(t.orderId),
+    // ADR 0002 O4: satu PO hanya boleh tertaut ke satu order (1 PO = 1 invoice).
+    uniqueIndex('purchase_orders_order_uq').on(t.orderId),
   ],
 );

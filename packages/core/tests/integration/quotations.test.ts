@@ -192,6 +192,20 @@ describe('linkPurchaseOrderToOrder', () => {
     const second = await linkPurchaseOrderToOrder(ctx.db, purchaseOrder.id, order.order.id, actor());
     expect(second.orderId).toBe(first.orderId);
   });
+
+  it('menolak dua PO tertaut ke order yang sama (index unik)', async () => {
+    const firstQuote = await newQuotation(ctx);
+    const secondQuote = await newQuotation(ctx);
+    const first = await convertQuotationToPO(ctx.db, firstQuote.id, { agreedTotal: 5_000_000 }, actor());
+    const second = await convertQuotationToPO(ctx.db, secondQuote.id, { agreedTotal: 5_000_000 }, actor());
+    const order = await newOrder(ctx, '081234567894');
+
+    await linkPurchaseOrderToOrder(ctx.db, first.purchaseOrder.id, order.order.id, actor());
+
+    await expect(
+      linkPurchaseOrderToOrder(ctx.db, second.purchaseOrder.id, order.order.id, actor()),
+    ).rejects.toMatchObject({ code: 'INVALID_STATE' });
+  });
 });
 
 describe('notifikasi admin saat quotation baru', () => {

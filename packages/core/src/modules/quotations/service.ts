@@ -296,11 +296,20 @@ export async function linkPurchaseOrderToOrder(
     throw new AppError('INVALID_STATE', 'PO ini sudah tertaut ke order lain.');
   }
 
-  const [updated] = await exec
-    .update(purchaseOrders)
-    .set({ orderId })
-    .where(and(eq(purchaseOrders.id, purchaseOrderId), isNull(purchaseOrders.orderId)))
-    .returning();
+  let updated: PurchaseOrderRow | undefined;
+  try {
+    [updated] = await exec
+      .update(purchaseOrders)
+      .set({ orderId })
+      .where(and(eq(purchaseOrders.id, purchaseOrderId), isNull(purchaseOrders.orderId)))
+      .returning();
+  } catch (error) {
+    // Index unik order_id menangkap PO lain yang sudah tertaut ke order ini.
+    if (isUniqueViolation(error)) {
+      throw new AppError('INVALID_STATE', 'Order ini sudah tertaut ke PO lain.');
+    }
+    throw error;
+  }
   if (!updated) {
     throw new AppError('INVALID_STATE', 'PO ini sudah tertaut ke order lain.');
   }
