@@ -64,9 +64,9 @@ ulang halaman `/new-order` yang sudah ada (source `po`).
 
 ### Checkpoint: Loop tertutup end-to-end
 - [x] `pnpm test` & `pnpm typecheck` lulus
-- [ ] Manual browser: quotation baru → admin tandai won & konversi → klik "Buat order" → order
-      PO-partition tercipta dan tertaut ke PO yang sama, terlihat di `/quotations` (belum diuji
-      di browser; jalur service `convert` + `link-order` ditutup tes integrasi)
+- [x] Manual browser: quotation baru → admin tandai won & konversi → klik "Buat order" → order
+      PO-partition tercipta dan tertaut ke PO yang sama, terlihat di `/quotations` (QA manual
+      oleh Herka: mostly berfungsi; jalur service `convert` + `link-order` juga ditutup tes integrasi)
 
 ### Phase 4: Notifikasi admin saat quotation baru masuk
 
