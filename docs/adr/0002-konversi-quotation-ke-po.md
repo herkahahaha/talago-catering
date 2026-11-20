@@ -63,7 +63,7 @@ Risiko berikut dicatat dari `tasks/plan.md` dan dari pemeriksaan kode saat ADR i
 - **PO tanpa order bisa terlihat seperti selesai.** Mitigasi: dashboard menampilkan status "belum ada order" secara tegas (Task 6).
 - **Harga PO dan total order bisa berbeda.** `agreedTotal` di PO tidak direkonsiliasi otomatis dengan total order dari menu-picker. Ini batasan yang diterima untuk sekarang. Penyelarasan ditunda sampai terbukti menjadi masalah nyata.
 - **Foreign key sudah ada.** `0001_foreign_keys.sql` mendefinisikan `purchase_orders_quotation_fk` (ON DELETE SET NULL) dan `purchase_orders_order_fk` (ON DELETE SET NULL). Skema Drizzle di `quotations/schema.ts` belum memakai `references()`, sehingga definisi di kode dan di database tidak sepenuhnya sama. Ini perlu dirapikan, tetapi tidak memblokir merge.
-- **Satu PO ke satu order dijaga di service, bukan di database.** `link-order` menolak jika PO sudah punya `orderId`. Namun index `purchase_orders_order_idx` tidak unik, sehingga dua PO masih bisa menunjuk ke order yang sama. Perlu diputuskan: index dibuat unik, atau dua PO ke satu order memang diizinkan.
+- **Relasi PO ke order belum final (lihat Amendments 2026-11-20).** `link-order` menolak jika PO sudah punya `orderId`, dan index `purchase_orders_order_idx` tidak unik. Kebutuhan marketing untuk satu PO menerbitkan hingga dua invoice pembayaran belum punya data lapangan, sehingga keputusan tentang index unik ditunda.
 - **Nomor WhatsApp kosong membuat notifikasi tidak terkirim tanpa peringatan keras.** Mitigasi: field pengaturan tampil di halaman `/quotations`.
 - **Uji QA manual di browser** sudah dilakukan oleh Herka dan hasilnya sebagian besar berfungsi. Checkpoint "loop tertutup end-to-end" di `plan.md` bisa dicentang. Temuan yang belum berfungsi sempurna perlu dicatat terpisah.
 - **Hubungan dengan ADR 0001.** Plafon hold reguler dan validasi O3 di ADR 0001 tetap berlaku untuk partisi reguler. P1 mengecualikan partisi PO dari aturan itu. ADR 0001 tidak diubah, karena keputusan ini menambah aturan untuk partisi lain dan tidak membatalkan keputusan sebelumnya.
@@ -80,4 +80,11 @@ grep -rn "notifications.admin_whatsapp" packages/core/src | head
 
 ## 7. Amendments
 
-Belum ada.
+### 2026-11-20
+
+Butir terbuka baru: O4 — apakah satu PO boleh menerbitkan lebih dari satu invoice pembayaran, dan apakah itu berarti satu PO boleh tertaut ke lebih dari satu order.
+
+- Kebutuhan marketing: satu PO maksimal dua invoice pembayaran. Kebutuhan ini **belum didukung data lapangan**, jadi belum menjadi keputusan.
+- Skema saat ini tidak bisa merepresentasikan dua order per PO. `purchase_orders.order_id` hanya satu kolom, sehingga kebutuhan ini butuh perubahan skema (misalnya tabel invoice terpisah, atau tabel penghubung PO–order). Itu keputusan arsitektur tersendiri.
+- Karena itu index `purchase_orders_order_idx` tetap tidak unik untuk sekarang, dan tidak ada perubahan skema di branch ini. Index unik hanya dibuat setelah O4 diputuskan.
+- Keputusan P1–P4 tidak berubah. Status ADR ini tetap "Diterima" untuk keputusan tersebut.
