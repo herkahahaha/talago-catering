@@ -1,0 +1,135 @@
+{
+  "actions": [],
+  "advisories": {
+    "1102341": {
+      "findings": [
+        {
+          "version": "0.18.20",
+          "paths": [
+            "packages__core>drizzle-kit>@esbuild-kit/esm-loader>@esbuild-kit/core-utils>esbuild"
+          ]
+        }
+      ],
+      "found_by": null,
+      "deleted": null,
+      "references": "- https://github.com/evanw/esbuild/security/advisories/GHSA-67mh-4wv8-2f99\n- https://github.com/evanw/esbuild/commit/de85afd65edec9ebc44a11e245fd9e9a2e99760d\n- https://github.com/advisories/GHSA-67mh-4wv8-2f99",
+      "created": "2025-02-10T17:48:07.000Z",
+      "id": 1102341,
+      "npm_advisory_id": null,
+      "overview": "### Summary\n\nesbuild allows any websites to send any request to the development server and read the response due to default CORS settings.\n\n### Details\n\nesbuild sets `Access-Control-Allow-Origin: *` header to all requests, including the SSE connection, which allows any websites to send any request to the development server and read the response.\n\nhttps://github.com/evanw/esbuild/blob/df815ac27b84f8b34374c9182a93c94718f8a630/pkg/api/serve_other.go#L121\nhttps://github.com/evanw/esbuild/blob/df815ac27b84f8b34374c9182a93c94718f8a630/pkg/api/serve_other.go#L363\n\n**Attack scenario**:\n\n1. The attacker serves a malicious web page (`http://malicious.example.com`).\n1. The user accesses the malicious web page.\n1. The attacker sends a `fetch('http://127.0.0.1:8000/main.js')` request by JS in that malicious web page. This request is normally blocked by same-origin policy, but that's not the case for the reasons above.\n1. The attacker gets the content of `http://127.0.0.1:8000/main.js`.\n\nIn this scenario, I assumed that the attacker knows the URL of the bundle output file name. But the attacker can also get that information by\n\n- Fetching `/index.html`: normally you have a script tag here\n- Fetching `/assets`: it's common to have a `assets` directory when you have JS files and CSS files in a different directory and the directory listing feature tells the attacker the list of files\n- Connecting `/esbuild` SSE endpoint: the SSE endpoint sends the URL path of the changed files when the file is changed (`new EventSource('/esbuild').addEventListener('change', e => console.log(e.type, e.data))`)\n- Fetching URLs in the known file: once the attacker knows one file, the attacker can know the URLs imported from that file\n\nThe scenario above fetches the compiled content, but if the victim has the source map option enabled, the attacker can also get the non-compiled content by fetching the source map file.\n\n### PoC\n\n1. Download [reproduction.zip](https://github.com/user-attachments/files/18561484/reproduction.zip)\n2. Extract it and move to that directory\n1. Run `npm i`\n1. Run `npm run watch`\n1. Run `fetch('http://127.0.0.1:8000/app.js').then(r => r.text()).then(content => console.log(content))` in a different website's dev tools.\n\n![image](https://github.com/user-attachments/assets/08fc2e4d-e1ec-44ca-b0ea-78a73c3c40e9)\n\n### Impact\n\nUsers using the serve feature may get the source code stolen by malicious websites.",
+      "reported_by": null,
+      "title": "esbuild enables any website to send any requests to the development server and read the response",
+      "metadata": null,
+      "cves": [],
+      "access": "public",
+      "severity": "moderate",
+      "module_name": "esbuild",
+      "vulnerable_versions": "<=0.24.2",
+      "github_advisory_id": "GHSA-67mh-4wv8-2f99",
+      "recommendation": "Upgrade to version 0.25.0 or later",
+      "patched_versions": ">=0.25.0",
+      "updated": "2025-02-10T17:48:08.000Z",
+      "cvss": {
+        "score": 5.3,
+        "vectorString": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:H/I:N/A:N"
+      },
+      "cwe": [
+        "CWE-346"
+      ],
+      "url": "https://github.com/advisories/GHSA-67mh-4wv8-2f99"
+    },
+    "1244623": {
+      "findings": [
+        {
+          "version": "10.2.6",
+          "paths": [
+            ".>eslint>minimatch"
+          ]
+        }
+      ],
+      "found_by": null,
+      "deleted": null,
+      "references": "- https://github.com/isaacs/minimatch/security/advisories/GHSA-g3hv-75wg-m249\n- https://nvd.nist.gov/vuln/detail/CVE-2026-118764\n- https://github.com/isaacs/minimatch/commit/77a0f5c4b80bdc641c3c930a1d9edf5ad2db57f8\n- https://github.com/isaacs/minimatch/releases/tag/v11.0.1\n- https://github.com/isaacs/minimatch/commit/297b6c1a01f2410b3ba1ebed14ba222d0c3c1033\n- https://github.com/isaacs/minimatch/commit/fd0b3ab9cbc5bf1aff1c99f1f46e413c2b3340da\n- https://github.com/advisories/GHSA-g3hv-75wg-m249",
+      "created": "2026-10-30T23:09:55.000Z",
+      "id": 1244623,
+      "npm_advisory_id": null,
+      "overview": "minimatch 10.2.6 contains an attacker-controlled pattern amplification in firstPhasePreProcess() when optimizationLevel >= 2.\n\nresearcher: Reid Downing (b1nv0id)\nfiles: \n\n- src/index.ts: 690-770\n- src/index.ts: 780-796\n\nissue:\ninput-controlled growth of globParts during first-phase preprocessing, followed by quadratic second-phase processing.\n\nthe **/../ transformation clones a globparts entry and appends the clone to the same globparts array:\n```\nparts.splice(gs, 1)\nconst other = parts.slice(0)\nother[gs] = '**'\nglobParts.push(other)\n```\nthis occurs inside a do...while (didSomething) fixpoint loop, allowing generated entries to be processed again.\n\nthe expanded globparts array is subsequently processed by secondPhasePreProcess(), which performs pairwise comparisons:\n```\nfor (let i = 0; i < globParts.length - 1; i++) {\n  for (let j = i + 1; j < globParts.length; j++) {\n    this.partsMatch(...)\n  }\n}\n```\nan attacker who can supply a glob pattern can therefore cause additional pattern entries to be generated during preprocessing, followed by quadratic pairwise processing, resulting in excessive cpu and memory consumption.",
+      "reported_by": null,
+      "title": "minimatch has potential denial of service via globparts amplification",
+      "metadata": null,
+      "cves": [
+        "CVE-2026-118764"
+      ],
+      "access": "public",
+      "severity": "moderate",
+      "module_name": "minimatch",
+      "vulnerable_versions": ">=7.0.0 <11.0.1",
+      "github_advisory_id": "GHSA-g3hv-75wg-m249",
+      "recommendation": "Upgrade to version 11.0.1 or later",
+      "patched_versions": ">=11.0.1",
+      "updated": "2026-11-04T16:50:04.000Z",
+      "cvss": {
+        "score": 0,
+        "vectorString": null
+      },
+      "cwe": [
+        "CWE-405"
+      ],
+      "url": "https://github.com/advisories/GHSA-g3hv-75wg-m249"
+    },
+    "1246687": {
+      "findings": [
+        {
+          "version": "11.1.9",
+          "paths": [
+            "apps__web>@astrojs/node"
+          ]
+        }
+      ],
+      "found_by": null,
+      "deleted": null,
+      "references": "- https://github.com/withastro/astro/security/advisories/GHSA-r3h5-4585-7x3w\n- https://nvd.nist.gov/vuln/detail/CVE-2026-126364\n- https://github.com/withastro/astro/commit/7da442bb286e0c29e1c9e1add6727b7cbf434f1a\n- https://github.com/withastro/astro/releases/tag/astro@7.4.7\n- https://github.com/advisories/GHSA-r3h5-4585-7x3w",
+      "created": "2026-11-13T18:35:59.000Z",
+      "id": 1246687,
+      "npm_advisory_id": null,
+      "overview": "## Summary\n\nThe `/_image` endpoint used by the `@astrojs/node` adapter checks that a requested local image is inside the build output directory before reading it from disk. That check compared paths case-insensitively. On case-sensitive filesystems (such as Linux), a directory whose path differs from the output directory only by letter case is a different directory, but it passed the check.\n\nFor example, with the client output directory at `/srv/app/dist/client/`, a request such as:\n\n```text\n/_image?href=/../../DIST/client/secret.png&w=32&f=png\n```\n\nresolved to `/srv/app/DIST/client/secret.png` and was served, even though that file is outside the output directory.\n\n## Impact\n\nAn unauthenticated attacker can read image files from outside the output directory, but only when all of the following are true:\n\n- The site uses on-demand rendering with the `@astrojs/node` adapter.\n- The server runs on a case-sensitive filesystem.\n- A directory exists whose path matches the output directory except for letter case (for example `DIST/client` next to `dist/client`). Such a layout is unusual, and the attacker cannot create it.\n\nOnly files the image service accepts can be read. Raster images are returned after resizing; SVG files are returned unchanged. Other file types fail during processing. Plain path traversal outside the output directory (for example `/../../secret.png`) was already rejected and is not affected.\n\n## Affected versions\n\n`astro` >= 5.14.3, <= 7.4.6, when used with `@astrojs/node` (all versions up to 11.1.11). The vulnerable image endpoint is provided by `astro` and used by the `@astrojs/node` adapter.\n\n## Patches\n\nFixed in `astro` 7.4.7. The path check now compares paths exactly, and only ignores letter case for Windows drive-letter paths. The fix ships in `astro`, so upgrading `@astrojs/node` alone is not enough.\n\n## Workarounds\n\nUpgrade to `astro` 7.4.7 or later. Before upgrading, make sure no directory next to the build output directory has a path that differs from it only by letter case.\n\n## Credits\n\nReported by @zachariah-mithani.",
+      "reported_by": null,
+      "title": "Astro: Image endpoint in @astrojs/node can read files from a case-variant sibling of the output directory on case-sensitive filesystems",
+      "metadata": null,
+      "cves": [
+        "CVE-2026-126364"
+      ],
+      "access": "public",
+      "severity": "moderate",
+      "module_name": "@astrojs/node",
+      "vulnerable_versions": "<=11.1.11",
+      "github_advisory_id": "GHSA-r3h5-4585-7x3w",
+      "recommendation": "None",
+      "patched_versions": "<0.0.0",
+      "updated": "2026-11-13T18:36:00.000Z",
+      "cvss": {
+        "score": 0,
+        "vectorString": null
+      },
+      "cwe": [
+        "CWE-22",
+        "CWE-178"
+      ],
+      "url": "https://github.com/advisories/GHSA-r3h5-4585-7x3w"
+    }
+  },
+  "muted": [],
+  "metadata": {
+    "vulnerabilities": {
+      "info": 0,
+      "low": 0,
+      "moderate": 3,
+      "high": 0,
+      "critical": 0
+    },
+    "dependencies": 845,
+    "devDependencies": 0,
+    "optionalDependencies": 0,
+    "totalDependencies": 845
+  }
+}
