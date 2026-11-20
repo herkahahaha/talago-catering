@@ -1,6 +1,6 @@
 # ADR 0003 — Pembayaran per segmen pelanggan PO dan klasifikasi segmen
 
-- **Status:** Diterima (S1 dan S2); aturan untuk segmen personal dan fitur klasifikasi masih terbuka
+- **Status:** Digantikan oleh [ADR 0004](0004-tanpa-pembedaan-segmen-pembayaran.md)
 - **Tanggal:** 2026-11-20
 - **Pemilik keputusan:** Herka
 - **Menggantikan sebagian:** [ADR 0002](0002-konversi-quotation-ke-po.md) §7 Amendments 2026-11-20 (O4), khusus aturan dua kali pembayaran parsial untuk semua segmen. Bagian lain ADR 0002 tetap berlaku.
