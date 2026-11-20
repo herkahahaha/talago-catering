@@ -63,7 +63,7 @@ Risiko berikut dicatat dari `tasks/plan.md` dan dari pemeriksaan kode saat ADR i
 - **PO tanpa order bisa terlihat seperti selesai.** Mitigasi: dashboard menampilkan status "belum ada order" secara tegas (Task 6).
 - **Harga PO dan total order bisa berbeda.** `agreedTotal` di PO tidak direkonsiliasi otomatis dengan total order dari menu-picker. Ini batasan yang diterima untuk sekarang. Penyelarasan ditunda sampai terbukti menjadi masalah nyata.
 - **Foreign key sudah ada.** `0001_foreign_keys.sql` mendefinisikan `purchase_orders_quotation_fk` (ON DELETE SET NULL) dan `purchase_orders_order_fk` (ON DELETE SET NULL). Skema Drizzle di `quotations/schema.ts` belum memakai `references()`, sehingga definisi di kode dan di database tidak sepenuhnya sama. Ini perlu dirapikan, tetapi tidak memblokir merge.
-- **Relasi PO ke order belum final (lihat Amendments 2026-11-20).** `link-order` menolak jika PO sudah punya `orderId`, dan index `purchase_orders_order_idx` tidak unik. Kebutuhan marketing untuk satu PO menerbitkan hingga dua invoice pembayaran belum punya data lapangan, sehingga keputusan tentang index unik ditunda.
+- **Index `purchase_orders_order_idx` belum unik, tetapi sudah diputuskan harus unik (O4, lihat Amendments 2026-11-20).** `link-order` sudah menolak jika PO punya `orderId`. Index unik dan pembatasan pembayaran parsial belum diimplementasikan di branch ini.
 - **Nomor WhatsApp kosong membuat notifikasi tidak terkirim tanpa peringatan keras.** Mitigasi: field pengaturan tampil di halaman `/quotations`.
 - **Uji QA manual di browser** sudah dilakukan oleh Herka dan hasilnya sebagian besar berfungsi. Checkpoint "loop tertutup end-to-end" di `plan.md` bisa dicentang. Temuan yang belum berfungsi sempurna perlu dicatat terpisah.
 - **Hubungan dengan ADR 0001.** Plafon hold reguler dan validasi O3 di ADR 0001 tetap berlaku untuk partisi reguler. P1 mengecualikan partisi PO dari aturan itu. ADR 0001 tidak diubah, karena keputusan ini menambah aturan untuk partisi lain dan tidak membatalkan keputusan sebelumnya.
@@ -80,11 +80,18 @@ grep -rn "notifications.admin_whatsapp" packages/core/src | head
 
 ## 7. Amendments
 
-### 2026-11-20
+### 2026-11-20 — O4 diputuskan
 
-Butir terbuka baru: O4 — apakah satu PO boleh menerbitkan lebih dari satu invoice pembayaran, dan apakah itu berarti satu PO boleh tertaut ke lebih dari satu order.
+Butir O4: apakah satu PO boleh menerbitkan lebih dari satu invoice, dan apakah satu PO boleh tertaut ke lebih dari satu order.
 
-- Kebutuhan marketing: satu PO maksimal dua invoice pembayaran. Kebutuhan ini **belum didukung data lapangan**, jadi belum menjadi keputusan.
-- Skema saat ini tidak bisa merepresentasikan dua order per PO. `purchase_orders.order_id` hanya satu kolom, sehingga kebutuhan ini butuh perubahan skema (misalnya tabel invoice terpisah, atau tabel penghubung PO–order). Itu keputusan arsitektur tersendiri.
-- Karena itu index `purchase_orders_order_idx` tetap tidak unik untuk sekarang, dan tidak ada perubahan skema di branch ini. Index unik hanya dibuat setelah O4 diputuskan.
-- Keputusan P1–P4 tidak berubah. Status ADR ini tetap "Diterima" untuk keputusan tersebut.
+**Keputusan (dari pemilik keputusan, Herka):**
+
+- **Satu PO hanya menerbitkan satu invoice**, sehingga satu PO tertaut ke **satu order**. Usulan awal dari marketing (dua invoice per PO) **dibatalkan**.
+- **Pembayaran parsial diperbolehkan**, dengan **maksimal dua kali pembayaran** per invoice (per order). Bukti tiap pembayaran dicatat.
+
+**Konsekuensi:**
+
+- Index `purchase_orders_order_idx` seharusnya menjadi **unik**. Ini belum diimplementasikan. Perubahannya butuh migrasi baru, bukan edit migrasi lama (sesuai `AGENTS.md`).
+- Pembatasan dua pembayaran parsial belum ada di kode. Perlu aturan di modul `payments`, dan perlu diuji.
+- Alasan tidak mengubah P1–P4: keputusan ini menyempitkan relasi PO–order, tidak mengubah partisi, status PO, atau jalur notifikasi.
+- Data lapangan untuk pembayaran parsial belum ada. Batas dua kali pembayaran berasal dari keputusan bisnis, bukan dari data. Jika data nanti menunjukkan batas itu perlu berubah, buat ADR baru yang merujuk ADR ini.
