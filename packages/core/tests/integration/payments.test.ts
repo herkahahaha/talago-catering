@@ -79,6 +79,23 @@ describe('recordPartialPayment', () => {
     ).rejects.toMatchObject({ code: 'INVALID_STATE' });
   });
 
+  it('tidak meloloskan pembayaran ke-3 walau dicatat bersamaan', async () => {
+    const order = await newPoOrder();
+
+    const results = await Promise.allSettled(
+      [1, 2, 3].map((n) =>
+        recordPartialPayment(ctx.db, {
+          orderId: order.order.id,
+          amount: 100_000,
+          proof: `bukti-paralel-${n}`,
+        }),
+      ),
+    );
+
+    expect(results.filter((r) => r.status === 'fulfilled')).toHaveLength(2);
+    expect(partialRows(await listPaymentsForOrder(ctx.db, order.order.id))).toHaveLength(2);
+  });
+
   it('menolak nominal selain bilangan bulat positif', async () => {
     const order = await newPoOrder();
 

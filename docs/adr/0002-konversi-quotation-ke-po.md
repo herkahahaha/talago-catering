@@ -91,11 +91,11 @@ Butir O4: apakah satu PO boleh menerbitkan lebih dari satu invoice, dan apakah s
 
 **Konsekuensi:**
 
-- Index `purchase_orders_order_idx` seharusnya menjadi **unik**. Ini belum diimplementasikan. Perubahannya butuh migrasi baru, bukan edit migrasi lama (sesuai `AGENTS.md`).
-- Pembatasan dua pembayaran parsial belum ada di kode. Perlu aturan di modul `payments`, dan perlu diuji.
+- Index unik `purchase_orders_order_uq` sudah diterapkan lewat migrasi `0003`, menggantikan `purchase_orders_order_idx`.
+- Batas dua pembayaran parsial sudah diterapkan di `payments/service.ts` (`MAX_PARTIAL_PAYMENTS_PER_ORDER`). Pengecekan dan penyimpanan berjalan dalam transaksi dengan kunci baris `orders` (`FOR UPDATE`), dan ada tes integrasi untuk kasus bersamaan.
 - Alasan tidak mengubah P1–P4: keputusan ini menyempitkan relasi PO–order, tidak mengubah partisi, status PO, atau jalur notifikasi.
 - Data lapangan untuk pembayaran parsial belum ada. Batas dua kali pembayaran berasal dari keputusan bisnis, bukan dari data. Jika data nanti menunjukkan batas itu perlu berubah, buat ADR baru yang merujuk ADR ini.
-- **Konteks segmen (dicatat 2026-11-20):** Herka menyatakan kasus pesanan sangat besar belum pernah terjadi di lapangan, tetapi diperkirakan cukup sering, dan kebanyakan datang dari **B2G** (instansi pemerintah) dibanding B2B. Pembayaran instansi biasanya terikat siklus anggaran dan dicairkan bertahap, sehingga batas dua pembayaran berpotensi terlalu ketat untuk segmen ini. Ini **belum diputuskan**. Perlu dikaji ulang sebelum aturan pembayaran diimplementasikan: apakah batas dua tetap berlaku untuk semua, atau dibedakan per segmen.
+- **Konteks segmen (dicatat 2026-11-20):** Herka menyatakan kasus pesanan sangat besar belum pernah terjadi di lapangan, tetapi diperkirakan cukup sering, dan kebanyakan datang dari **B2G** (instansi pemerintah) dibanding B2B. Pembayaran instansi biasanya terikat siklus anggaran dan dicairkan bertahap, sehingga batas dua pembayaran berpotensi terlalu ketat untuk segmen ini. Catatan ini sudah **tidak berlaku**: Herka kemudian memutuskan B2G dibayar penuh dan disamakan dengan B2B, lihat [ADR 0004](0004-tanpa-pembedaan-segmen-pembayaran.md).
 
 ### 2026-11-20 — Implementasi index unik `order_id`
 

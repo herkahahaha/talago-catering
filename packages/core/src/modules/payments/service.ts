@@ -1,5 +1,5 @@
 import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
-import { desc, eq } from 'drizzle-orm';
+import { desc, eq, sql } from 'drizzle-orm';
 import type { PaymentDto, PaymentInstructionsDto, PaymentMethod } from '@catering/contracts';
 import { payments, webhookEvents } from './schema';
 import type { Executor } from '../../db/client';
@@ -235,35 +235,41 @@ export async function recordPartialPayment(
     throw new AppError('VALIDATION_ERROR', 'Bukti pembayaran parsial wajib diisi.');
   }
 
-  const partialCount = (await listPaymentsForOrder(exec, input.orderId)).filter(
-    (row) => (row.payload as { kind?: unknown } | null)?.kind === PARTIAL_PAYMENT_KIND,
-  ).length;
-  if (partialCount >= MAX_PARTIAL_PAYMENTS_PER_ORDER) {
-    throw new AppError(
-      'INVALID_STATE',
-      `Order ini sudah punya ${MAX_PARTIAL_PAYMENTS_PER_ORDER} pembayaran parsial.`,
-    );
-  }
+  // Hitung dan simpan dalam satu transaksi, dikunci per order (SELECT ... FOR UPDATE)
+  // agar dua request bersamaan tidak sama-sama lolos batas dan menyimpan pembayaran ke-3.
+  return exec.transaction(async (tx) => {
+    await tx.execute(sql`SELECT id FROM orders WHERE id = ${input.orderId} FOR UPDATE`);
 
-  const paidAt = input.paidAt ?? new Date();
-  const [payment] = await exec
-    .insert(payments)
-    .values({
-      orderId: input.orderId,
-      gatewayRef: `PARTIAL-${randomToken(12)}`,
-      method: input.method ?? 'cash',
-      status: 'paid',
-      amount: input.amount,
-      reference: proof,
-      instructions: 'Pembayaran parsial dicatat oleh admin.',
-      payload: { kind: PARTIAL_PAYMENT_KIND, proof },
-      expiresAt: paidAt,
-      paidAt,
-    })
-    .returning();
+    const partialCount = (await listPaymentsForOrder(tx, input.orderId)).filter(
+      (row) => (row.payload as { kind?: unknown } | null)?.kind === PARTIAL_PAYMENT_KIND,
+    ).length;
+    if (partialCount >= MAX_PARTIAL_PAYMENTS_PER_ORDER) {
+      throw new AppError(
+        'INVALID_STATE',
+        `Order ini sudah punya ${MAX_PARTIAL_PAYMENTS_PER_ORDER} pembayaran parsial.`,
+      );
+    }
 
-  if (!payment) throw new AppError('PAYMENT_ERROR', 'Gagal mencatat pembayaran parsial.');
-  return payment;
+    const paidAt = input.paidAt ?? new Date();
+    const [payment] = await tx
+      .insert(payments)
+      .values({
+        orderId: input.orderId,
+        gatewayRef: `PARTIAL-${randomToken(12)}`,
+        method: input.method ?? 'cash',
+        status: 'paid',
+        amount: input.amount,
+        reference: proof,
+        instructions: 'Pembayaran parsial dicatat oleh admin.',
+        payload: { kind: PARTIAL_PAYMENT_KIND, proof },
+        expiresAt: paidAt,
+        paidAt,
+      })
+      .returning();
+
+    if (!payment) throw new AppError('PAYMENT_ERROR', 'Gagal mencatat pembayaran parsial.');
+    return payment;
+  });
 }
 
 export async function markPaymentPaid(
