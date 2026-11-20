@@ -1,62 +1,74 @@
-# ADR 0003 — Batas pembayaran parsial dibedakan per segmen pelanggan
+# ADR 0003 — Pembayaran per segmen pelanggan PO dan klasifikasi segmen
 
-- **Status:** Diterima (arah keputusan); angka batas B2G dan cara menentukan segmen masih terbuka
+- **Status:** Diterima (S1 dan S2); aturan untuk segmen personal dan fitur klasifikasi masih terbuka
 - **Tanggal:** 2026-11-20
 - **Pemilik keputusan:** Herka
-- **Menggantikan sebagian:** [ADR 0002](0002-konversi-quotation-ke-po.md) §7 Amendments 2026-11-20 (O4), khusus butir "maksimal dua kali pembayaran per invoice" untuk semua segmen. Bagian lain ADR 0002 tetap berlaku.
+- **Menggantikan sebagian:** [ADR 0002](0002-konversi-quotation-ke-po.md) §7 Amendments 2026-11-20 (O4), khusus aturan dua kali pembayaran parsial untuk semua segmen. Bagian lain ADR 0002 tetap berlaku.
 - **Berkaitan dengan:** [ADR 0001](0001-batas-order-dan-target-produksi.md) (tidak diubah)
 
 ## 1. Konteks
 
-ADR 0002 memutuskan bahwa satu PO menerbitkan satu invoice, dan pembayaran parsial dibatasi maksimal dua kali per invoice. Batas dua kali itu diputuskan untuk semua pelanggan.
+ADR 0002 memutuskan bahwa satu PO menerbitkan satu invoice, dan pembayaran parsial dibatasi maksimal dua kali per invoice untuk semua pelanggan.
 
-Setelah keputusan itu, Herka menjelaskan bahwa pesanan sangat besar belum pernah terjadi di lapangan, tetapi diperkirakan cukup sering. Kasus ini kebanyakan datang dari **B2G** (instansi pemerintah), bukan B2B. Pembayaran instansi biasanya terikat siklus anggaran dan dicairkan bertahap, sehingga batas dua kali pembayaran dapat menghambat segmen ini.
+Herka kemudian menjelaskan dua hal:
+
+- Pesanan dari instansi pemerintah (B2G) sebaiknya dibayar **penuh sekaligus**, karena nominalnya tidak akan mencapai ratusan juta. Ini meluruskan dugaan sebelumnya bahwa B2G memerlukan pembayaran bertahap.
+- Perlu fitur baru untuk **mengatur segmen** setiap order PO, dengan tiga kategori: swasta, pemerintah, dan personal (decision maker atau event planner).
 
 ## 2. Keputusan
 
-### S1 — Batas pembayaran parsial dibedakan per segmen
+### S1 — Aturan pembayaran dibedakan per segmen
 
-- Batas pembayaran parsial per invoice ditentukan oleh segmen pelanggan, tidak lagi satu nilai untuk semua.
-- **B2B** tetap mengikuti batas maksimal dua kali pembayaran (ADR 0002).
-- **B2G** memakai batas yang lebih longgar. Angka pastinya **belum ditetapkan** (lihat §6).
-- Batas disimpan sebagai pengaturan (`settings`) agar bisa diubah admin tanpa perubahan kode, mengikuti pola `order.*` yang sudah ada.
+- **B2G (pemerintah):** dibayar penuh dalam **satu kali pembayaran**. Tidak ada pembayaran parsial.
+- **B2B (swasta):** mengikuti ADR 0002, yaitu maksimal dua kali pembayaran parsial per invoice.
+- **Personal (decision maker atau event planner):** aturannya **belum diputuskan** (lihat §6).
+- Aturan ini menggantikan butir "maksimal dua kali pembayaran per invoice" di ADR 0002 hanya untuk segmen B2G dan personal. Untuk B2B tetap berlaku.
 
-### S2 — Setiap pembayaran parsial tetap dicatat dengan bukti
+### S2 — Segmen order PO diatur lewat fitur baru
 
-- Berlaku untuk semua segmen: setiap pembayaran parsial wajib punya bukti yang tercatat. Ini tidak berubah dari ADR 0002.
+- Setiap PO/order mendapat atribut segmen dengan tiga nilai: `swasta`, `pemerintah`, `personal`.
+- Segmen ditetapkan oleh admin lewat fitur baru. Fitur ini belum dibangun.
+- Aturan pembayaran di S1 membaca nilai segmen ini.
+- Batas-batas aturan disimpan sebagai pengaturan (`settings`), bukan hard-code, supaya bisa disesuaikan admin.
+
+### S3 — Setiap pembayaran tetap dicatat dengan bukti
+
+- Berlaku untuk semua segmen, termasuk pembayaran penuh. Tidak berubah dari ADR 0002.
 
 ## 3. Alasan
 
-- **S1:** Batas yang sama untuk semua segmen tidak cocok dengan kebutuhan instansi yang mencairkan dana bertahap. Membedakan per segmen menjaga batas ketat untuk B2B sambil tidak memblokir B2G.
-- Menyimpan batas di `settings` menghindari perubahan kode setiap kali batas perlu disesuaikan, sama seperti pendekatan ADR 0001 untuk batas porsi.
+- **S1:** B2G membayar penuh karena nominalnya tidak besar, sehingga pembayaran bertahap tidak diperlukan. Membedakan per segmen menjaga B2B tetap dengan batas dua kali pembayaran.
+- **S2:** Aturan pembayaran tidak bisa dibedakan tanpa informasi segmen. Admin perlu menetapkannya, karena sistem tidak bisa menebaknya dari data order.
 
 ## 4. Alternatif yang ditolak
 
-- **Batas dua kali tetap untuk semua segmen:** berisiko menghambat pesanan B2G yang paling besar.
-- **Tanpa batas sama sekali:** membuka ruang pembayaran parsial yang tidak terkendali untuk B2B, dan tidak sesuai dengan keputusan O4 untuk segmen itu.
-- **Batas diatur per pelanggan, bukan per segmen:** lebih rumit dan belum ada kebutuhan yang menuntutnya.
+- **Batas dua kali pembayaran untuk semua segmen:** tidak sesuai dengan kebutuhan B2G yang membayar penuh.
+- **Segmen ditebak dari data order atau nama pelanggan:** tidak andal, dan bisa salah klasifikasi.
 
 ## 5. Konsekuensi
 
-- Modul `payments` perlu membaca batas dari `settings` berdasarkan segmen order. Belum diimplementasikan.
-- Perlu cara menentukan segmen sebuah order. Belum diputuskan (lihat §6).
-- Index `purchase_orders.order_id` tetap direncanakan unik, sesuai ADR 0002. Keputusan ini tidak mengubahnya.
+- Modul `payments` perlu membaca segmen order dan aturan yang sesuai. Belum diimplementasikan.
+- Fitur klasifikasi segmen perlu dibangun: field di PO/order, input di dashboard, dan audit log.
+- Index `purchase_orders.order_id` tetap direncanakan unik, sesuai ADR 0002.
 - Tidak ada perubahan skema di branch ini.
 
 ## 6. Pertanyaan terbuka
 
-- **Angka batas B2G:** tanpa batas, atau batas tertentu (berapa kali pembayaran)?
-- **Cara menentukan segmen:** dari jenis pelanggan (akun instansi), dari kolom pada order, atau dari kode quotation?
+- **Aturan pembayaran untuk segmen personal:** penuh sekali, atau mengikuti batas B2B?
+- **Detail fitur klasifikasi:** apakah segmen wajib diisi sebelum order dikonfirmasi, dan apakah bisa diubah setelah pembayaran pertama?
 
 ## 7. Verifikasi
 
 Sebelum implementasi, cek:
 
 ```bash
-grep -rn "max_payments\|partial" packages/core/src/modules/payments | head
+grep -rn "segment\|max_payments" packages/core/src/modules/payments | head
 grep -rn "order.max_portions_per_order" packages/core/src | head
 ```
 
 ## 8. Amendments
 
-Belum ada.
+### 2026-11-20
+
+- Versi awal ADR ini menyatakan bahwa B2G memerlukan batas pembayaran yang lebih longgar. Itu **tidak benar**. Herka mengklarifikasi bahwa B2G membayar penuh sekaligus, karena nominal pesanannya tidak akan mencapai ratusan juta. Bagian S1 dan §1 sudah diperbarui sesuai klarifikasi ini.
+- Pilihan "segmen ditentukan lewat fitur" dan tiga nilai segmen ditambahkan berdasarkan permintaan Herka.
