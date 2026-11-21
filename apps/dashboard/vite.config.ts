@@ -62,7 +62,7 @@ function devApiProxy(target: string): Plugin {
 }
 
 export default defineConfig({
-  server: { port: 3001, host: true, allowedHosts: ['.trycloudflare.com'], },
+  server: { port: 3001, host: true, allowedHosts: ['.trycloudflare.com', '.kiri.local'], },
   resolve: { tsconfigPaths: true },
   plugins: [devApiProxy(apiTarget), tailwindcss(), tanstackStart(), viteSolid({ ssr: true }), nitro()],
 });
