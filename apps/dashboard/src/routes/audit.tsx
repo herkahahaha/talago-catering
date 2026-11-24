@@ -9,10 +9,10 @@ import { formatDateTime, todayWib } from '~/lib/format';
 import { Badge } from '~/components/ui/badge';
 import { Card } from '~/components/ui/card';
 import { EmptyState } from '~/components/ui/empty-state';
-import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
 import { Select } from '~/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '~/components/ui/table';
+import { DatePicker } from '~/components/ui/date-picker';
 
 export const Route = createFileRoute('/audit')({
   component: AuditPage,
@@ -62,13 +62,7 @@ function AuditPage() {
             <Label for="audit-date" class="text-xs">
               Tanggal
             </Label>
-            <Input
-              id="audit-date"
-              type="date"
-              class="w-40"
-              value={date()}
-              onInput={(event) => setDate(event.currentTarget.value)}
-            />
+            <DatePicker id="audit-date" class="w-40" value={date()} onChange={setDate} />
           </div>
           <div class="grid gap-1.5">
             <Label for="audit-entity" class="text-xs">

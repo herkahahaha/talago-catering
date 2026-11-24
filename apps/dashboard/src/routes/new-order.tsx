@@ -21,6 +21,7 @@ import { Label } from '~/components/ui/label';
 import { Select } from '~/components/ui/select';
 import { Separator } from '~/components/ui/separator';
 import { Textarea } from '~/components/ui/textarea';
+import { DatePicker } from '~/components/ui/date-picker';
 
 export const Route = createFileRoute('/new-order')({
   validateSearch: (search: Record<string, unknown>): { quotationId?: string } => ({
@@ -152,6 +153,10 @@ function NewOrderPage() {
     setError(null);
     if (rows().length === 0) {
       setError({ message: 'Tambahkan minimal satu hidangan.' });
+      return;
+    }
+    if (!serviceDate()) {
+      setError({ message: 'Tanggal layanan wajib diisi.' });
       return;
     }
     setBusy(true);
@@ -322,13 +327,7 @@ function NewOrderPage() {
                   </div>
                   <div class="grid gap-2">
                     <Label for="date">Tanggal layanan</Label>
-                    <Input
-                      id="date"
-                      type="date"
-                      required
-                      value={serviceDate()}
-                      onInput={(event) => setServiceDate(event.currentTarget.value)}
-                    />
+                    <DatePicker id="date" required value={serviceDate()} onChange={setServiceDate} />
                   </div>
                 </div>
 

@@ -39,7 +39,8 @@ seluruh halaman diuji di browser (desktop 1440×950 dan mobile 390×844).
 | Paket | Versi | Fungsi |
 | :-- | :-- | :-- |
 | `tailwindcss` + `@tailwindcss/vite` | 4.3.4 | Utility CSS, tema `@theme inline`, content scanning otomatis |
-| `@ark-ui/solid` | 5.40.1 | Primitif headless: Select, Dialog (+ AlertDialog, Sheet), Menu (DropdownMenu), Checkbox |
+| `@ark-ui/solid` | 5.40.1 | Primitif headless: Select, Dialog (+ AlertDialog, Sheet), Menu (DropdownMenu), Checkbox, DatePicker, DateInput |
+| `@internationalized/date` | 3.12.4 | Tipe tanggal Ark (`CalendarDate`, `CalendarDateTime`) untuk DatePicker dan DateInput |
 | `class-variance-authority` | 0.7.1 | Varian komponen (`buttonVariants`, `badgeVariants`, `alertVariants`) |
 | `clsx` + `tailwind-merge` | 2.1.1 / 3.7.0 | Helper `cn()` untuk menggabungkan class tanpa konflik |
 | `lucide-solid` | 1.68.0 | Ikon (padanan `lucide-react`) |
@@ -60,6 +61,7 @@ apps/dashboard/src/
 ├── styles/app.css              # token shadcn (terang & gelap), base layer, style cetak
 ├── lib/cn.ts                   # clsx + tailwind-merge
 ├── lib/theme.ts                # state tema terang/gelap, penyimpanan, script anti-kilat
+├── lib/date-values.ts          # konversi string tanggal/jam ↔ CalendarDate/CalendarDateTime
 ├── components/
 │   ├── AppShell.tsx            # sidebar + header + konten, sesi & logout
 │   ├── ThemeToggle.tsx         # tombol ganti tema di header
@@ -127,7 +129,9 @@ Semua berada di `apps/dashboard/src/components/ui/`.
 | Button | `button.tsx` | `<button>` + CVA | Semua halaman, toolbar, footer dialog |
 | Badge | `badge.tsx` | `<span>` + CVA | Status order, status menu/refund, hitungan |
 | Card (+ Header/Title/Description/Action/Content/Footer) | `card.tsx` | `<div>` | Semua halaman |
-| Input | `input.tsx` | `<input>` | Form, filter tanggal/pencarian |
+| Input | `input.tsx` | `<input>` | Form, filter pencarian |
+| DatePicker | `date-picker.tsx` | Ark DatePicker | Tanggal layanan, tanggal produksi/audit/hari, filter bulan (`kind="month"`) |
+| DateTimeInput | `date-time-input.tsx` | Ark DateInput | Jatuh tempo penawaran, cut-off hari (`kind="datetime"`), jam jendela antar (`kind="time"`) |
 | Textarea | `textarea.tsx` | `<textarea>` | Catatan, deskripsi menu, alasan batal |
 | Label | `label.tsx` | `<label>` | Semua field |
 | Select | `select.tsx` | Ark Select | Filter status/entitas, kategori, pembayaran, hidangan |
@@ -241,7 +245,37 @@ Tabel lebar diberi `min-w-[…]` pada `Table` dan berada di dalam `overflow-x-au
 layar kecil tabel bisa digeser horizontal alih-alih memecah kolom. Kepala tabel memakai latar
 `bg-muted/40`.
 
-### 6.7 Feedback
+### 6.7 Input tanggal dan jam
+
+Nilai tetap berupa string dalam format yang sama seperti input native, sehingga state dan
+pengiriman ke API tidak berubah. Konversi dilakukan di `lib/date-values.ts`.
+
+| Komponen | `kind` | Nilai | Contoh |
+| :-- | :-- | :-- | :-- |
+| `DatePicker` | `date` (default) | `YYYY-MM-DD` | `2026-11-24` |
+| `DatePicker` | `month` | `YYYY-MM` | `2026-11` |
+| `DateTimeInput` | `datetime` | `YYYY-MM-DDTHH:mm` | `2026-11-24T10:00` |
+| `DateTimeInput` | `time` | `HH:mm` | `11:00` |
+
+```tsx
+<DatePicker id="production-date" class="w-40" value={date()} onChange={setDate} />
+
+<DateTimeInput id="due-at" kind="datetime" value={dueAt()} onChange={setDueAt} />
+
+<DateTimeInput kind="time" aria-label="Jam mulai" value={window.startTime}
+  onChange={(value) => updateWindow(index(), { startTime: value })} />
+```
+
+- Nilai kosong (`''`) berarti belum dipilih; mengosongkan field selalu menghasilkan `''`.
+- `DatePicker` memakai locale `id-ID`. Mode `month` menampilkan bulan dan tahun, dan memilih
+  bulan mengembalikan `YYYY-MM`.
+- `DateTimeInput` tidak memakai zona waktu; nilai diperlakukan sebagai waktu WIB seperti sebelumnya.
+- Untuk `time`, Ark tidak punya komponen jam saja. Komponen ini memakai DateInput dengan segmen
+  tanggal disembunyikan dan tanggal jangkar tetap, jadi hanya jam dan menit yang terlihat.
+- Form yang sebelumnya mengandalkan `required` native harus memeriksa nilainya sendiri saat
+  submit (lihat `new-order.tsx`), karena komponen Ark tidak ikut validasi native.
+
+### 6.8 Feedback
 
 - `Alert` varian `destructive`, `warning`, `info`, `success` untuk pesan kontekstual.
 - `Toast` untuk konfirmasi singkat setelah aksi (3 detik).
@@ -317,6 +351,11 @@ pnpm --filter @catering/dashboard build
 
 Perlu diuji manual setelah migrasi ke Ark UI dan penambahan tema:
 
+- Input tanggal dan jam: buka kalender, pindah bulan/tahun, pilih tanggal, ketik langsung di
+  segmen, kosongkan field (nilai harus menjadi `''`), dan submit form order dengan tanggal kosong
+  (harus muncul pesan "Tanggal layanan wajib diisi").
+- Filter bulan di pesanan: pilih bulan dari tampilan bulan dan pastikan daftar ikut berubah.
+
 - Tema: toggle terang/gelap di header, pilihan bertahan setelah reload, tidak ada kilatan saat
   memuat ulang dalam mode gelap, dan cetak rekap produksi tetap hitam-putih.
 - Dialog, AlertDialog, Sheet, Select, Dropdown, dan Checkbox: buka/tutup, ESC, klik overlay,
@@ -360,8 +399,8 @@ Checklist manual dari rilis sebelumnya:
 
 - Mode gelap memakai token dan pasangan `dark:` untuk warna status. Komponen baru yang memakai
   warna langsung wajib menyediakan varian gelapnya.
-- Input tanggal/jam masih memakai kontrol native browser (belum ada komponen Calendar/Popover
-  shadcn). Cukup untuk kebutuhan admin saat ini.
+- Input tanggal dan jam memakai Ark UI (§6.7). Belum ada preset rentang tanggal atau batas
+  `min`/`max`; tambahkan lewat props wrapper bila kebutuhan muncul.
 - Tabel lebar memakai scroll horizontal di mobile; bila ingin UX yang lebih baik, buat card list
   terpisah untuk < `md`.
 - Toast masih minimal (bukan Sonner) — cukup untuk satu pesan sukses/error pada satu waktu.

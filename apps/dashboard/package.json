@@ -13,6 +13,7 @@
   "dependencies": {
     "@ark-ui/solid": "5.40.1",
     "@catering/contracts": "workspace:*",
+    "@internationalized/date": "3.12.4",
     "@tanstack/solid-query": "^5.105.3",
     "@tanstack/solid-router": "^1.170.43",
     "@tanstack/solid-start": "^1.169.4",

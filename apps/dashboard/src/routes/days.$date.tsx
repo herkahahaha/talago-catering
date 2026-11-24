@@ -31,6 +31,8 @@ import { EmptyState } from '~/components/ui/empty-state';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
 import { Progress } from '~/components/ui/progress';
+import { DatePicker } from '~/components/ui/date-picker';
+import { DateTimeInput } from '~/components/ui/date-time-input';
 
 export const Route = createFileRoute('/days/$date')({
   component: DaySettingsPage,
@@ -63,14 +65,13 @@ function DaySettingsPage() {
             <Label for="day-date" class="text-xs">
               Tanggal
             </Label>
-            <Input
+            <DatePicker
               id="day-date"
-              type="date"
               class="w-40"
               value={date()}
-              onChange={(event) => {
-                if (event.currentTarget.value) {
-                  void navigate({ to: '/days/$date', params: { date: event.currentTarget.value } });
+              onChange={(value) => {
+                if (value) {
+                  void navigate({ to: '/days/$date', params: { date: value } });
                 }
               }}
             />
@@ -410,12 +411,7 @@ function DayForm(props: { day: DaySettingsDto; date: string }) {
               </div>
               <div class="grid gap-2">
                 <Label for="cutOffAt">Cut-off (WIB)</Label>
-                <Input
-                  id="cutOffAt"
-                  type="datetime-local"
-                  value={cutOffAt()}
-                  onInput={(event) => setCutOffAt(event.currentTarget.value)}
-                />
+                <DateTimeInput id="cutOffAt" kind="datetime" value={cutOffAt()} onChange={setCutOffAt} />
               </div>
             </div>
 
@@ -550,18 +546,20 @@ function DayForm(props: { day: DaySettingsDto; date: string }) {
                   </div>
                   <div class="grid gap-2">
                     <Label>Mulai</Label>
-                    <Input
-                      type="time"
+                    <DateTimeInput
+                      kind="time"
+                      aria-label="Jam mulai"
                       value={window.startTime}
-                      onInput={(event) => updateWindow(index(), { startTime: event.currentTarget.value })}
+                      onChange={(value) => updateWindow(index(), { startTime: value })}
                     />
                   </div>
                   <div class="grid gap-2">
                     <Label>Selesai</Label>
-                    <Input
-                      type="time"
+                    <DateTimeInput
+                      kind="time"
+                      aria-label="Jam selesai"
                       value={window.endTime}
-                      onInput={(event) => updateWindow(index(), { endTime: event.currentTarget.value })}
+                      onChange={(value) => updateWindow(index(), { endTime: value })}
                     />
                   </div>
                   <div class="grid gap-2">

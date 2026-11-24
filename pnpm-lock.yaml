@@ -9,6 +9,9 @@ catalogs:
     typescript:
       specifier: ^5.9.3
       version: 5.9.3
+    zod:
+      specifier: ^4.6.7
+      version: 4.6.7
 
 overrides:
   '@emnapi/runtime': 1.11.3
@@ -84,6 +87,9 @@ importers:
       '@catering/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
+      '@internationalized/date':
+        specifier: 3.12.4
+        version: 3.12.4
       '@tanstack/solid-query':
         specifier: ^5.105.3
         version: 5.105.3(solid-js@1.9.18)

@@ -23,6 +23,7 @@ import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '~/components/ui/table';
 import { Toast } from '~/components/ui/toast';
+import { DateTimeInput } from '~/components/ui/date-time-input';
 
 export const Route = createFileRoute('/quotations')({
   validateSearch: (search: Record<string, unknown>): { toast?: string } => ({
@@ -353,12 +354,7 @@ function QuotationsPage() {
             </div>
             <div class="grid gap-2">
               <Label for="due-at">Jatuh tempo pembayaran (opsional)</Label>
-              <Input
-                id="due-at"
-                type="datetime-local"
-                value={dueAt()}
-                onInput={(event) => setDueAt(event.currentTarget.value)}
-              />
+              <DateTimeInput id="due-at" kind="datetime" value={dueAt()} onChange={setDueAt} />
             </div>
             <Show when={convertError()}>
               <Alert variant="destructive">
