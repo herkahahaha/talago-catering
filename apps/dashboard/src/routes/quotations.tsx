@@ -24,6 +24,7 @@ import { Label } from '~/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '~/components/ui/table';
 import { Toast } from '~/components/ui/toast';
 import { DateTimeInput } from '~/components/ui/date-time-input';
+import { DatePicker } from '~/components/ui/date-picker';
 
 export const Route = createFileRoute('/quotations')({
   validateSearch: (search: Record<string, unknown>): { toast?: string } => ({
@@ -105,14 +106,16 @@ function QuotationsPage() {
   // ── konversi ke PO ────────────────────────────────────────────────────
   const [converting, setConverting] = createSignal<QuoteRequestDto | null>(null);
   const [agreedTotal, setAgreedTotal] = createSignal('');
-  const [dueAt, setDueAt] = createSignal('');
+  const [dueDate, setDueDate] = createSignal('');
+  const [dueTime, setDueTime] = createSignal('');
   const [convertError, setConvertError] = createSignal<string | null>(null);
   const [convertingBusy, setConvertingBusy] = createSignal(false);
 
   function openConvert(quote: QuoteRequestDto) {
     setConverting(quote);
     setAgreedTotal('');
-    setDueAt('');
+    setDueDate('');
+    setDueTime('');
     setConvertError(null);
   }
 
@@ -135,7 +138,7 @@ function QuotationsPage() {
     try {
       await api.post<QuotationPurchaseOrderDto>(`/admin/quotations/${quote.id}/convert`, {
         agreedTotal: total,
-        ...(dueAt() ? { dueAt: fromWibInputValue(dueAt()) } : {}),
+        ...(dueDate() ? { dueAt: fromWibInputValue(`${dueDate()}T${dueTime() || '23:59'}`) } : {}),
       });
       await queryClient.invalidateQueries({ queryKey: ['quotations'] });
       setConverting(null);
@@ -354,7 +357,24 @@ function QuotationsPage() {
             </div>
             <div class="grid gap-2">
               <Label for="due-at">Jatuh tempo pembayaran (opsional)</Label>
-              <DateTimeInput id="due-at" kind="datetime" value={dueAt()} onChange={setDueAt} />
+              <div class="flex flex-wrap gap-2">
+                <DatePicker
+                  id="due-at"
+                  portal={false}
+                  class="min-w-40 flex-1"
+                  value={dueDate()}
+                  onChange={setDueDate}
+                  aria-label="Tanggal jatuh tempo"
+                />
+                <DateTimeInput
+                  kind="time"
+                  class="w-28"
+                  value={dueTime()}
+                  onChange={setDueTime}
+                  aria-label="Jam jatuh tempo"
+                />
+              </div>
+              <p class="text-muted-foreground text-xs">Jam kosong = 23:59 WIB.</p>
             </div>
             <Show when={convertError()}>
               <Alert variant="destructive">

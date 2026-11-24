@@ -14,6 +14,8 @@ export interface DatePickerProps {
   value: string;
   onChange: (value: string) => void;
   kind?: DatePickerKind;
+  /** `false` untuk dipakai di dalam dialog: popup kalender harus tetap di dalam focus trap dialog. */
+  portal?: boolean;
   placeholder?: string;
   disabled?: boolean;
   required?: boolean;
@@ -36,6 +38,7 @@ export function DatePicker(props: DatePickerProps) {
     'value',
     'onChange',
     'kind',
+    'portal',
     'placeholder',
     'disabled',
     'required',
@@ -91,7 +94,8 @@ export function DatePicker(props: DatePickerProps) {
         </ArkDatePicker.Trigger>
       </ArkDatePicker.Control>
 
-      <Portal>
+      {(() => {
+        const positioner = (
         <ArkDatePicker.Positioner class="z-50">
           <ArkDatePicker.Content class="bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 w-72 rounded-md border p-3 shadow-md outline-none">
             <ArkDatePicker.Context>
@@ -185,7 +189,9 @@ export function DatePicker(props: DatePickerProps) {
             </ArkDatePicker.Context>
           </ArkDatePicker.Content>
         </ArkDatePicker.Positioner>
-      </Portal>
+        );
+        return local.portal === false ? positioner : <Portal>{positioner}</Portal>;
+      })()}
     </ArkDatePicker.Root>
   );
 }
