@@ -31,6 +31,8 @@ import { EmptyState } from '~/components/ui/empty-state';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
 import { Progress } from '~/components/ui/progress';
+import { DatePicker } from '~/components/ui/date-picker';
+import { DateTimeInput } from '~/components/ui/date-time-input';
 
 export const Route = createFileRoute('/days/$date')({
   component: DaySettingsPage,
@@ -63,14 +65,13 @@ function DaySettingsPage() {
             <Label for="day-date" class="text-xs">
               Tanggal
             </Label>
-            <Input
+            <DatePicker
               id="day-date"
-              type="date"
               class="w-40"
               value={date()}
-              onChange={(event) => {
-                if (event.currentTarget.value) {
-                  void navigate({ to: '/days/$date', params: { date: event.currentTarget.value } });
+              onChange={(value) => {
+                if (value) {
+                  void navigate({ to: '/days/$date', params: { date: value } });
                 }
               }}
             />
@@ -207,6 +208,12 @@ function DayForm(props: { day: DaySettingsDto; date: string }) {
   }
 
   const ruleBreached = () => maxRegular() + maxPo() > kitchenMaxTotal();
+  // Kapasitas tidak boleh di bawah porsi yang sudah terpesan (sesuai aturan backend).
+  const poBelowReserved = () => maxPo() < props.day.reservedPo;
+  const poBelowMessage = () => ({
+    message: 'Kapasitas PO tidak boleh di bawah porsi PO yang sudah terpesan.',
+    hint: `${props.day.reservedPo} porsi PO sudah terpesan.`,
+  });
   const week = () => weekRange(props.date);
   const reservedRatio = () =>
     props.day.maxRegular > 0 ? Math.min(100, (props.day.reservedRegular / props.day.maxRegular) * 100) : 0;
@@ -266,12 +273,25 @@ function DayForm(props: { day: DaySettingsDto; date: string }) {
 
   async function applyWeek() {
     setWeekConfirmOpen(false);
+    if (poBelowReserved()) {
+      setError(poBelowMessage());
+      return;
+    }
     setWeekSaving(true);
     setError(null);
     try {
       await api.put(`/admin/days/week/${props.date}`, dayPayload());
+      if (menu.data) {
+        await api.put(`/admin/days/week/${props.date}/menu`, {
+          items: menu.data.map((item) => ({
+            menuItemId: item.id,
+            isAvailable: menuState()[item.id] ?? false,
+          })),
+        });
+      }
       await queryClient.invalidateQueries({ queryKey: ['admin-day', props.date] });
-      setNotice('Pengaturan diterapkan ke 7 hari dalam minggu ini.');
+      await queryClient.invalidateQueries({ queryKey: ['admin-menu'] });
+      setNotice('Pengaturan dan menu diterapkan ke 7 hari dalam minggu ini.');
       window.setTimeout(() => setNotice(null), 4000);
     } catch (err) {
       if (err instanceof ApiError) {
@@ -305,6 +325,10 @@ function DayForm(props: { day: DaySettingsDto; date: string }) {
       setError({
         message: `max_regular (${maxRegular()}) + max_po (${maxPo()}) melebihi kapasitas dapur (${kitchenMaxTotal()}).`,
       });
+      return;
+    }
+    if (poBelowReserved()) {
+      setError(poBelowMessage());
       return;
     }
     setSaving(true);
@@ -358,7 +382,7 @@ function DayForm(props: { day: DaySettingsDto; date: string }) {
                 <Input
                   id="maxPo"
                   type="number"
-                  min={0}
+                  min={props.day.reservedPo}
                   max={5000}
                   value={maxPo()}
                   onInput={(event) => setMaxPo(Number(event.currentTarget.value))}
@@ -410,12 +434,7 @@ function DayForm(props: { day: DaySettingsDto; date: string }) {
               </div>
               <div class="grid gap-2">
                 <Label for="cutOffAt">Cut-off (WIB)</Label>
-                <Input
-                  id="cutOffAt"
-                  type="datetime-local"
-                  value={cutOffAt()}
-                  onInput={(event) => setCutOffAt(event.currentTarget.value)}
-                />
+                <DateTimeInput id="cutOffAt" kind="datetime" value={cutOffAt()} onChange={setCutOffAt} />
               </div>
             </div>
 
@@ -550,18 +569,20 @@ function DayForm(props: { day: DaySettingsDto; date: string }) {
                   </div>
                   <div class="grid gap-2">
                     <Label>Mulai</Label>
-                    <Input
-                      type="time"
+                    <DateTimeInput
+                      kind="time"
+                      aria-label="Jam mulai"
                       value={window.startTime}
-                      onInput={(event) => updateWindow(index(), { startTime: event.currentTarget.value })}
+                      onChange={(value) => updateWindow(index(), { startTime: value })}
                     />
                   </div>
                   <div class="grid gap-2">
                     <Label>Selesai</Label>
-                    <Input
-                      type="time"
+                    <DateTimeInput
+                      kind="time"
+                      aria-label="Jam selesai"
                       value={window.endTime}
-                      onInput={(event) => updateWindow(index(), { endTime: event.currentTarget.value })}
+                      onChange={(value) => updateWindow(index(), { endTime: value })}
                     />
                   </div>
                   <div class="grid gap-2">

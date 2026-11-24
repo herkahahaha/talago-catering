@@ -21,6 +21,7 @@ import { Label } from '~/components/ui/label';
 import { Select } from '~/components/ui/select';
 import { Separator } from '~/components/ui/separator';
 import { Textarea } from '~/components/ui/textarea';
+import { DatePicker } from '~/components/ui/date-picker';
 
 export const Route = createFileRoute('/new-order')({
   validateSearch: (search: Record<string, unknown>): { quotationId?: string } => ({
@@ -154,6 +155,10 @@ function NewOrderPage() {
       setError({ message: 'Tambahkan minimal satu hidangan.' });
       return;
     }
+    if (!serviceDate()) {
+      setError({ message: 'Tanggal layanan wajib diisi.' });
+      return;
+    }
     setBusy(true);
     try {
       const result = await api.post<CreatedOrderDto>('/admin/orders', {
@@ -217,7 +222,7 @@ function NewOrderPage() {
         fallback={
           <Card class="mx-auto max-w-xl">
             <CardHeader>
-              <div class="mb-2 flex size-10 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+              <div class="mb-2 flex size-10 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400">
                 <CircleCheck class="size-5" />
               </div>
               <CardTitle class="text-xl">Order berhasil dibuat</CardTitle>
@@ -322,13 +327,7 @@ function NewOrderPage() {
                   </div>
                   <div class="grid gap-2">
                     <Label for="date">Tanggal layanan</Label>
-                    <Input
-                      id="date"
-                      type="date"
-                      required
-                      value={serviceDate()}
-                      onInput={(event) => setServiceDate(event.currentTarget.value)}
-                    />
+                    <DatePicker id="date" required value={serviceDate()} onChange={setServiceDate} />
                   </div>
                 </div>
 

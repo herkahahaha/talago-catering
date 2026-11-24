@@ -23,6 +23,7 @@ import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '~/components/ui/table';
 import { Toast } from '~/components/ui/toast';
+import { DatePicker } from '~/components/ui/date-picker';
 
 export const Route = createFileRoute('/quotations')({
   validateSearch: (search: Record<string, unknown>): { toast?: string } => ({
@@ -353,11 +354,14 @@ function QuotationsPage() {
             </div>
             <div class="grid gap-2">
               <Label for="due-at">Jatuh tempo pembayaran (opsional)</Label>
-              <Input
+              <DatePicker
                 id="due-at"
-                type="datetime-local"
+                kind="date"
+                withTime
+                portal={false}
+                aria-label="Jatuh tempo pembayaran"
                 value={dueAt()}
-                onInput={(event) => setDueAt(event.currentTarget.value)}
+                onChange={setDueAt}
               />
             </div>
             <Show when={convertError()}>

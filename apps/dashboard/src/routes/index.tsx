@@ -24,6 +24,7 @@ import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
 import { Select } from '~/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '~/components/ui/table';
+import { DatePicker } from '~/components/ui/date-picker';
 import {
   formatDateTime,
   formatMonth,
@@ -146,13 +147,13 @@ function OrdersPage() {
               >
                 <ChevronLeft />
               </Button>
-              <Input
+              <DatePicker
                 id="month"
+                kind="month"
                 class="w-36"
-                type="month"
                 value={month()}
-                onInput={(event) => {
-                  if (event.currentTarget.value) setMonth(event.currentTarget.value);
+                onChange={(value) => {
+                  if (value) setMonth(value);
                   setPage(1);
                 }}
               />

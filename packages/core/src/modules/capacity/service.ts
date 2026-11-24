@@ -308,7 +308,20 @@ export async function updateWeek(
     for (const serviceDate of dates) {
       const offset = diffDays(anchorDate, serviceDate);
       const cutOffAt = new Date(baseCutoff.getTime() + offset * 86_400_000).toISOString();
-      results.push(await updateDay(tx, serviceDate, { ...input, cutOffAt }, actor));
+      try {
+        results.push(await updateDay(tx, serviceDate, { ...input, cutOffAt }, actor));
+      } catch (err) {
+        // Sebut tanggal yang bentrok agar admin tahu hari mana yang perlu diubah.
+        // Transaksi di-rollback otomatis, jadi tidak ada hari yang tersimpan sebagian.
+        if (err instanceof AppError) {
+          throw new AppError(err.code, `${serviceDate}: ${err.message}`, {
+            status: err.status,
+            ...(err.hint ? { hint: err.hint } : {}),
+            ...(err.details ? { details: err.details } : {}),
+          });
+        }
+        throw err;
+      }
     }
     return results;
   });

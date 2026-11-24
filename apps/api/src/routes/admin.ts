@@ -45,6 +45,7 @@ import {
   getQuotationById,
   getRefundDtosForOrder,
   setMenuAvailabilityForDate,
+  setMenuAvailabilityForWeek,
   linkPurchaseOrderToOrder,
   listAdminMenuItems,
   listAdminOrders,
@@ -267,6 +268,19 @@ export function adminRoutes(): Hono<AppEnv> {
       label: staff.user.name,
     });
     return ok(c, result);
+  });
+
+  admin.put('/days/week/:date/menu', async (c) => {
+    const db = c.get('db');
+    const staff = await requireStaff(c, db);
+    assertRole(staff.user, ['admin']);
+    const date = dateSchema.parse(c.req.param('date'));
+    const input = await parseBody(c, adminMenuAvailabilitySchema);
+    await setMenuAvailabilityForWeek(db, date, input.items, {
+      id: staff.user.id,
+      label: staff.user.name,
+    });
+    return ok(c, { applied: true });
   });
 
   admin.get('/production', async (c) => {

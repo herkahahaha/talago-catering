@@ -7,7 +7,7 @@ Platform catering B2C/B2B hybrid untuk menjual nasi kotak dengan menu khas Padan
 | Persona | Aplikasi | Stack |
 |---------|----------|-------|
 | **Pelanggan** | `apps/web` — storefront | Astro 7 (SSR, adapter Node) + SolidJS islands |
-| **Admin / Dapur / Kurir** | `apps/dashboard` — dashboard internal | TanStack Start + SolidJS + TanStack Query, UI Kobalte (shadcn/ui port, Tailwind v4) |
+| **Admin / Dapur / Kurir** | `apps/dashboard` — dashboard internal | TanStack Start + SolidJS + TanStack Query, UI Ark UI (`@ark-ui/solid`) dengan token shadcn/ui, Tailwind v4, tema terang/gelap |
 | **Sistem** | `apps/api` — API + worker | Hono di Node, `ROLE=web` atau `ROLE=worker` (image sama) |
 | **Domain** | `packages/core` | TypeScript + Drizzle ORM + SQL atomik |
 | **Contract** | `packages/contracts` | Zod schema, enum, DTO, label UI |

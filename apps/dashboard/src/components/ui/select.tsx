@@ -1,5 +1,6 @@
-import { Show, createMemo, splitProps } from 'solid-js';
-import { Select as KSelect } from '@kobalte/core/select';
+import { For, Show, createMemo, splitProps } from 'solid-js';
+import { Portal } from 'solid-js/web';
+import { Select as ArkSelect, createListCollection } from '@ark-ui/solid/select';
 import { Check, ChevronDown } from 'lucide-solid';
 import { cn } from '~/lib/cn';
 
@@ -21,60 +22,69 @@ export interface SelectProps {
 }
 
 export function Select(props: SelectProps) {
-  const [local, rest] = splitProps(props, ['class', 'value', 'onChange', 'options', 'placeholder']);
+  const [local, rest] = splitProps(props, ['id', 'class', 'value', 'onChange', 'options', 'placeholder']);
 
-  const labels = createMemo(() => new Map(local.options.map((option) => [option.value, option.label])));
-  const values = createMemo(() => local.options.map((option) => option.value));
-  const selected = createMemo(() => labels().get(local.value));
+  const collection = createMemo(() =>
+    createListCollection<SelectOption>({
+      items: local.options,
+      itemToValue: (option) => option.value,
+      itemToString: (option) => option.label,
+      isItemDisabled: (option) => !!option.disabled,
+    }),
+  );
 
   return (
-    <KSelect<string>
-      options={values()}
-      value={local.value === '' ? null : local.value}
-      onChange={(value) => local.onChange(value ?? '')}
-      placeholder={local.placeholder}
+    <ArkSelect.Root
+      collection={collection()}
+      // Id trigger harus didaftarkan ke zag juga; kalau tidak, label `for` tidak tersambung dan
+      // trigger tidak bisa dicari secara internal.
+      ids={local.id ? { trigger: local.id } : undefined}
+      value={local.value === '' ? [] : [local.value]}
+      onValueChange={(details) => local.onChange(details.value[0] ?? '')}
       disabled={rest.disabled}
-      sameWidth
-      gutter={4}
-      itemComponent={(itemProps) => (
-        <KSelect.Item
-          item={itemProps.item}
-          class="data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground relative flex w-full cursor-default items-center gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm outline-none select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
-        >
-          <KSelect.ItemLabel class="truncate">
-            {labels().get(itemProps.item.rawValue) ?? itemProps.item.rawValue}
-          </KSelect.ItemLabel>
-          <KSelect.ItemIndicator class="absolute right-2 flex size-3.5 items-center justify-center">
-            <Check class="size-4" />
-          </KSelect.ItemIndicator>
-        </KSelect.Item>
-      )}
+      positioning={{ sameWidth: true, gutter: 4 }}
+      lazyMount
+      unmountOnExit
     >
-      <KSelect.Trigger
-        id={rest.id}
-        aria-label={rest['aria-label']}
-        class={cn(
-          'border-input flex h-9 w-full min-w-0 items-center justify-between gap-2 rounded-md border bg-transparent px-3 py-2 text-sm whitespace-nowrap shadow-xs transition-[color,box-shadow] outline-none',
-          'focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50',
-          'data-[expanded]:border-ring data-[expanded]:ring-[3px] data-[expanded]:ring-ring/50',
-          'disabled:cursor-not-allowed disabled:opacity-50',
-          local.class,
-        )}
-      >
-        <span class={cn('truncate', !selected() && 'text-muted-foreground')}>
-          {selected() ?? local.placeholder ?? 'Pilih…'}
-        </span>
-        <KSelect.Icon class="shrink-0">
-          <ChevronDown class="size-4 opacity-50" />
-        </KSelect.Icon>
-      </KSelect.Trigger>
-      <Show when={values().length > 0}>
-        <KSelect.Portal>
-          <KSelect.Content class="bg-popover text-popover-foreground data-[expanded]:animate-in data-[closed]:animate-out data-[closed]:fade-out-0 data-[expanded]:fade-in-0 data-[closed]:zoom-out-95 data-[expanded]:zoom-in-95 z-50 max-h-72 min-w-32 overflow-y-auto rounded-md border p-1 shadow-md">
-            <KSelect.Listbox class="outline-none" />
-          </KSelect.Content>
-        </KSelect.Portal>
+      <ArkSelect.Control class="w-full min-w-0">
+        <ArkSelect.Trigger
+          id={local.id}
+          aria-label={rest['aria-label']}
+          class={cn(
+            'border-input data-[placeholder-shown]:text-muted-foreground flex h-9 w-full min-w-0 items-center justify-between gap-2 rounded-md border bg-transparent px-3 py-2 text-sm whitespace-nowrap shadow-xs transition-[color,box-shadow] outline-none',
+            'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
+            'data-[state=open]:border-ring data-[state=open]:ring-ring/50 data-[state=open]:ring-[3px]',
+            'disabled:cursor-not-allowed disabled:opacity-50',
+            local.class,
+          )}
+        >
+          <ArkSelect.ValueText class="truncate" placeholder={local.placeholder ?? 'Pilih…'} />
+          <ArkSelect.Indicator class="shrink-0">
+            <ChevronDown class="size-4 opacity-50" />
+          </ArkSelect.Indicator>
+        </ArkSelect.Trigger>
+      </ArkSelect.Control>
+      <Show when={local.options.length > 0}>
+        <Portal>
+          <ArkSelect.Positioner class="z-50">
+            <ArkSelect.Content class="bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 max-h-72 min-w-32 overflow-y-auto rounded-md border p-1 shadow-md outline-none">
+              <For each={local.options}>
+                {(option) => (
+                  <ArkSelect.Item
+                    item={option}
+                    class="data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground relative flex w-full cursor-default items-center gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm outline-none select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+                  >
+                    <ArkSelect.ItemText class="truncate">{option.label}</ArkSelect.ItemText>
+                    <ArkSelect.ItemIndicator class="absolute right-2 flex size-3.5 items-center justify-center">
+                      <Check class="size-4" />
+                    </ArkSelect.ItemIndicator>
+                  </ArkSelect.Item>
+                )}
+              </For>
+            </ArkSelect.Content>
+          </ArkSelect.Positioner>
+        </Portal>
       </Show>
-    </KSelect>
+    </ArkSelect.Root>
   );
 }
