@@ -208,6 +208,12 @@ function DayForm(props: { day: DaySettingsDto; date: string }) {
   }
 
   const ruleBreached = () => maxRegular() + maxPo() > kitchenMaxTotal();
+  // Kapasitas tidak boleh di bawah porsi yang sudah terpesan (sesuai aturan backend).
+  const poBelowReserved = () => maxPo() < props.day.reservedPo;
+  const poBelowMessage = () => ({
+    message: 'Kapasitas PO tidak boleh di bawah porsi PO yang sudah terpesan.',
+    hint: `${props.day.reservedPo} porsi PO sudah terpesan.`,
+  });
   const week = () => weekRange(props.date);
   const reservedRatio = () =>
     props.day.maxRegular > 0 ? Math.min(100, (props.day.reservedRegular / props.day.maxRegular) * 100) : 0;
@@ -267,6 +273,10 @@ function DayForm(props: { day: DaySettingsDto; date: string }) {
 
   async function applyWeek() {
     setWeekConfirmOpen(false);
+    if (poBelowReserved()) {
+      setError(poBelowMessage());
+      return;
+    }
     setWeekSaving(true);
     setError(null);
     try {
@@ -306,6 +316,10 @@ function DayForm(props: { day: DaySettingsDto; date: string }) {
       setError({
         message: `max_regular (${maxRegular()}) + max_po (${maxPo()}) melebihi kapasitas dapur (${kitchenMaxTotal()}).`,
       });
+      return;
+    }
+    if (poBelowReserved()) {
+      setError(poBelowMessage());
       return;
     }
     setSaving(true);
@@ -359,7 +373,7 @@ function DayForm(props: { day: DaySettingsDto; date: string }) {
                 <Input
                   id="maxPo"
                   type="number"
-                  min={0}
+                  min={props.day.reservedPo}
                   max={5000}
                   value={maxPo()}
                   onInput={(event) => setMaxPo(Number(event.currentTarget.value))}
