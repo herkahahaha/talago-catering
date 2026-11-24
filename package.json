@@ -46,5 +46,10 @@
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.72.1"
   },
-  "type": "module"
+  "type": "module",
+  "pnpm": {
+    "overrides": {
+      "@emnapi/runtime": "1.11.3"
+    }
+  }
 }
