@@ -130,7 +130,7 @@ Semua berada di `apps/dashboard/src/components/ui/`.
 | Badge | `badge.tsx` | `<span>` + CVA | Status order, status menu/refund, hitungan |
 | Card (+ Header/Title/Description/Action/Content/Footer) | `card.tsx` | `<div>` | Semua halaman |
 | Input | `input.tsx` | `<input>` | Form, filter pencarian |
-| DatePicker | `date-picker.tsx` | Ark DatePicker | Tanggal layanan, tanggal produksi/audit/hari, filter bulan (`kind="month"`) |
+| DatePicker | `date-picker.tsx` | Ark DatePicker | Tanggal layanan, tanggal produksi/audit/hari, filter bulan (`kind="month"`), jatuh tempo PO (`withTime`, `portal={false}` di dalam dialog) |
 | DateTimeInput | `date-time-input.tsx` | Ark DateInput | Jatuh tempo penawaran, cut-off hari (`kind="datetime"`), jam jendela antar (`kind="time"`) |
 | Textarea | `textarea.tsx` | `<textarea>` | Catatan, deskripsi menu, alasan batal |
 | Label | `label.tsx` | `<label>` | Semua field |
@@ -250,17 +250,24 @@ layar kecil tabel bisa digeser horizontal alih-alih memecah kolom. Kepala tabel 
 Nilai tetap berupa string dalam format yang sama seperti input native, sehingga state dan
 pengiriman ke API tidak berubah. Konversi dilakukan di `lib/date-values.ts`.
 
-| Komponen | `kind` | Nilai | Contoh |
-| :-- | :-- | :-- | :-- |
-| `DatePicker` | `date` (default) | `YYYY-MM-DD` | `2026-11-24` |
-| `DatePicker` | `month` | `YYYY-MM` | `2026-11` |
-| `DateTimeInput` | `datetime` | `YYYY-MM-DDTHH:mm` | `2026-11-24T10:00` |
-| `DateTimeInput` | `time` | `HH:mm` | `11:00` |
+| Komponen | `kind` | Props tambahan | Nilai | Contoh |
+| :-- | :-- | :-- | :-- | :-- |
+| `DatePicker` | `date` (default) | — | `YYYY-MM-DD` | `2026-11-24` |
+| `DatePicker` | `date` | `withTime` | `YYYY-MM-DDTHH:mm` | `2026-11-24T10:00` |
+| `DatePicker` | `month` | — | `YYYY-MM` | `2026-11` |
+| `DateTimeInput` | `datetime` | — | `YYYY-MM-DDTHH:mm` | `2026-11-24T10:00` |
+| `DateTimeInput` | `time` | — | `HH:mm` | `11:00` |
 
 ```tsx
 <DatePicker id="production-date" class="w-40" value={date()} onChange={setDate} />
 
-<DateTimeInput id="due-at" kind="datetime" value={dueAt()} onChange={setDueAt} />
+{/* DatePicker dengan jam — untuk field tanggal+jam di luar dialog */}
+<DatePicker id="service-at" kind="date" withTime value={serviceAt()} onChange={setServiceAt} />
+
+{/* DatePicker dengan jam di dalam dialog — wajib portal={false} */}
+<DatePicker id="due-at" kind="date" withTime portal={false} value={dueAt()} onChange={setDueAt} />
+
+<DateTimeInput id="cutoff" kind="datetime" value={cutOffAt()} onChange={setCutOffAt} />
 
 <DateTimeInput kind="time" aria-label="Jam mulai" value={window.startTime}
   onChange={(value) => updateWindow(index(), { startTime: value })} />
@@ -269,11 +276,20 @@ pengiriman ke API tidak berubah. Konversi dilakukan di `lib/date-values.ts`.
 - Nilai kosong (`''`) berarti belum dipilih; mengosongkan field selalu menghasilkan `''`.
 - `DatePicker` memakai locale `id-ID`. Mode `month` menampilkan bulan dan tahun, dan memilih
   bulan mengembalikan `YYYY-MM`.
+- **`withTime`** (hanya `kind="date"`): menampilkan field jam di dalam popup kalender. Nilai
+  menjadi `YYYY-MM-DDTHH:mm`. Field jam memakai `<input type="time">` native — lihat catatan
+  konflik di bawah.
+- **`portal`** (default `true`): atur ke `false` ketika `DatePicker` berada di dalam `Dialog`
+  agar popup kalender tetap di dalam focus trap dialog dan tidak terputus.
 - `DateTimeInput` tidak memakai zona waktu; nilai diperlakukan sebagai waktu WIB seperti sebelumnya.
 - Untuk `time`, Ark tidak punya komponen jam saja. Komponen ini memakai DateInput dengan segmen
   tanggal disembunyikan dan tanggal jangkar tetap, jadi hanya jam dan menit yang terlihat.
 - Form yang sebelumnya mengandalkan `required` native harus memeriksa nilainya sendiri saat
   submit (lihat `new-order.tsx`), karena komponen Ark tidak ikut validasi native.
+- **⚠️ Konflik focus trap:** Ark DateInput (`DateTimeInput`) tidak boleh dirender di dalam
+  `ArkDialog.Content`. Focus trap zag.js di Dialog mengintervensi key event segmen sehingga
+  input tidak bisa diketik. Untuk field jam di dalam popup `DatePicker withTime`, dipakai
+  `<input type="time">` native sebagai solusi. Lihat [ADR 0005](../adr/0005-ui-framework-dashboard.md) §6.
 
 ### 6.8 Feedback
 
