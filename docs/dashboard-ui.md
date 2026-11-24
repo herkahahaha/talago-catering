@@ -289,7 +289,7 @@ pengiriman ke API tidak berubah. Konversi dilakukan di `lib/date-values.ts`.
 - **⚠️ Konflik focus trap:** Ark DateInput (`DateTimeInput`) tidak boleh dirender di dalam
   `ArkDialog.Content`. Focus trap zag.js di Dialog mengintervensi key event segmen sehingga
   input tidak bisa diketik. Untuk field jam di dalam popup `DatePicker withTime`, dipakai
-  `<input type="time">` native sebagai solusi. Lihat [ADR 0005](../adr/0005-ui-framework-dashboard.md) §6.
+  `<input type="time">` native sebagai solusi. Lihat [ADR 0005](adr/0005-ui-framework-dashboard.md) §6.
 
 ### 6.8 Feedback
 
