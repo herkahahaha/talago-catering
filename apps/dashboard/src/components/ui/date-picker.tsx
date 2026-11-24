@@ -12,7 +12,6 @@ import {
   parseLocalDateTimeValue,
   parseMonthValue,
 } from '~/lib/date-values';
-import { DateTimeInput } from '~/components/ui/date-time-input';
 
 export type DatePickerKind = 'date' | 'month';
 
@@ -241,12 +240,12 @@ export function DatePicker(props: DatePickerProps) {
                   <Show when={withTime()}>
                     <div class="mt-3 flex items-center justify-between gap-2 border-t pt-3">
                       <span class="text-muted-foreground text-sm">Jam</span>
-                      <DateTimeInput
-                        kind="time"
-                        class="w-28"
+                      <input
+                        type="time"
                         aria-label="Jam"
                         value={timeText()}
-                        onChange={changeTime}
+                        onInput={(e) => changeTime(e.currentTarget.value)}
+                        class="border-input focus-visible:ring-ring/50 h-9 w-28 rounded-md border bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px]"
                       />
                     </div>
                   </Show>
