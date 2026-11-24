@@ -1,10 +1,18 @@
-import type { CalendarDate, DateValue } from '@internationalized/date';
-import { For, splitProps } from 'solid-js';
+import { CalendarDate, CalendarDateTime, type DateValue } from '@internationalized/date';
+import { For, Show, splitProps } from 'solid-js';
 import { Portal } from 'solid-js/web';
 import { DatePicker as ArkDatePicker } from '@ark-ui/solid/date-picker';
 import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-solid';
 import { cn } from '~/lib/cn';
-import { formatDateValue, formatMonthValue, parseDateValue, parseMonthValue } from '~/lib/date-values';
+import {
+  formatDateValue,
+  formatLocalDateTimeValue,
+  formatMonthValue,
+  parseDateValue,
+  parseLocalDateTimeValue,
+  parseMonthValue,
+} from '~/lib/date-values';
+import { DateTimeInput } from '~/components/ui/date-time-input';
 
 export type DatePickerKind = 'date' | 'month';
 
@@ -14,6 +22,8 @@ export interface DatePickerProps {
   value: string;
   onChange: (value: string) => void;
   kind?: DatePickerKind;
+  /** Pola "With time" Ark: kalender + field jam di dalam popup. Nilai `YYYY-MM-DDTHH:mm`. Hanya untuk kind `date`. */
+  withTime?: boolean;
   /** `false` untuk dipakai di dalam dialog: popup kalender harus tetap di dalam focus trap dialog. */
   portal?: boolean;
   placeholder?: string;
@@ -38,6 +48,7 @@ export function DatePicker(props: DatePickerProps) {
     'value',
     'onChange',
     'kind',
+    'withTime',
     'portal',
     'placeholder',
     'disabled',
@@ -48,18 +59,50 @@ export function DatePicker(props: DatePickerProps) {
   ]);
 
   const isMonth = () => local.kind === 'month';
-  const parsed = (): CalendarDate[] => {
+  const withTime = () => !isMonth() && local.withTime === true;
+  const DEFAULT_TIME = { hour: 23, minute: 59 };
+
+  const parsed = (): DateValue[] => {
+    if (withTime()) {
+      const dt = parseLocalDateTimeValue(local.value);
+      if (dt) return [dt];
+      const d = parseDateValue(local.value);
+      return d ? [d] : [];
+    }
     const v = isMonth() ? parseMonthValue(local.value) : parseDateValue(local.value);
     return v ? [v] : [];
   };
 
+  /** Jam yang sedang tersimpan; dipakai ulang saat tanggal diganti di kalender. */
+  const currentTime = () => {
+    const dt = parseLocalDateTimeValue(local.value);
+    return dt ? { hour: dt.hour, minute: dt.minute } : DEFAULT_TIME;
+  };
+
+  function emit(picked: DateValue | undefined) {
+    if (!picked) return local.onChange('');
+    if (isMonth()) return local.onChange(formatMonthValue(picked as CalendarDate));
+    if (withTime()) {
+      const t = currentTime();
+      return local.onChange(
+        formatLocalDateTimeValue(new CalendarDateTime(picked.year, picked.month, picked.day, t.hour, t.minute)),
+      );
+    }
+    return local.onChange(formatDateValue(picked as CalendarDate));
+  }
+
+  /** Nilai jam untuk field di popup, `HH:mm`, kosong bila belum ada tanggal. */
+  const timeText = (api: { value: DateValue[] }) => {
+    const v = api.value[0];
+    if (!v || !('hour' in v)) return '';
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${pad(v.hour as number)}:${pad(v.minute as number)}`;
+  };
+
   return (
     <ArkDatePicker.Root
-      value={parsed() as DateValue[]}
-      onValueChange={(details) => {
-        const picked = details.value[0] as CalendarDate | undefined;
-        local.onChange(isMonth() ? formatMonthValue(picked) : formatDateValue(picked));
-      }}
+      value={parsed()}
+      onValueChange={(details) => emit(details.value[0])}
       locale="id-ID"
       selectionMode="single"
       defaultView={isMonth() ? 'month' : 'day'}
@@ -184,6 +227,23 @@ export function DatePicker(props: DatePickerProps) {
                       </ArkDatePicker.TableBody>
                     </ArkDatePicker.Table>
                   </ArkDatePicker.View>
+                  <Show when={withTime()}>
+                    <div class="mt-3 flex items-center justify-between gap-2 border-t pt-3">
+                      <span class="text-muted-foreground text-sm">Jam</span>
+                      <DateTimeInput
+                        kind="time"
+                        class="w-28"
+                        disabled={!api().value[0]}
+                        aria-label="Jam"
+                        value={timeText(api())}
+                        onChange={(text) => {
+                          const [h, m] = text.split(':').map(Number);
+                          if (h === undefined || m === undefined || Number.isNaN(h) || Number.isNaN(m)) return;
+                          api().setTime({ hour: h, minute: m });
+                        }}
+                      />
+                    </div>
+                  </Show>
                 </>
               )}
             </ArkDatePicker.Context>
