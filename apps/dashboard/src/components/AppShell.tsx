@@ -21,6 +21,7 @@ import { cn } from '~/lib/cn';
 import { Button } from '~/components/ui/button';
 import { Separator } from '~/components/ui/separator';
 import { Sheet } from '~/components/ui/sheet';
+import { ThemeToggle } from '~/components/ThemeToggle';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -236,6 +237,9 @@ export function AppShell(props: {
               <span class="text-muted-foreground hidden sm:inline">/</span>
               <span class="truncate font-medium">{current()?.label ?? props.title}</span>
             </nav>
+            <div class="ml-auto flex items-center">
+              <ThemeToggle />
+            </div>
             <Show when={user()} keyed>
               {(currentUser) => (
                 <DropdownMenu>

@@ -10,9 +10,11 @@ const alertVariants = cva(
       variant: {
         default: 'bg-card text-card-foreground',
         destructive: 'text-destructive border-destructive/30 bg-destructive/5 [&>svg]:text-destructive',
-        success: 'border-emerald-200 bg-emerald-50 text-emerald-800 [&>svg]:text-emerald-600',
-        warning: 'border-amber-200 bg-amber-50 text-amber-900 [&>svg]:text-amber-600',
-        info: 'border-sky-200 bg-sky-50 text-sky-800 [&>svg]:text-sky-600',
+        success:
+          'border-emerald-200 bg-emerald-50 text-emerald-800 [&>svg]:text-emerald-600 dark:border-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-300 dark:[&>svg]:text-emerald-400',
+        warning:
+          'border-amber-200 bg-amber-50 text-amber-900 [&>svg]:text-amber-600 dark:border-amber-900 dark:bg-amber-950/50 dark:text-amber-300 dark:[&>svg]:text-amber-400',
+        info: 'border-sky-200 bg-sky-50 text-sky-800 [&>svg]:text-sky-600 dark:border-sky-900 dark:bg-sky-950/50 dark:text-sky-300 dark:[&>svg]:text-sky-400',
       },
     },
     defaultVariants: {

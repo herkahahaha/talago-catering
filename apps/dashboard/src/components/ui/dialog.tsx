@@ -1,36 +1,57 @@
-import type { ComponentProps, ParentProps } from 'solid-js';
+import type { ComponentProps, JSX, ParentProps } from 'solid-js';
 import { splitProps } from 'solid-js';
-import { Dialog as KDialog } from '@kobalte/core/dialog';
+import { Portal } from 'solid-js/web';
+import { Dialog as ArkDialog } from '@ark-ui/solid/dialog';
 import { X } from 'lucide-solid';
 import { cn } from '~/lib/cn';
 
-const Dialog = KDialog;
+export interface DialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  children?: JSX.Element;
+}
 
-function DialogTrigger(props: ComponentProps<typeof KDialog.Trigger>) {
-  return <KDialog.Trigger data-slot="dialog-trigger" {...props} />;
+/** Root dialog terkontrol. Konten di-mount saat dibuka dan dilepas saat ditutup (seperti sebelumnya). */
+function Dialog(props: DialogProps) {
+  return (
+    <ArkDialog.Root
+      open={props.open}
+      onOpenChange={(details) => props.onOpenChange(details.open)}
+      lazyMount
+      unmountOnExit
+    >
+      {props.children}
+    </ArkDialog.Root>
+  );
+}
+
+function DialogTrigger(props: ComponentProps<typeof ArkDialog.Trigger>) {
+  return <ArkDialog.Trigger data-slot="dialog-trigger" {...props} />;
 }
 
 function DialogContent(props: ParentProps<{ class?: string }>) {
   return (
-    <KDialog.Portal>
-      <KDialog.Overlay class="data-[expanded]:animate-in data-[closed]:animate-out data-[closed]:fade-out-0 data-[expanded]:fade-in-0 fixed inset-0 z-50 bg-black/50" />
-      <KDialog.Content
-        data-slot="dialog-content"
-        class={cn(
-          'bg-background data-[expanded]:animate-in data-[closed]:animate-out data-[closed]:fade-out-0 data-[expanded]:fade-in-0 data-[closed]:zoom-out-95 data-[expanded]:zoom-in-95 fixed top-1/2 left-1/2 z-50 grid w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl border p-6 shadow-lg sm:max-w-lg',
-          props.class,
-        )}
-      >
-        {props.children}
-        <KDialog.CloseButton
-          data-slot="dialog-close"
-          class="ring-offset-background focus:ring-ring absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-none disabled:pointer-events-none"
+    <Portal>
+      <ArkDialog.Backdrop class="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/50" />
+      <ArkDialog.Positioner class="fixed inset-0 z-50 flex items-center justify-center">
+        <ArkDialog.Content
+          data-slot="dialog-content"
+          class={cn(
+            'bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 relative grid w-[calc(100%-2rem)] max-w-lg gap-4 rounded-xl border p-6 shadow-lg sm:max-w-lg',
+            props.class,
+          )}
         >
-          <X class="size-4" />
-          <span class="sr-only">Tutup</span>
-        </KDialog.CloseButton>
-      </KDialog.Content>
-    </KDialog.Portal>
+          {props.children}
+          <ArkDialog.CloseTrigger
+            data-slot="dialog-close"
+            class="ring-offset-background focus:ring-ring absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-none disabled:pointer-events-none"
+          >
+            <X class="size-4" />
+            <span class="sr-only">Tutup</span>
+          </ArkDialog.CloseTrigger>
+        </ArkDialog.Content>
+      </ArkDialog.Positioner>
+    </Portal>
   );
 }
 
@@ -56,24 +77,30 @@ function DialogFooter(props: ComponentProps<'div'>) {
   );
 }
 
-function DialogTitle(props: ComponentProps<typeof KDialog.Title>) {
+function DialogTitle(props: ComponentProps<typeof ArkDialog.Title>) {
+  const [local, rest] = splitProps(props, ['class']);
   return (
-    <KDialog.Title
+    <ArkDialog.Title
       data-slot="dialog-title"
-      class="text-lg leading-none font-semibold tracking-tight"
-      {...props}
+      class={cn('text-lg leading-none font-semibold tracking-tight', local.class)}
+      {...rest}
     />
   );
 }
 
-function DialogDescription(props: ComponentProps<typeof KDialog.Description>) {
+function DialogDescription(props: ComponentProps<typeof ArkDialog.Description>) {
+  const [local, rest] = splitProps(props, ['class']);
   return (
-    <KDialog.Description data-slot="dialog-description" class="text-muted-foreground text-sm" {...props} />
+    <ArkDialog.Description
+      data-slot="dialog-description"
+      class={cn('text-muted-foreground text-sm', local.class)}
+      {...rest}
+    />
   );
 }
 
-function DialogClose(props: ComponentProps<typeof KDialog.CloseButton>) {
-  return <KDialog.CloseButton data-slot="dialog-close" {...props} />;
+function DialogClose(props: ComponentProps<typeof ArkDialog.CloseTrigger>) {
+  return <ArkDialog.CloseTrigger data-slot="dialog-close" {...props} />;
 }
 
 export {

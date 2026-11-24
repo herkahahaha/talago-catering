@@ -1,24 +1,46 @@
-import type { ComponentProps, ParentProps } from 'solid-js';
+import type { ComponentProps, JSX, ParentProps } from 'solid-js';
 import { splitProps } from 'solid-js';
-import { AlertDialog as KAlertDialog } from '@kobalte/core/alert-dialog';
+import { Portal } from 'solid-js/web';
+import { Dialog as ArkDialog } from '@ark-ui/solid/dialog';
 import { cn } from '~/lib/cn';
 
-const AlertDialog = KAlertDialog;
+export interface AlertDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  children?: JSX.Element;
+}
+
+/** Dialog konfirmasi: sama seperti Dialog, tetapi kontennya berperan sebagai `alertdialog`. */
+function AlertDialog(props: AlertDialogProps) {
+  return (
+    <ArkDialog.Root
+      role="alertdialog"
+      open={props.open}
+      onOpenChange={(details) => props.onOpenChange(details.open)}
+      lazyMount
+      unmountOnExit
+    >
+      {props.children}
+    </ArkDialog.Root>
+  );
+}
 
 function AlertDialogContent(props: ParentProps<{ class?: string }>) {
   return (
-    <KAlertDialog.Portal>
-      <KAlertDialog.Overlay class="data-[expanded]:animate-in data-[closed]:animate-out data-[closed]:fade-out-0 data-[expanded]:fade-in-0 fixed inset-0 z-50 bg-black/50" />
-      <KAlertDialog.Content
-        data-slot="alert-dialog-content"
-        class={cn(
-          'bg-background data-[expanded]:animate-in data-[closed]:animate-out data-[closed]:fade-out-0 data-[expanded]:fade-in-0 data-[closed]:zoom-out-95 data-[expanded]:zoom-in-95 fixed top-1/2 left-1/2 z-50 grid w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl border p-6 shadow-lg',
-          props.class,
-        )}
-      >
-        {props.children}
-      </KAlertDialog.Content>
-    </KAlertDialog.Portal>
+    <Portal>
+      <ArkDialog.Backdrop class="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/50" />
+      <ArkDialog.Positioner class="fixed inset-0 z-50 flex items-center justify-center">
+        <ArkDialog.Content
+          data-slot="alert-dialog-content"
+          class={cn(
+            'bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 relative grid w-[calc(100%-2rem)] max-w-lg gap-4 rounded-xl border p-6 shadow-lg',
+            props.class,
+          )}
+        >
+          {props.children}
+        </ArkDialog.Content>
+      </ArkDialog.Positioner>
+    </Portal>
   );
 }
 
@@ -44,10 +66,10 @@ function AlertDialogFooter(props: ComponentProps<'div'>) {
   );
 }
 
-function AlertDialogTitle(props: ComponentProps<typeof KAlertDialog.Title>) {
+function AlertDialogTitle(props: ComponentProps<typeof ArkDialog.Title>) {
   const [local, rest] = splitProps(props, ['class']);
   return (
-    <KAlertDialog.Title
+    <ArkDialog.Title
       data-slot="alert-dialog-title"
       class={cn('text-lg leading-none font-semibold tracking-tight', local.class)}
       {...rest}
@@ -55,10 +77,10 @@ function AlertDialogTitle(props: ComponentProps<typeof KAlertDialog.Title>) {
   );
 }
 
-function AlertDialogDescription(props: ComponentProps<typeof KAlertDialog.Description>) {
+function AlertDialogDescription(props: ComponentProps<typeof ArkDialog.Description>) {
   const [local, rest] = splitProps(props, ['class']);
   return (
-    <KAlertDialog.Description
+    <ArkDialog.Description
       data-slot="alert-dialog-description"
       class={cn('text-muted-foreground text-sm', local.class)}
       {...rest}
@@ -66,8 +88,8 @@ function AlertDialogDescription(props: ComponentProps<typeof KAlertDialog.Descri
   );
 }
 
-function AlertDialogCancel(props: ComponentProps<typeof KAlertDialog.CloseButton>) {
-  return <KAlertDialog.CloseButton data-slot="alert-dialog-cancel" {...props} />;
+function AlertDialogCancel(props: ComponentProps<typeof ArkDialog.CloseTrigger>) {
+  return <ArkDialog.CloseTrigger data-slot="alert-dialog-cancel" {...props} />;
 }
 
 export {

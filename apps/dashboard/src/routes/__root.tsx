@@ -5,6 +5,7 @@ import { Link, HeadContent, Outlet, Scripts, createRootRoute } from '@tanstack/s
 import { QueryClient, QueryClientProvider } from '@tanstack/solid-query';
 import { Home, TriangleAlert } from 'lucide-solid';
 import { cn } from '~/lib/cn';
+import { THEME_INIT_SCRIPT } from '~/lib/theme';
 import '~/styles/app.css';
 
 const queryClient = new QueryClient({
@@ -85,6 +86,7 @@ function RootDocument(props: { children: JSX.Element }) {
     <html lang="id">
       <head>
         <HeadContent />
+        <script innerHTML={THEME_INIT_SCRIPT} />
         <HydrationScript />
       </head>
       <body>

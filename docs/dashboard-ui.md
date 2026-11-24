@@ -12,8 +12,10 @@ mengubah komponen tanpa merusak alur bisnis.
 > shadcn/ui resminya adalah komponen **React**. Karena itu yang diadopsi adalah **design
 > language-nya** (token warna, radius, tipografi, pola komponen, dan perilaku), lalu komponen
 > shadcn ditulis ulang sebagai komponen Solid di `src/components/ui`. Interaksi kompleks
-> (dialog, select, dropdown, checkbox) memakai primitif **Kobalte** — pustaka headless aksesibel
-> untuk Solid yang menjadi padanan Radix UI di dunia React.
+> (dialog, select, dropdown, checkbox) memakai primitif **Ark UI** (`@ark-ui/solid`) — pustaka
+> headless aksesibel berbasis zag.js yang bisa dipakai di Solid. Ark tidak membawa styling, jadi
+> seluruh tampilan (termasuk mode terang/gelap) ditulis di wrapper `components/ui` dengan token
+> Tailwind.
 
 ---
 
@@ -24,6 +26,8 @@ mengubah komponen tanpa merusak alur bisnis.
 | Seluruh tampilan dashboard: layout, sidebar, header, kartu, tabel, form, dialog, badge, toast | Query TanStack Query, endpoint API, aturan kapasitas, autentikasi, RBAC, audit log |
 | CSS global (dari CSS kustom → Tailwind v4 + token shadcn) | Skema database, migrasi, worker, storefront |
 | Form menu kini di **Dialog**, aksi baris di **DropdownMenu**, pembatalan order & penerapan mingguan memakai dialog konfirmasi | Validasi server, idempotensi, dan transisi status |
+| Primitif interaktif: Kobalte → **Ark UI**, dengan API wrapper `components/ui` yang sama | Props dan perilaku wrapper (`open`/`onOpenChange`, `value`/`onChange`, `checked`/`onChange`, `onSelect`) |
+| Mode **terang & gelap** dengan toggle di header (lihat §4) | Halaman dan alur bisnis di baliknya; mode cetak tetap hitam-putih |
 
 Hasil verifikasi: `pnpm lint`, `pnpm typecheck`, dan `pnpm build` untuk `apps/dashboard` hijau;
 seluruh halaman diuji di browser (desktop 1440×950 dan mobile 390×844).
@@ -35,7 +39,7 @@ seluruh halaman diuji di browser (desktop 1440×950 dan mobile 390×844).
 | Paket | Versi | Fungsi |
 | :-- | :-- | :-- |
 | `tailwindcss` + `@tailwindcss/vite` | 4.3.4 | Utility CSS, tema `@theme inline`, content scanning otomatis |
-| `@kobalte/core` | 0.13.14 | Primitif headless: Select, Dialog, AlertDialog, DropdownMenu, Checkbox |
+| `@ark-ui/solid` | 5.40.1 | Primitif headless: Select, Dialog (+ AlertDialog, Sheet), Menu (DropdownMenu), Checkbox |
 | `class-variance-authority` | 0.7.1 | Varian komponen (`buttonVariants`, `badgeVariants`, `alertVariants`) |
 | `clsx` + `tailwind-merge` | 2.1.1 / 3.7.0 | Helper `cn()` untuk menggabungkan class tanpa konflik |
 | `lucide-solid` | 1.68.0 | Ikon (padanan `lucide-react`) |
@@ -53,10 +57,12 @@ plugins: [tailwindcss(), tanstackStart(), viteSolid({ ssr: true }), nitro()]
 
 ```text
 apps/dashboard/src/
-├── styles/app.css              # token shadcn, base layer, style cetak
+├── styles/app.css              # token shadcn (terang & gelap), base layer, style cetak
 ├── lib/cn.ts                   # clsx + tailwind-merge
+├── lib/theme.ts                # state tema terang/gelap, penyimpanan, script anti-kilat
 ├── components/
 │   ├── AppShell.tsx            # sidebar + header + konten, sesi & logout
+│   ├── ThemeToggle.tsx         # tombol ganti tema di header
 │   ├── StatusBadge.tsx         # status order → varian badge
 │   ├── stat-card.tsx           # kartu statistik ringkas
 │   └── ui/                     # komponen design system (lihat tabel)
@@ -67,9 +73,12 @@ apps/dashboard/src/
 
 ## 4. Token & tema
 
-Token mengikuti shadcn/ui base color **neutral**, mode **light only** (sesuai permintaan).
-Semua nilai didefinisikan di `:root` pada `app.css` lalu dipetakan ke utility Tailwind lewat
-`@theme inline`.
+Token mengikuti shadcn/ui base color **neutral** dan tersedia dalam dua mode:
+
+- **Terang** didefinisikan di `:root`, **gelap** di `.dark` pada `app.css`.
+- Keduanya dipetakan ke utility Tailwind lewat `@theme inline`.
+- Variant `dark:` di Tailwind diarahkan ke class `dark` (`@custom-variant dark` di `app.css`),
+  bukan ke preferensi sistem, sehingga mengikuti pilihan pengguna di toggle.
 
 | Token | Fungsi | Contoh pemakaian |
 | :-- | :-- | :-- |
@@ -88,9 +97,24 @@ Semua nilai didefinisikan di `:root` pada `app.css` lalu dipetakan ke utility Ta
 Tipografi memakai stack sans sistem (tanpa unduhan font eksternal) agar dashboard tetap ringan
 dan tidak bergantung CDN. Angka nominal selalu memakai `tabular-nums`.
 
-**Menambah dark mode di masa depan:** tambahkan blok `:root.dark { … }` (token shadcn dark) dan
-pasang class `dark` pada `<html>`; seluruh komponen yang sudah memakai token akan ikut berubah
-tanpa edit per komponen.
+### 4.1 Mode terang & gelap
+
+- **Toggle** ada di header (`ThemeToggle`, ikon bulan/matahari, `aria-pressed` untuk status mode gelap).
+- **Pilihan disimpan** di `localStorage` dengan kunci `dashboard-theme` (`'light'` | `'dark'`).
+- **Tanpa pilihan tersimpan**, tema mengikuti preferensi sistem (`prefers-color-scheme`).
+- **Anti-kilat:** script kecil di `<head>` (`THEME_INIT_SCRIPT` dari `lib/theme.ts`) memasang class
+  `dark` pada `<html>` sebelum halaman dirender.
+- **Mengubah tema dari kode:** panggil `setTheme('dark' | 'light')` atau `toggleTheme()` dari
+  `~/lib/theme`. Keduanya menerapkan class, menyimpan pilihan, dan memperbarui state toggle.
+- **Mode cetak** selalu terang: `@media print` memaksa token ke hitam-putih, sehingga rekap
+  produksi tetap terbaca di kertas walaupun tema gelap aktif.
+
+### 4.2 Menambah warna baru
+
+- Pakai token (`bg-card`, `text-muted-foreground`, dst.) — otomatis mengikuti mode.
+- Bila memakai warna langsung (mis. `bg-emerald-50` untuk status), tambahkan pasangan `dark:` pada
+  kelas yang sama, contoh: `bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400`
+  (sudah diterapkan di `badge.tsx`, `alert.tsx`, dan ikon sukses order manual).
 
 ---
 
@@ -106,14 +130,14 @@ Semua berada di `apps/dashboard/src/components/ui/`.
 | Input | `input.tsx` | `<input>` | Form, filter tanggal/pencarian |
 | Textarea | `textarea.tsx` | `<textarea>` | Catatan, deskripsi menu, alasan batal |
 | Label | `label.tsx` | `<label>` | Semua field |
-| Select | `select.tsx` | Kobalte Select | Filter status/entitas, kategori, pembayaran, hidangan |
-| Checkbox | `checkbox.tsx` | Kobalte Checkbox | Menu aktif, hari buka, ketersediaan menu |
+| Select | `select.tsx` | Ark Select | Filter status/entitas, kategori, pembayaran, hidangan |
+| Checkbox | `checkbox.tsx` | Ark Checkbox | Menu aktif, hari buka, ketersediaan menu |
 | Table (+ Header/Body/Row/Head/Cell) | `table.tsx` | `<table>` | Pesanan, menu, audit, refund, penawaran, detail order |
 | Alert (+ Title/Description) | `alert.tsx` | `<div>` + CVA | Error, info, warning (5 varian) |
-| Dialog | `dialog.tsx` | Kobalte Dialog | Form menu, alasan pembatalan |
-| AlertDialog | `alert-dialog.tsx` | Kobalte AlertDialog | Konfirmasi terapkan ke seminggu |
-| DropdownMenu | `dropdown-menu.tsx` | Kobalte DropdownMenu | Aksi baris menu, menu pengguna (logout) |
-| Sheet | `sheet.tsx` | Kobalte Dialog | Navigasi mobile dari kiri |
+| Dialog | `dialog.tsx` | Ark Dialog | Form menu, alasan pembatalan |
+| AlertDialog | `alert-dialog.tsx` | Ark Dialog (`role="alertdialog"`) | Konfirmasi terapkan ke seminggu |
+| DropdownMenu | `dropdown-menu.tsx` | Ark Menu | Aksi baris menu, menu pengguna (logout) |
+| Sheet | `sheet.tsx` | Ark Dialog | Navigasi mobile dari kiri |
 | Separator | `separator.tsx` | `<div role="separator">` | Header, ringkasan |
 | Progress | `progress.tsx` | `<div role="progressbar">` | Kapasitas reguler/PO di pengaturan hari |
 | Skeleton | `skeleton.tsx` | `<div>` | Tersedia untuk loading state |
@@ -259,7 +283,7 @@ Contoh hasil (emulasi media `print`): ![Cetak rekap produksi](screenshots/print-
 ## 9. Aksesibilitas
 
 - Focus ring konsisten `focus-visible:ring-[3px] ring-ring/50`.
-- Dialog/Sheet/AlertDialog/Select/Dropdown dari Kobalte: focus trap, ESC, ARIA, keyboard nav.
+- Dialog/Sheet/AlertDialog/Select/Dropdown dari Ark UI: focus trap, ESC, ARIA, keyboard nav.
 - Setiap trigger ikon-only memiliki `aria-label` (mis. `Filter status pesanan`, `Aksi untuk …`).
 - Tabel memakai `<th>` untuk kolom; status tidak hanya dibedakan warna (teks label ikut tampil).
 - `aria-current="page"` pada item navigasi aktif.
@@ -273,8 +297,9 @@ Contoh hasil (emulasi media `print`): ![Cetak rekap produksi](screenshots/print-
    atau port Solid-nya, lalu tulis ulang di `components/ui/<nama>.tsx`.
 2. Gunakan `data-slot="…"` dan `cn()`; pertahankan nama token (`bg-card`, `text-muted-foreground`,
    dst.) agar tema konsisten.
-3. Untuk interaksi, pakai primitif Kobalte yang sesuai dan pastikan bisa SSR (portal hanya
-   dirender saat terbuka).
+3. Untuk interaksi, pakai primitif Ark UI (`@ark-ui/solid`) yang sesuai dan pastikan bisa SSR
+   (portal hanya dirender saat terbuka). Ark tidak memberi styling: beri class Tailwind dan
+   selector `data-[state=open]`, `data-[highlighted]`, `data-[disabled]` sesuai atribut Ark.
 4. Tambahkan entri di tabel inventaris dokumen ini dan, bila perlu, contoh pemakaian.
 5. Jalankan `pnpm --filter @catering/dashboard lint` lalu uji keyboard & mobile.
 6. Jalankan `pnpm --filter @catering/dashboard typecheck` lalu uji keyboard & mobile.
@@ -290,7 +315,14 @@ pnpm --filter @catering/dashboard typecheck
 pnpm --filter @catering/dashboard build
 ```
 
-Checklist manual yang sudah dijalankan:
+Perlu diuji manual setelah migrasi ke Ark UI dan penambahan tema:
+
+- Tema: toggle terang/gelap di header, pilihan bertahan setelah reload, tidak ada kilatan saat
+  memuat ulang dalam mode gelap, dan cetak rekap produksi tetap hitam-putih.
+- Dialog, AlertDialog, Sheet, Select, Dropdown, dan Checkbox: buka/tutup, ESC, klik overlay,
+  navigasi keyboard, dan nilai yang tersimpan setelah dipilih.
+
+Checklist manual dari rilis sebelumnya:
 
 - Login/logout, redirect 401, menu pengguna.
 - Daftar pesanan: filter bulan/status/pencarian, pagination, klik baris.
@@ -326,7 +358,8 @@ Checklist manual yang sudah dijalankan:
 
 ## 13. Batasan & rekomendasi lanjutan
 
-- **Light mode saja** sesuai permintaan; token dark belum dibuat.
+- Mode gelap memakai token dan pasangan `dark:` untuk warna status. Komponen baru yang memakai
+  warna langsung wajib menyediakan varian gelapnya.
 - Input tanggal/jam masih memakai kontrol native browser (belum ada komponen Calendar/Popover
   shadcn). Cukup untuk kebutuhan admin saat ini.
 - Tabel lebar memakai scroll horizontal di mobile; bila ingin UX yang lebih baik, buat card list

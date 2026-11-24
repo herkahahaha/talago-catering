@@ -217,7 +217,7 @@ function NewOrderPage() {
         fallback={
           <Card class="mx-auto max-w-xl">
             <CardHeader>
-              <div class="mb-2 flex size-10 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+              <div class="mb-2 flex size-10 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400">
                 <CircleCheck class="size-5" />
               </div>
               <CardTitle class="text-xl">Order berhasil dibuat</CardTitle>
