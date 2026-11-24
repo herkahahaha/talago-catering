@@ -21,5 +21,5 @@ Berkas ini disertakan dalam konteks lengkap untuk setiap percakapan agen. Tetap 
 - [`docs/prd-mapping.md`](docs/prd-mapping.md) Pemetaan PRD §1–13 ke implementasi, status per fitur
 - [`docs/docker.md`](docs/docker.md) Arsitektur container, dev/staging/prod, operasional, troubleshooting
 - [`docs/design-web.md`](docs/design-web.md) Design system M3 storefront (warna, tipografi, layout, komponen)
-- [`docs/dashboard-ui.md`](docs/dashboard-ui.md) Design system shadcn/ui dashboard (token, komponen, pola, aksesibilitas)
+- [`docs/dashboard-ui.md`](docs/dashboard-ui.md) Design system ark-ui dashboard (token, komponen, pola, aksesibilitas)
 - [`docs/agent-instructions.md`](docs/agent-instructions.md) aturan architectural decision record dalam mengoreksi ADR, mengganti keputusan, dan memperbarui konsekuensi keputusan.
