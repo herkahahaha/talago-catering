@@ -22,7 +22,7 @@ export interface SelectProps {
 }
 
 export function Select(props: SelectProps) {
-  const [local, rest] = splitProps(props, ['class', 'value', 'onChange', 'options', 'placeholder']);
+  const [local, rest] = splitProps(props, ['id', 'class', 'value', 'onChange', 'options', 'placeholder']);
 
   const collection = createMemo(() =>
     createListCollection<SelectOption>({
@@ -36,6 +36,9 @@ export function Select(props: SelectProps) {
   return (
     <ArkSelect.Root
       collection={collection()}
+      // Id trigger harus didaftarkan ke zag juga; kalau tidak, label `for` tidak tersambung dan
+      // trigger tidak bisa dicari secara internal.
+      ids={local.id ? { trigger: local.id } : undefined}
       value={local.value === '' ? [] : [local.value]}
       onValueChange={(details) => local.onChange(details.value[0] ?? '')}
       disabled={rest.disabled}
@@ -45,7 +48,7 @@ export function Select(props: SelectProps) {
     >
       <ArkSelect.Control class="w-full min-w-0">
         <ArkSelect.Trigger
-          id={rest.id}
+          id={local.id}
           aria-label={rest['aria-label']}
           class={cn(
             'border-input data-[placeholder-shown]:text-muted-foreground flex h-9 w-full min-w-0 items-center justify-between gap-2 rounded-md border bg-transparent px-3 py-2 text-sm whitespace-nowrap shadow-xs transition-[color,box-shadow] outline-none',
