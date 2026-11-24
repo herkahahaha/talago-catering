@@ -13,6 +13,7 @@ import {
   parseMonthValue,
 } from '~/lib/date-values';
 import { DateTimeInput } from '~/components/ui/date-time-input';
+import { todayWib } from '~/lib/format';
 
 export type DatePickerKind = 'date' | 'month';
 
@@ -92,12 +93,23 @@ export function DatePicker(props: DatePickerProps) {
   }
 
   /** Nilai jam untuk field di popup, `HH:mm`, kosong bila belum ada tanggal. */
-  const timeText = (api: { value: DateValue[] }) => {
-    const v = api.value[0];
-    if (!v || !('hour' in v)) return '';
+  const timeText = () => {
+    const dt = parseLocalDateTimeValue(local.value);
+    if (!dt) return '';
     const pad = (n: number) => String(n).padStart(2, '0');
-    return `${pad(v.hour as number)}:${pad(v.minute as number)}`;
+    return `${pad(dt.hour)}:${pad(dt.minute)}`;
   };
+
+  /** Ubah jam dari field di popup. Tanpa tanggal, jam dipasang ke hari ini (WIB). */
+  function changeTime(text: string) {
+    const [h, m] = text.split(':').map(Number);
+    if (h === undefined || m === undefined || Number.isNaN(h) || Number.isNaN(m)) return;
+    const base = parseLocalDateTimeValue(local.value) ?? parseDateValue(todayWib());
+    if (!base) return;
+    local.onChange(
+      formatLocalDateTimeValue(new CalendarDateTime(base.year, base.month, base.day, h, m)),
+    );
+  }
 
   return (
     <ArkDatePicker.Root
@@ -108,7 +120,7 @@ export function DatePicker(props: DatePickerProps) {
       defaultView={isMonth() ? 'month' : 'day'}
       minView={isMonth() ? 'month' : 'day'}
       maxView="year"
-      closeOnSelect
+      closeOnSelect={!withTime()}
       disabled={local.disabled}
       positioning={{ placement: 'bottom-start', gutter: 4 }}
       format={
@@ -233,14 +245,9 @@ export function DatePicker(props: DatePickerProps) {
                       <DateTimeInput
                         kind="time"
                         class="w-28"
-                        disabled={!api().value[0]}
                         aria-label="Jam"
-                        value={timeText(api())}
-                        onChange={(text) => {
-                          const [h, m] = text.split(':').map(Number);
-                          if (h === undefined || m === undefined || Number.isNaN(h) || Number.isNaN(m)) return;
-                          api().setTime({ hour: h, minute: m });
-                        }}
+                        value={timeText()}
+                        onChange={changeTime}
                       />
                     </div>
                   </Show>
