@@ -13,7 +13,6 @@ import {
   parseMonthValue,
 } from '~/lib/date-values';
 import { DateTimeInput } from '~/components/ui/date-time-input';
-import { todayWib } from '~/lib/format';
 
 export type DatePickerKind = 'date' | 'month';
 
@@ -61,7 +60,7 @@ export function DatePicker(props: DatePickerProps) {
 
   const isMonth = () => local.kind === 'month';
   const withTime = () => !isMonth() && local.withTime === true;
-  const DEFAULT_TIME = { hour: 23, minute: 59 };
+  const DEFAULT_TIME = { hour: 0, minute: 0 };
 
   const parsed = (): DateValue[] => {
     if (withTime()) {
@@ -74,37 +73,37 @@ export function DatePicker(props: DatePickerProps) {
     return v ? [v] : [];
   };
 
-  /** Jam yang sedang tersimpan; dipakai ulang saat tanggal diganti di kalender. */
-  const currentTime = () => {
-    const dt = parseLocalDateTimeValue(local.value);
-    return dt ? { hour: dt.hour, minute: dt.minute } : DEFAULT_TIME;
-  };
-
   function emit(picked: DateValue | undefined) {
     if (!picked) return local.onChange('');
     if (isMonth()) return local.onChange(formatMonthValue(picked as CalendarDate));
     if (withTime()) {
-      const t = currentTime();
+      // Pakai jam dari timeText() yang selalu valid (preserve jam user, default 00:00).
+      const txt = timeText();
+      const [h, m] = txt.split(':').map(Number);
+      const hour = Number.isNaN(h) ? DEFAULT_TIME.hour : h;
+      const minute = Number.isNaN(m) ? DEFAULT_TIME.minute : m;
       return local.onChange(
-        formatLocalDateTimeValue(new CalendarDateTime(picked.year, picked.month, picked.day, t.hour, t.minute)),
+        formatLocalDateTimeValue(new CalendarDateTime(picked.year, picked.month, picked.day, hour, minute)),
       );
     }
     return local.onChange(formatDateValue(picked as CalendarDate));
   }
 
-  /** Nilai jam untuk field di popup, `HH:mm`, kosong bila belum ada tanggal. */
+  /** Nilai jam untuk field di popup, `HH:mm`. Selalu ada nilai (default 00:00) agar Ark bisa mengedit. */
   const timeText = () => {
     const dt = parseLocalDateTimeValue(local.value);
-    if (!dt) return '';
+    const t = dt ? { hour: dt.hour, minute: dt.minute } : DEFAULT_TIME;
     const pad = (n: number) => String(n).padStart(2, '0');
-    return `${pad(dt.hour)}:${pad(dt.minute)}`;
+    return `${pad(t.hour)}:${pad(t.minute)}`;
   };
 
-  /** Ubah jam dari field di popup. Tanpa tanggal, jam dipasang ke hari ini (WIB). */
+  /** Ubah jam dari field di popup. Tanpa tanggal dipilih, jam tidak memicu onChange agar state tetap bersih. */
   function changeTime(text: string) {
     const [h, m] = text.split(':').map(Number);
     if (h === undefined || m === undefined || Number.isNaN(h) || Number.isNaN(m)) return;
-    const base = parseLocalDateTimeValue(local.value) ?? parseDateValue(todayWib());
+    // Hanya update jika sudah ada tanggal — kalau tidak ada tanggal, perubahan jam tidak disimpan.
+    // Ini mencegah emit nilai tidak lengkap ketika user edit jam sebelum pilih tanggal.
+    const base = parseLocalDateTimeValue(local.value) ?? parseDateValue(local.value);
     if (!base) return;
     local.onChange(
       formatLocalDateTimeValue(new CalendarDateTime(base.year, base.month, base.day, h, m)),
