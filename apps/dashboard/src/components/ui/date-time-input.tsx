@@ -78,21 +78,23 @@ export function DateTimeInput(props: DateTimeInputProps) {
             };
             const firstEditable = () => visible().findIndex((seg) => seg.type !== 'literal');
             return (
-              <For each={visible()}>
-                {(segment, i) =>
-                  segment.type === 'literal' ? (
-                    <span aria-hidden="true" class="text-muted-foreground px-px select-none">
-                      {segment.text}
-                    </span>
-                  ) : (
-                    <ArkDateInput.Segment
-                      segment={segment}
-                      id={i() === firstEditable() ? local.id : undefined}
-                      class={segmentClass}
-                    />
-                  )
-                }
-              </For>
+              <ArkDateInput.SegmentGroup index={0} class="flex items-center gap-0.5">
+                <For each={visible()}>
+                  {(segment, i) =>
+                    segment.type === 'literal' ? (
+                      <span aria-hidden="true" class="text-muted-foreground px-px select-none">
+                        {segment.text}
+                      </span>
+                    ) : (
+                      <ArkDateInput.Segment
+                        segment={segment}
+                        id={i() === firstEditable() ? local.id : undefined}
+                        class={segmentClass}
+                      />
+                    )
+                  }
+                </For>
+              </ArkDateInput.SegmentGroup>
             );
           }}
         </ArkDateInput.Context>
