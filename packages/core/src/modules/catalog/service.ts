@@ -1,3 +1,4 @@
+import { weekDates } from '../../lib/time';
 import { and, eq, gte, inArray, sql } from 'drizzle-orm';
 import type {
   AdminMenuCreateInput,
@@ -7,7 +8,7 @@ import type {
   MenuItemDto,
 } from '@catering/contracts';
 import { menuItems, menuSchedule } from './schema';
-import type { Executor } from '../../db/client';
+import type { Database, Executor } from '../../db/client';
 import { recordAudit } from '../audit/index';
 import { AppError, slugify } from '../../lib/ids';
 import { addDays, todayWib } from '../../lib/time';
@@ -168,6 +169,23 @@ export async function getMenuAvailabilityForDate(
         portionsRemaining: null,
       };
     });
+}
+
+/**
+ * Terapkan status menu yang sama ke tujuh hari Senin–Minggu yang memuat tanggal
+ * acuan. Semua atau tidak sama sekali (satu transaksi).
+ */
+export async function setMenuAvailabilityForWeek(
+  exec: Database,
+  anchorDate: string,
+  updates: Array<{ menuItemId: string; isAvailable: boolean }>,
+  actor: { id?: string | null; label: string },
+): Promise<void> {
+  await exec.transaction(async (tx) => {
+    for (const date of weekDates(anchorDate)) {
+      await setMenuAvailabilityForDate(tx, date, updates, actor);
+    }
+  });
 }
 
 export async function setMenuAvailabilityForDate(

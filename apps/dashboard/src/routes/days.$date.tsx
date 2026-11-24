@@ -281,8 +281,17 @@ function DayForm(props: { day: DaySettingsDto; date: string }) {
     setError(null);
     try {
       await api.put(`/admin/days/week/${props.date}`, dayPayload());
+      if (menu.data) {
+        await api.put(`/admin/days/week/${props.date}/menu`, {
+          items: menu.data.map((item) => ({
+            menuItemId: item.id,
+            isAvailable: menuState()[item.id] ?? false,
+          })),
+        });
+      }
       await queryClient.invalidateQueries({ queryKey: ['admin-day', props.date] });
-      setNotice('Pengaturan diterapkan ke 7 hari dalam minggu ini.');
+      await queryClient.invalidateQueries({ queryKey: ['admin-menu'] });
+      setNotice('Pengaturan dan menu diterapkan ke 7 hari dalam minggu ini.');
       window.setTimeout(() => setNotice(null), 4000);
     } catch (err) {
       if (err instanceof ApiError) {
