@@ -378,15 +378,29 @@ export interface AdminStatsDto {
   deliveryStops: number;
 }
 
+export interface QuotationPurchaseOrderDto {
+  id: string;
+  poNumber: string;
+  agreedTotal: number;
+  dueAt: string | null;
+  orderId: string | null;
+  /** Nomor order bila PO sudah ditautkan ke order nyata. */
+  orderNo: string | null;
+}
+
 export interface QuoteRequestDto {
   id: string;
   status: 'new' | 'contacted' | 'won' | 'lost';
   name: string;
   phone: string;
+  email: string | null;
   company: string | null;
   serviceDate: string;
   portions: number;
+  notes: string | null;
   createdAt: string;
+  /** PO hasil konversi, null selama quotation belum dikonversi. */
+  purchaseOrder: QuotationPurchaseOrderDto | null;
 }
 
 export interface HealthDto {

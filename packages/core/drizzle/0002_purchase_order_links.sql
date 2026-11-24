@@ -1,0 +1,2 @@
+CREATE UNIQUE INDEX "purchase_orders_quotation_uq" ON "purchase_orders" USING btree ("quotation_id");--> statement-breakpoint
+CREATE INDEX "purchase_orders_order_idx" ON "purchase_orders" USING btree ("order_id");

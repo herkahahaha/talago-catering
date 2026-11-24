@@ -10,7 +10,8 @@ export type NotificationTemplate =
   | 'order_cancelled'
   | 'refund_queued'
   | 'refund_completed'
-  | 'otp_code';
+  | 'otp_code'
+  | 'quotation_requested_admin';
 
 export interface EnqueueInput {
   channel: 'email' | 'whatsapp' | 'sms';

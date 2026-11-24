@@ -1,7 +1,13 @@
-import { For, Show, createMemo, createSignal } from 'solid-js';
-import { Link, createFileRoute } from '@tanstack/solid-router';
-import { useQuery } from '@tanstack/solid-query';
-import type { AdminMenuItemDto, CreatedOrderDto } from '@catering/contracts';
+import { For, Show, createEffect, createMemo, createSignal } from 'solid-js';
+import { Link, createFileRoute, useNavigate } from '@tanstack/solid-router';
+import { useQuery, useQueryClient } from '@tanstack/solid-query';
+import type {
+  AdminMenuItemDto,
+  CreatedOrderDto,
+  DaySettingsDto,
+  OrderSettingsDto,
+  QuoteRequestDto,
+} from '@catering/contracts';
 import { ArrowLeft, CircleAlert, CircleCheck, Plus, Trash2 } from 'lucide-solid';
 import { AppShell } from '~/components/AppShell';
 import { StatusBadge } from '~/components/StatusBadge';
@@ -17,6 +23,9 @@ import { Separator } from '~/components/ui/separator';
 import { Textarea } from '~/components/ui/textarea';
 
 export const Route = createFileRoute('/new-order')({
+  validateSearch: (search: Record<string, unknown>): { quotationId?: string } => ({
+    quotationId: typeof search.quotationId === 'string' ? search.quotationId : undefined,
+  }),
   component: NewOrderPage,
 });
 
@@ -37,6 +46,11 @@ const METHOD_OPTIONS = [
 ];
 
 function NewOrderPage() {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const search = Route.useSearch();
+  const quotationId = () => search().quotationId;
+
   const [source, setSource] = createSignal<'po' | 'manual'>('manual');
   const [serviceDate, setServiceDate] = createSignal(addDays(todayWib(), 2));
   const [name, setName] = createSignal('');
@@ -50,11 +64,61 @@ function NewOrderPage() {
   const [busy, setBusy] = createSignal(false);
   const [error, setError] = createSignal<{ message: string; hint?: string } | null>(null);
   const [created, setCreated] = createSignal<CreatedOrderDto | null>(null);
+  const [linkWarning, setLinkWarning] = createSignal<string | null>(null);
+  const [prefilled, setPrefilled] = createSignal(false);
 
   const catalog = useQuery(() => ({
     queryKey: ['admin-catalog'],
     queryFn: () => api.get<AdminMenuItemDto[]>('/admin/catalog'),
   }));
+
+  const quotation = useQuery(() => ({
+    queryKey: ['quotation', quotationId()],
+    queryFn: () => api.get<QuoteRequestDto>(`/admin/quotations/${quotationId()}`),
+    enabled: Boolean(quotationId()),
+  }));
+
+  // quotationId di URL = alur PO: prefill dari data quotation dan paksa source 'po'.
+  createEffect(() => {
+    const quote = quotation.data;
+    if (!quote || prefilled()) return;
+    setPrefilled(true);
+    setSource('po');
+    setServiceDate(quote.serviceDate);
+    setName(quote.name);
+    setPhone(quote.phone);
+    setEmail(quote.email ?? '');
+    setNotes(quote.notes ?? '');
+  });
+
+  // Reguler: dibatasi batas porsi per order global. PO: acuan negosiasi marketing
+  // adalah kapasitas dapur harian, bukan batas per-order — order besar yang
+  // disepakati lewat PO/quotation tidak dimaksudkan tunduk pada batas itu.
+  // Belum ada validasi keras di sini; ini hanya referensi, supaya saat fitur
+  // approval PO dibangun (fase 2), ia tinggal memakai `dayCapacity` yang sama.
+  const orderSettings = useQuery(() => ({
+    queryKey: ['admin-order-settings'],
+    queryFn: () => api.get<OrderSettingsDto>('/admin/settings/order'),
+    enabled: source() === 'manual',
+  }));
+  const dayCapacity = useQuery(() => ({
+    queryKey: ['admin-day-capacity', serviceDate()],
+    queryFn: () => api.get<DaySettingsDto>(`/admin/days/${serviceDate()}`),
+    enabled: source() === 'po',
+  }));
+
+  const portionsCeilingLabel = createMemo(() => {
+    if (source() === 'po') {
+      const kitchenMaxTotal = dayCapacity.data?.kitchenMaxTotal;
+      return kitchenMaxTotal
+        ? `Order PO dapat sampai kapasitas dapur harian (${kitchenMaxTotal} porsi) sebagai acuan negosiasi.`
+        : 'Order PO mengacu ke kapasitas dapur harian sebagai batas negosiasi.';
+    }
+    const maxPortionsPerOrder = orderSettings.data?.maxPortionsPerOrder;
+    return maxPortionsPerOrder
+      ? `Minimal 1 hidangan, maksimal ${maxPortionsPerOrder} porsi per order.`
+      : 'Minimal 1 hidangan.';
+  });
 
   const activeItems = createMemo(() => (catalog.data ?? []).filter((item) => item.isActive));
 
@@ -104,6 +168,27 @@ function NewOrderPage() {
         paymentMethod: method(),
         ...(notes().trim() ? { notes: notes().trim() } : {}),
       });
+
+      const po = quotation.data?.purchaseOrder;
+      if (po && !po.orderId) {
+        try {
+          await api.patch(`/admin/purchase-orders/${po.id}/link-order`, {
+            orderId: result.order.id,
+          });
+          await queryClient.invalidateQueries({ queryKey: ['quotations'] });
+          await queryClient.invalidateQueries({ queryKey: ['quotation', quotationId()] });
+          setCreated(result);
+          void navigate({ to: '/quotations', search: { toast: 'order-linked' } });
+          return;
+        } catch (linkErr) {
+          setLinkWarning(
+            linkErr instanceof ApiError
+              ? `Order terbuat, tetapi gagal menautkan ke PO: ${linkErr.message}`
+              : 'Order terbuat, tetapi gagal menautkan ke PO. Tautkan manual dari halaman quotation.',
+          );
+        }
+      }
+
       setCreated(result);
     } catch (err) {
       if (err instanceof ApiError) {
@@ -139,6 +224,12 @@ function NewOrderPage() {
               <CardDescription>
                 Pesanan manual/PO langsung tercatat dan masuk ke rekap produksi.
               </CardDescription>
+              <Show when={linkWarning()}>
+                <Alert variant="destructive">
+                  <CircleAlert />
+                  <AlertDescription>{linkWarning()}</AlertDescription>
+                </Alert>
+              </Show>
             </CardHeader>
             <CardContent class="grid gap-4">
               <dl class="grid gap-3 rounded-lg border p-4 text-sm">
@@ -181,6 +272,36 @@ function NewOrderPage() {
       >
         <form onSubmit={submit} class="grid items-start gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
           <div class="grid gap-6">
+            <Show when={quotationId()}>
+              <Show
+                when={quotation.data}
+                fallback={
+                  <Alert>
+                    <AlertTitle>Memuat quotation…</AlertTitle>
+                    <AlertDescription>Data pelanggan akan terisi otomatis dari quotation.</AlertDescription>
+                  </Alert>
+                }
+              >
+                {(quote) => (
+                  <Alert>
+                    <AlertTitle>Order dari quotation {quote().name}</AlertTitle>
+                    <AlertDescription>
+                      <Show
+                        when={quote().purchaseOrder}
+                        fallback="Quotation ini belum punya PO; order tetap dibuat sebagai order PO."
+                      >
+                        {(po) => (
+                          <>
+                            Sumber PO {po().poNumber} · total disepakati {rp(po().agreedTotal)}.
+                          </>
+                        )}
+                      </Show>
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </Show>
+            </Show>
+
             <Card>
               <CardHeader>
                 <CardTitle>Sumber &amp; pelanggan</CardTitle>
@@ -195,6 +316,7 @@ function NewOrderPage() {
                       value={source()}
                       onChange={(value) => setSource(value as 'po' | 'manual')}
                       options={SOURCE_OPTIONS}
+                      disabled={Boolean(quotationId())}
                       aria-label="Sumber order"
                     />
                   </div>
@@ -292,7 +414,7 @@ function NewOrderPage() {
                 <div class="flex flex-wrap items-start justify-between gap-2">
                   <div class="grid gap-1.5">
                     <CardTitle>Hidangan</CardTitle>
-                    <CardDescription>Minimal 1 hidangan, maksimal 200 porsi per order.</CardDescription>
+                    <CardDescription>{portionsCeilingLabel()}</CardDescription>
                   </div>
                   <Button
                     type="button"
@@ -384,7 +506,12 @@ function NewOrderPage() {
               </Alert>
             </Show>
 
-            <Button type="submit" size="lg" class="w-full" disabled={busy()}>
+            <Button
+              type="submit"
+              size="lg"
+              class="w-full"
+              disabled={busy() || Boolean(quotationId() && quotation.isLoading)}
+            >
               {busy() ? 'Membuat order…' : 'Buat order'}
             </Button>
           </aside>

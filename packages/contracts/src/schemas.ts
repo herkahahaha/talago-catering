@@ -168,6 +168,28 @@ export const quotationRequestSchema = z.object({
 });
 export type QuotationRequestInput = z.infer<typeof quotationRequestSchema>;
 
+export const adminQuotationStatusSchema = z.object({
+  status: z.enum(['contacted', 'lost']),
+});
+export type AdminQuotationStatusInput = z.infer<typeof adminQuotationStatusSchema>;
+
+export const adminConvertQuotationSchema = z.object({
+  agreedTotal: z.number().int().min(1).max(1_000_000_000),
+  dueAt: isoDateTimeSchema.optional(),
+});
+export type AdminConvertQuotationInput = z.infer<typeof adminConvertQuotationSchema>;
+
+export const adminLinkPurchaseOrderSchema = z.object({
+  orderId: idSchema,
+});
+export type AdminLinkPurchaseOrderInput = z.infer<typeof adminLinkPurchaseOrderSchema>;
+
+export const adminNotificationSettingsSchema = z.object({
+  /** Nomor WhatsApp admin; string kosong berarti notifikasi admin dimatikan. */
+  adminWhatsapp: z.union([phoneSchema, z.literal('')]),
+});
+export type AdminNotificationSettingsInput = z.infer<typeof adminNotificationSettingsSchema>;
+
 /* ─────────────────────────── admin: auth ─────────────────────────── */
 
 export const adminLoginSchema = z.object({

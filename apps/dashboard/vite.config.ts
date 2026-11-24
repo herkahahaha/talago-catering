@@ -1,5 +1,5 @@
 import http from 'node:http';
-import { defineConfig, type Connect, type Plugin } from 'vite';
+import { defineConfig, type Connect, type Plugin, type PluginOption } from 'vite';
 import { tanstackStart } from '@tanstack/solid-start/plugin/vite';
 import tailwindcss from '@tailwindcss/vite';
 import viteSolid from 'vite-plugin-solid';
@@ -62,7 +62,7 @@ function devApiProxy(target: string): Plugin {
 }
 
 export default defineConfig({
-  server: { port: 3001, host: true, allowedHosts: ['.trycloudflare.com'], },
+  server: { port: 3001, host: true, allowedHosts: ['.trycloudflare.com', '.kiri.local'], },
   resolve: { tsconfigPaths: true },
-  plugins: [devApiProxy(apiTarget), tailwindcss(), tanstackStart(), viteSolid({ ssr: true }), nitro()],
+  plugins: [devApiProxy(apiTarget), tailwindcss(), tanstackStart(), viteSolid({ ssr: true }), nitro()] as PluginOption[],
 });

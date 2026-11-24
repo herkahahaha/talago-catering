@@ -1,4 +1,4 @@
-import { sql } from 'drizzle-orm';
+import { sql, type SQL } from 'drizzle-orm';
 import type { Executor } from '../../db/client';
 import { recordAudit } from '../audit/index';
 
@@ -23,6 +23,16 @@ const PARTITION_COLUMNS = {
   regular: { reserved: 'reserved_regular', held: 'held_regular', max: 'max_regular' },
   po: { reserved: 'reserved_po', held: 'held_po', max: 'max_po' },
 } as const;
+
+/**
+ * `hold_ceiling` adalah pengaman anti-bot untuk slot web di partisi reguler.
+ * Partisi PO dibuat manual oleh admin (order besar/negosiasi), sehingga
+ * plafonnya cukup kapasitas PO itu sendiri — memakai plafon reguler akan
+ * menolak PO besar meski kuota PO pada tanggal tersebut sudah dinaikkan.
+ */
+function holdCeilingSql(partition: Partition): SQL {
+  return partition === 'po' ? sql.raw(PARTITION_COLUMNS.po.max) : sql`hold_ceiling`;
+}
 
 export type ReserveFailure = 'not_found' | 'day_closed' | 'cutoff_passed' | 'capacity_full' | 'hold_ceiling';
 
@@ -135,6 +145,7 @@ export async function reservePortions(exec: Executor, options: ReserveOptions): 
   const portions = options.portions;
   const holdIncrement = options.hold ? portions : 0;
   const cutoffClause = options.ignoreCutoff ? sql`` : sql`AND now() < cut_off_at`;
+  const holdCeiling = holdCeilingSql(options.partition);
 
   const result = await exec.execute(sql`
     UPDATE daily_capacity
@@ -145,7 +156,7 @@ export async function reservePortions(exec: Executor, options: ReserveOptions): 
       AND is_open = true
       ${cutoffClause}
       AND ${sql.raw(columns.reserved)} + ${portions} <= ${sql.raw(columns.max)}
-      AND ${sql.raw(columns.held)} + ${holdIncrement} <= hold_ceiling
+      AND ${sql.raw(columns.held)} + ${holdIncrement} <= ${holdCeiling}
     RETURNING ${sql.raw(columns.reserved)} AS reserved, ${sql.raw(columns.max)} AS max
   `);
 
@@ -201,8 +212,9 @@ async function diagnoseReserveFailure(
 
   const held = Number(row.held);
   const holdIncrement = options.hold ? options.portions : 0;
-  if (held + holdIncrement > Number(row.hold_ceiling)) {
-    return { reason: 'hold_ceiling', remaining: Math.max(Number(row.hold_ceiling) - held, 0) };
+  const holdCeiling = options.partition === 'po' ? max : Number(row.hold_ceiling);
+  if (held + holdIncrement > holdCeiling) {
+    return { reason: 'hold_ceiling', remaining: Math.max(holdCeiling - held, 0) };
   }
 
   return { reason: 'capacity_full', remaining: Math.max(max - reserved, 0) };

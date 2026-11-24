@@ -7,8 +7,8 @@ language: id-ID
 Status per bagian **System Design v2** (29 Okt 2026). Legenda: ✅ selesai · 🟡 sebagian /
 mock · ⏳ fase berikutnya. ✅ berarti ada di kode, bukan berarti siap produksi.
 
-Terakhir ditinjau terhadap commit `30ac293` (15 Nov 2026). Belum semua baris dicek ulang ke
-kode (mis. keputusan #6 dan token tampilan 30 menit).
+Terakhir ditinjau terhadap working tree 19 Nov 2026 (di atas commit `cadc5ad`). Belum semua
+baris dicek ulang ke kode (mis. keputusan #6 dan token tampilan 30 menit).
 
 
 ## Keputusan bisnis
@@ -86,7 +86,7 @@ kode (mis. keputusan #6 dan token tampilan 30 menit).
 | payments | `payments` | ✅ |
 | refunds | `refunds` | ✅ |
 | deliveries | `deliveries` | ✅ (status & bukti disiapkan) |
-| quotations, purchase_orders | idem | 🟡 tabel ada; hanya buat (`POST /quotes`) dan daftar (`GET /admin/quotations`). Belum ada ubah status atau konversi ke PO, dan `purchase_orders` belum dipakai kode (fase 2) |
+| quotations, purchase_orders | idem | 🟡 alur dikelola admin: buat (`POST /quotes`), daftar, ubah status, konversi ke PO (`POST /admin/quotations/{id}/convert`), tautkan ke order. Belum ada approval berjenjang/termin (fase 2) |
 | idempotency_keys | idem | ✅ |
 | audit_log | idem | ✅ |
 | order_notes_internal | idem | ✅ |
@@ -108,7 +108,7 @@ Indeks penting (orders per tanggal/status, hold expiry parsial, payments gateway
 | POST /orders/{id}/payment-retry | ✅ | |
 | POST /orders/{id}/cancel | ✅ | refund otomatis diantrekan |
 | POST /webhooks/payment | ✅ | idempoten + signature |
-| Admin/dapur/kurir | orders, overview bulanan, menu CRUD, days (date picker + terapkan mingguan), production, refunds, audit, quotations (daftar saja) | ✅ |
+| Admin/dapur/kurir | orders, overview bulanan, menu CRUD, days (date picker + terapkan mingguan), production, refunds, audit, quotations (status + konversi PO + tautan order) | ✅ |
 | Lacak pesanan tamu (tambahan) | `GET /orders/mine`, `POST /orders/lookup`, token tampilan bertanda tangan 30 menit | ✅ |
 | Kode error tambahan | `HOLD_LIMIT`, `CAPTCHA_REQUIRED`, `ORDER_TOO_LARGE` + `MIN_ORDER_NOT_MET`, `OTP_REQUIRED` | ✅ |
 
@@ -168,5 +168,7 @@ rasio hold→bayar, porsi terisi, refund, p95 latency).
   `error.cause.code`), sehingga tabrakan `order_no` menjadi HTTP 500. Jarang di volume nyata.
 - `SESSION_SECRET`, `CAPTCHA_SECRET`, `PAYMENT_WEBHOOK_SECRET`, dan password admin seed punya nilai
   default; belum ada penjaga yang menolak start di `NODE_ENV=production`.
-- Alur quotation → PO belum ada: pesanan di atas batas order berakhir di daftar quotation tanpa
-  tindak lanjut di sistem.
+- PO hasil konversi quotation belum merekonsiliasi harga dengan total order yang dibuat lewat
+  `/new-order`; `agreedTotal` hanya catatan kesepakatan, bukan validasi otomatis.
+- Alur quotation hanya menutup loop manual: status, konversi PO, dan tautan ke order dikelola
+  admin (belum ada approval berjenjang/termin, fase 2).

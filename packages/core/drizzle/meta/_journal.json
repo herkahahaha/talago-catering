@@ -15,6 +15,27 @@
       "when": 1793710297652,
       "tag": "0001_foreign_keys",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1795083911442,
+      "tag": "0002_purchase_order_links",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1795182130725,
+      "tag": "0003_purchase_order_order_uq",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1795184987799,
+      "tag": "0004_purchase_order_fk_declarations",
+      "breakpoints": true
     }
   ]
 }
